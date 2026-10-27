@@ -34,9 +34,15 @@ namespace WinFontSwap
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.CenterParent;
             ClientSize = new Size(520, 620);
-            BackColor = p.Bg;
+            BackColor = Theme.KeyColor;
+            TransparencyKey = Theme.KeyColor;
             Font = new Font("Segoe UI", 9.5f);
             Opacity = 1;
+
+            // 整页铺一张不透明卡片：按钮四角只要和卡片同色就能干净贴合，
+            // 不用去猜窗体背景（它可能被 MicaForEveryone 做成亚克力）
+            var root = new CardPanel { Location = new Point(0, 0), Size = new Size(520, 620), Radius = 8 };
+            Controls.Add(root);
 
             var title = new Label
             {
@@ -92,17 +98,17 @@ namespace WinFontSwap
             _list.SelectedIndexChanged += delegate { UpdatePreview(); };
             _list.DoubleClick += delegate { Accept(); };
 
-            _ok = new RoundedButton { Text = "确定", Primary = true, Location = new Point(308, 556), Size = new Size(92, 34), Enabled = false, CornerColor = p.Bg };
-            _cancel = new RoundedButton { Text = "取消", Location = new Point(408, 556), Size = new Size(92, 34), CornerColor = p.Bg };
+            _ok = new RoundedButton { Text = "确定", Primary = true, Location = new Point(308, 556), Size = new Size(92, 34), Enabled = false, CornerColor = p.Surface };
+            _cancel = new RoundedButton { Text = "取消", Location = new Point(408, 556), Size = new Size(92, 34), CornerColor = p.Surface };
             _ok.Click += delegate { Accept(); };
             _cancel.Click += delegate { DialogResult = DialogResult.Cancel; Close(); };
 
-            Controls.Add(title);
-            Controls.Add(_hint);
-            Controls.Add(searchHost);
-            Controls.Add(_list);
-            Controls.Add(_ok);
-            Controls.Add(_cancel);
+            root.Controls.Add(title);
+            root.Controls.Add(_hint);
+            root.Controls.Add(searchHost);
+            root.Controls.Add(_list);
+            root.Controls.Add(_ok);
+            root.Controls.Add(_cancel);
 
             LoadFamilies();
             Shown += delegate
@@ -115,7 +121,7 @@ namespace WinFontSwap
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
-            e.Graphics.Clear(Theme.Current.Bg);
+            e.Graphics.Clear(Theme.KeyColor);
         }
 
         [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
