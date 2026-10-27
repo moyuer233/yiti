@@ -59,21 +59,6 @@ namespace WinFontSwap
         }
     }
 
-    /// <summary>透明容器：背景取整窗模糊壁纸。</summary>
-    internal sealed class GlassPanel : Panel
-    {
-        public GlassPanel()
-        {
-            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
-        }
-
-        protected override void OnPaintBackground(PaintEventArgs e)
-        {
-            Backdrop.Paint(e.Graphics, this);
-        }
-    }
-
     /// <summary>圆角卡片。</summary>
     internal sealed class CardPanel : Panel
     {
@@ -90,7 +75,8 @@ namespace WinFontSwap
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
-            Backdrop.Paint(e.Graphics, this);
+            // 卡片外圈跟窗体真实底色一致（主窗纯色、弹窗色键）
+            e.Graphics.Clear(Draw.Back(this));
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -101,8 +87,8 @@ namespace WinFontSwap
             var rect = new Rectangle(0, 0, Width - 1, Height - 1);
             using (var path = Draw.Rounded(rect, Radius))
             {
-                using (var b = new SolidBrush(Color.FromArgb(Emphasis ? 26 : 18, 255, 255, 255))) g.FillPath(b, path);
-                using (var pen = new Pen(Color.FromArgb(12, 255, 255, 255))) g.DrawPath(pen, path);
+                using (var b = new SolidBrush(Emphasis ? p.SurfaceAlt : p.Surface)) g.FillPath(b, path);
+                using (var pen = new Pen(p.Line)) g.DrawPath(pen, path);
             }
         }
     }
@@ -141,20 +127,21 @@ namespace WinFontSwap
             var p = Theme.Current;
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            Backdrop.Paint(g, this);   // 圆角外露出的就是背景图，不用猜底色
+            // 先用底色把整块擦干净，再画圆角；路径收到 W-1/H-1，四边抗锯齿才均匀
+            g.Clear(CornerColor.HasValue ? CornerColor.Value : Draw.Back(this));
             var fillRect = new Rectangle(0, 0, Width - 1, Height - 1);
             var borderRect = new Rectangle(0, 0, Width - 1, Height - 1);
 
-            Color fill = Primary ? p.Accent : Color.FromArgb(38, 255, 255, 255);
+            Color fill = Primary ? p.Accent : (Parent is CardPanel ? p.SurfaceAlt : p.Surface);
             Color text = Primary ? p.AccentText : p.Text;
-            if (!Enabled) { fill = Color.FromArgb(16, 255, 255, 255); text = Color.FromArgb(120, 255, 255, 255); }
-            else if (_hover) { fill = Primary ? Draw.Mix(p.Accent, Color.White, 0.12f) : Color.FromArgb(52, 255, 255, 255); }
+            if (!Enabled) { fill = p.SurfaceAlt; text = p.TextDim; }
+            else if (_hover) { fill = Primary ? Draw.Mix(p.Accent, Color.White, 0.14f) : p.Hover; }
 
             using (var path = Draw.Rounded(fillRect, Radius))
             {
                 using (var b = new SolidBrush(fill)) g.FillPath(b, path);
                 if (!Primary && Enabled)
-                    using (var pen = new Pen(Color.FromArgb(34, 255, 255, 255))) g.DrawPath(pen, Draw.Rounded(borderRect, Radius));
+                    using (var pen = new Pen(p.Line)) g.DrawPath(pen, Draw.Rounded(borderRect, Radius));
             }
             TextRenderer.DrawText(g, Text, Font, fillRect, text,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
@@ -190,7 +177,7 @@ namespace WinFontSwap
             var p = Theme.Current;
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            Backdrop.Paint(g, this);
+            g.Clear(Draw.Back(this));
 
             int h = 20, w = 40, top = (Height - h) / 2, left = (Width - w) / 2;
             var track = new Rectangle(left, top, w, h);
@@ -323,14 +310,11 @@ namespace WinFontSwap
             var p = Theme.Current;
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            Backdrop.Paint(g, this);
+            g.Clear(p.SurfaceAlt);
 
             var rect = new Rectangle(0, 0, Width - 1, Height - 1);
             using (var path = Draw.Rounded(rect, 8))
-            {
-                using (var b = new SolidBrush(Color.FromArgb(40, 0, 0, 0))) g.FillPath(b, path);
-                using (var pen = new Pen(Color.FromArgb(14, 255, 255, 255))) g.DrawPath(pen, path);
-            }
+            using (var pen = new Pen(p.Line)) g.DrawPath(pen, path);
 
             var sf = new StringFormat();
             sf.Trimming = StringTrimming.EllipsisCharacter;

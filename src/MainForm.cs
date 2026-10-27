@@ -130,7 +130,7 @@ namespace WinFontSwap
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
-            Backdrop.Paint(e.Graphics, this);
+            e.Graphics.Clear(Theme.Current.Bg);   // 主窗用整体透明度，不再用色键
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -141,7 +141,7 @@ namespace WinFontSwap
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            // 背景由 Backdrop 画，这里不再覆盖
+            using (var b = new SolidBrush(Theme.Current.Bg)) e.Graphics.FillRectangle(b, ClientRectangle);
         }
 
         void BuildHeader()
@@ -167,10 +167,10 @@ namespace WinFontSwap
 
         void BuildShell()
         {
-            _header = new GlassPanel();
+            _header = new Panel();
             _header.Location = new Point(0, 0);
             _header.Size = new Size(W, 84);
-
+            _header.BackColor = Theme.Current.Bg;
             _header.Controls.Add(_title);
             _header.Controls.Add(_subtitle);
 
@@ -183,17 +183,17 @@ namespace WinFontSwap
             _rail.Add("预设");
             _rail.Selected += delegate { ShowPage(_rail.SelectedIndex); };
 
-            _page = new GlassPanel();
+            _page = new Panel();
             _page.Location = new Point(RailW, 84);
             _page.Size = new Size(W - RailW, H - 84);
-
+            _page.BackColor = Theme.Current.Bg;
 
             for (int i = 0; i < 4; i++)
             {
-                var pg = new GlassPanel();
+                var pg = new Panel();
                 pg.Location = new Point(0, 0);
                 pg.Size = _page.Size;
-
+                pg.BackColor = Theme.Current.Bg;
                 pg.Visible = i == 0;
                 _pages[i] = pg;
                 _page.Controls.Add(pg);
