@@ -581,7 +581,7 @@ namespace WinFontSwap.Wpf
 
 
 
-                var b = T.Btn2("指定", false, 13);
+                var b = T.Btn2("选择", false, 13);
                 b.Margin = new Thickness(0, 0, 12, 0);
                 b.Click += delegate { PickSlot(idx); };
                 right.Children.Add(b);
