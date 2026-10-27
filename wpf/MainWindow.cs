@@ -886,10 +886,21 @@ namespace WinFontSwap.Wpf
                     {
                         // 按反馈：直接显示“现在装进去的是哪个字体”，不再显示槽位原始族名；不显示文件大小
                         var fam = info.Family;
-                        if (info.Applied)
                         {
+                            // 不看 state 的 applied 标记：只要文件里能读出别家厂商/字体，就以它为准（旧版本装的也要显示对）
                             string replaced;
                             if (_appliedFamily.TryGetValue(info.FileName, out replaced) && !string.IsNullOrEmpty(replaced)) fam = replaced;
+                            else
+                            {
+                                var det = Installer.DetectSourceFamily(info.FileName);
+                                if (!string.IsNullOrEmpty(det)) fam = det;
+                                else
+                                {
+                                    // 旧版本装的没记录，只能靠版权字段判断是哪家的字体
+                                    var vendor = Installer.DetectSourceVendor(info.FileName);
+                                    if (!string.IsNullOrEmpty(vendor)) fam = vendor;   // 旧安装没有来源记录，只能给出厂商
+                                }
+                            }
                         }
                         if (string.IsNullOrEmpty(fam)) fam = "未识别";
                         if (_fontPreview[i] != null)

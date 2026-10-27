@@ -117,6 +117,14 @@ namespace WinFontSwap
             if (args != null && args.Length > 0)
             {
                 if (args[0] == "--selftest") return SelfTest.Run();
+                if (args[0] == "--detect")
+                {
+                    foreach (var f in Installer.TargetFiles)
+                    {
+                        Console.WriteLine(f + "  family=" + (Installer.DetectSourceFamily(f) ?? "-") + "  vendor=" + (Installer.DetectSourceVendor(f) ?? "-"));
+                    }
+                    return 0;
+                }
                 if (args[0] == "--writetest") return SelfTest.WriteTest();
                 if (args[0] == "--acltest") return SelfTest.AclTest();
                 if (args[0] == "--applytest") return SelfTest.ApplyTest();

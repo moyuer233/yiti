@@ -1,0 +1,5 @@
+﻿start 10/28/2026 02:37:10
+src exists True size 20000820
+dst exists before False
+dst size after 20000820
+acl reset

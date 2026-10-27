@@ -177,6 +177,98 @@ namespace WinFontSwap
             }
         }
 
+        static readonly Dictionary<string, string> _srcCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// 反查“这个系统字体文件现在装的是哪款字体”：我们只改写 family/subfamily 那几个 nameID，
+        /// 版权/版本/商标（0/5/7）仍是原字体的，拿它去和本机字体逐个比对即可指认来源。
+        /// </summary>
+        public static string DetectSourceFamily(string fileName)
+        {
+            string cached;
+            if (_srcCache.TryGetValue(fileName, out cached)) return cached;
+            string result = null;
+            try
+            {
+                var target = Path.Combine(FontsDir, fileName);
+                if (!File.Exists(target)) return null;
+                var data = File.ReadAllBytes(target);
+                var faces = Sfnt.FaceOffsets(data);
+                if (faces.Length == 0) return null;
+                var ids = new[] { 0, 5, 7 };
+                var mine = Sfnt.NameStrings(data, faces[0], ids);
+                if (string.IsNullOrEmpty(mine[0]) && string.IsNullOrEmpty(mine[1]) && string.IsNullOrEmpty(mine[2])) return null;
+
+                var self = new List<string>();
+                string matchedFamily = null;
+                int matched = 0;
+                foreach (var f in FontLibrary.All)
+                {
+                    try
+                    {
+                        var candName = Path.GetFileName(f.Path);
+                        if (string.Equals(candName, fileName, StringComparison.OrdinalIgnoreCase)) continue;
+                        // 我们自己换出来的兄弟目标文件版权字段完全一样，不能当成来源
+                        bool isTarget = false;
+                        foreach (var t in TargetFiles) if (string.Equals(candName, t, StringComparison.OrdinalIgnoreCase)) { isTarget = true; break; }
+                        if (isTarget) continue;
+                        var cand = File.ReadAllBytes(f.Path);
+                        var cf = Sfnt.FaceOffsets(cand);
+                        if (f.FaceIndex >= cf.Length) continue;
+                        var other = Sfnt.NameStrings(cand, cf[f.FaceIndex], ids);
+                        bool same = true;
+                        int compared = 0;
+                        for (int i = 0; i < ids.Length; i++)
+                        {
+                            if (string.IsNullOrEmpty(mine[i]) || string.IsNullOrEmpty(other[i])) continue;
+                            compared++;
+                            if (!string.Equals(mine[i], other[i], StringComparison.Ordinal)) { same = false; break; }
+                        }
+                        if (same && compared > 0) { matched++; matchedFamily = f.Family; if (matched > 1) break; }
+                    }
+                    catch { }
+                }
+                // 只有唯一命中才算认出来；多个候选说明是通用字段（如 Version 1.0），不敢下结论
+                if (matched == 1) result = matchedFamily;
+            }
+            catch { }
+            _srcCache[fileName] = result;
+            return result;
+        }
+
+        static readonly Dictionary<string, string> _vendorCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// 从字体文件里没被改写的版权字段判断“这是谁家的字体”（Huawei→华为 等）。
+        /// 精确族名无法从文件反推（我们把 family 全改成微软了），但版权方名字保留着。
+        /// </summary>
+        public static string DetectSourceVendor(string fileName)
+        {
+            string cached;
+            if (_vendorCache.TryGetValue(fileName, out cached)) return cached;
+            string result = null;
+            try
+            {
+                var target = Path.Combine(FontsDir, fileName);
+                if (!File.Exists(target)) return null;
+                var data = File.ReadAllBytes(target);
+                var faces = Sfnt.FaceOffsets(data);
+                if (faces.Length == 0) return null;
+                var ids = Sfnt.NameStrings(data, faces[0], new[] { 0, 9 });
+                var text = ((ids[0] ?? "") + " " + (ids[1] ?? "")).ToLowerInvariant();
+                if (text.Contains("huawei")) result = "华为";
+                else if (text.Contains("xiaomi")) result = "小米";
+                else if (text.Contains("founder")) result = "方正";
+                else if (text.Contains("hanyi")) result = "汉仪";
+                else if (text.Contains("monotype")) result = "Monotype";
+                else if (text.Contains("google")) result = "Google";
+                else if (text.Contains("adobe")) result = "Adobe";
+            }
+            catch { }
+            _vendorCache[fileName] = result;
+            return result;
+        }
+
         public static List<TargetInfo> Inspect()
         {
             var state = ReadState();

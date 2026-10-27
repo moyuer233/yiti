@@ -1,0 +1,10 @@
+﻿start 10/28/2026 02:08:22
+found cache files: 7
+backed up: 7
+stopped
+del failed FontCache-Obsolete-109.dat: 找不到路径“C:\Windows\ServiceProfiles\LocalService\AppData\Local\FontCache\FontCache-Obsolete-109.dat”，因为该路径不存在。
+del failed ~FontCache-FontFace.dat: 找不到路径“C:\Windows\ServiceProfiles\LocalService\AppData\Local\FontCache\~FontCache-FontFace.dat”，因为该路径不存在。
+del failed ~FontCache-S-1-5-21-2805540092-3283300019-3022172939-1001.dat: 找不到路径“C:\Windows\ServiceProfiles\LocalService\AppData\Local\FontCache\~FontCache-S-1-5-21-2805540092-3283300019-3022172939-1001.dat”，因为该路径不存在。
+remaining: 2
+started
+done 10/28/2026 02:08:25

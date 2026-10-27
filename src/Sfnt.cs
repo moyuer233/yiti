@@ -92,6 +92,22 @@ namespace WinFontSwap
             catch { return false; }
         }
 
+        /// <summary>按 nameID 取字符串（用于指纹比对：版权/版本/商标这些我们不改写的字段）。</summary>
+        public static string[] NameStrings(byte[] file, int faceOff, int[] ids)
+        {
+            var res = new string[ids.Length];
+            try
+            {
+                var tables = ReadTables(file, faceOff);
+                var name = tables.Find(t => t.Tag == "name");
+                if (name == null) return res;
+                var recs = ParseNames(name.Data);
+                for (int i = 0; i < ids.Length; i++) res[i] = First(recs, ids[i]);
+            }
+            catch { }
+            return res;
+        }
+
         static void ReadExact(Stream s, byte[] buf, int count)
         {
             int off = 0;
