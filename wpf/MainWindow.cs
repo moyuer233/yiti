@@ -897,7 +897,7 @@ namespace WinFontSwap.Wpf
                             _fontPreview[i].Text = fam;
                             try { _fontPreview[i].FontFamily = new FontFamily(fam); } catch { }
                         }
-                        if (info.Applied) parts.Add("已替换");
+                        // 「已替换」不再显示：状态里直接给现在用的字体族就够了；只保留「待重启」这种会影响行为的提示
                         if (info.Queued) parts.Add("待重启");
                     }
                     _metaText[i].Text = string.Join("   ", parts.ToArray());
