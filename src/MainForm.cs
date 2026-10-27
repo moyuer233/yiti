@@ -19,11 +19,11 @@ namespace WinFontSwap
         Label _title, _subtitle;
         RoundedButton _pickBtn;
         Label _pickedLabel;
-        Label[] _slotLabels = new Label[3];
+        Label[] _slotLabels = new FlatLabel[3];
         RoundedButton[] _slotBtns = new RoundedButton[3];
         PreviewBox _preview;
         ToggleSwitch[] _toggles = new ToggleSwitch[3];
-        Label[] _targetMeta = new Label[3];
+        Label[] _targetMeta = new FlatLabel[3];
         RoundedButton _applyBtn, _genBtn, _rollbackBtn, _cancelBtn;
         Label _status;
 
@@ -118,7 +118,7 @@ namespace WinFontSwap
 
         void BuildHeader()
         {
-            _title = new Label
+            _title = new FlatLabel
             {
                 Text = "字体替换",
                 Font = new Font("Segoe UI", 18f, FontStyle.Bold),
@@ -126,7 +126,7 @@ namespace WinFontSwap
                 Location = new Point(PadX, 16),
                 Size = new Size(500, 34)
             };
-            _subtitle = new Label
+            _subtitle = new FlatLabel
             {
                 Text = "选一个字体，粗体细体自动匹配；重启后设置、开始菜单一起变。",
                 Tag = "dim",
@@ -141,7 +141,7 @@ namespace WinFontSwap
 
         Label Header(string text, int x, int y)
         {
-            return new Label
+            return new FlatLabel
             {
                 Text = text,
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
@@ -159,7 +159,7 @@ namespace WinFontSwap
 
             _pickBtn = new RoundedButton { Text = "选择字体…", Location = new Point(16, 46), Size = new Size(120, 34) };
             _pickBtn.Click += delegate { PickFont(); };
-            _pickedLabel = new Label
+            _pickedLabel = new FlatLabel
             {
                 Text = "还没有选择",
                 Tag = "dim",
@@ -177,7 +177,7 @@ namespace WinFontSwap
             for (int i = 0; i < 3; i++)
             {
                 int y = 90 + i * 30;
-                var name = new Label
+                var name = new FlatLabel
                 {
                     Text = slotNames[i],
                     Tag = "dim",
@@ -187,7 +187,7 @@ namespace WinFontSwap
                     Size = new Size(52, 24),
                     TextAlign = ContentAlignment.MiddleLeft
                 };
-                var val = new Label
+                var val = new FlatLabel
                 {
                     Text = "未匹配",
                     Tag = "dim",
@@ -216,7 +216,7 @@ namespace WinFontSwap
                 _slotBtns[i] = btn;
             }
 
-            card.Controls.Add(new Label
+            card.Controls.Add(new FlatLabel
             {
                 Text = "斜体由系统合成，不用单独匹配；没匹配到的字重保留系统原样。",
                 Tag = "dim",
@@ -246,7 +246,7 @@ namespace WinFontSwap
             for (int i = 0; i < 3; i++)
             {
                 int y = 42 + i * 40;
-                var title = new Label
+                var title = new FlatLabel
                 {
                     Text = targetNames[i],
                     Font = new Font("Segoe UI", 9.5f),
@@ -254,7 +254,7 @@ namespace WinFontSwap
                     Location = new Point(16, y),
                     Size = new Size(260, 20)
                 };
-                var meta = new Label
+                var meta = new FlatLabel
                 {
                     Text = "检测中…",
                     Tag = "dim",
@@ -291,7 +291,7 @@ namespace WinFontSwap
             Controls.Add(_rollbackBtn);
             Controls.Add(_cancelBtn);
 
-            _status = new Label
+            _status = new FlatLabel
             {
                 Text = "",
                 Tag = "dim",

@@ -39,6 +39,18 @@ namespace WinFontSwap
         }
     }
 
+    /// <summary>标签：分层窗口没法用 ClearType，统一走 GDI+ 灰度抗锯齿（不要彩色次像素）。</summary>
+    internal sealed class FlatLabel : Label
+    {
+        public FlatLabel() { UseCompatibleTextRendering = true; }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+            base.OnPaint(e);
+        }
+    }
+
     /// <summary>圆角卡片。</summary>
     internal sealed class CardPanel : Panel
     {
@@ -106,7 +118,7 @@ namespace WinFontSwap
             g.Clear(Draw.Back(this));
             var rect = new Rectangle(0, 0, Width - 1, Height - 1);
 
-            Color fill = Primary ? p.Accent : p.Surface;
+            Color fill = Primary ? p.Accent : (Parent is CardPanel ? p.SurfaceAlt : p.Surface);
             Color text = Primary ? p.AccentText : p.Text;
             if (!Enabled) { fill = p.SurfaceAlt; text = p.TextDim; }
             else if (_hover) { fill = Primary ? Draw.Mix(p.Accent, Color.White, 0.14f) : p.Hover; }
@@ -117,8 +129,16 @@ namespace WinFontSwap
                 if (!Primary && Enabled)
                     using (var pen = new Pen(p.Line)) g.DrawPath(pen, path);
             }
-            TextRenderer.DrawText(g, Text, Font, rect, text,
-                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+            g.TextRenderingHint = TextRenderingHint.AntiAlias;
+            using (var sf = new StringFormat())
+            using (var brush = new SolidBrush(text))
+            {
+                sf.Alignment = StringAlignment.Center;
+                sf.LineAlignment = StringAlignment.Center;
+                sf.Trimming = StringTrimming.EllipsisCharacter;
+                sf.FormatFlags = StringFormatFlags.NoWrap;
+                g.DrawString(Text, Font, brush, new RectangleF(0, 0, Width, Height), sf);
+            }
         }
     }
 
@@ -302,7 +322,7 @@ namespace WinFontSwap
                 return;
             }
 
-            g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+            g.TextRenderingHint = TextRenderingHint.AntiAlias;
             using (var f1 = new Font(Family, 15f))
             using (var f2 = new Font(Family, 9.5f))
             using (var b1 = new SolidBrush(p.Text))

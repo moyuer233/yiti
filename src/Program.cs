@@ -27,7 +27,8 @@ namespace WinFontSwap
                     if (args[i] == "--opaque") Theme.Glass = false;
 
             Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
+            // 分层窗口会禁用 GDI 的 ClearType/抗锯齿，改用 GDI+ 文本渲染保住平滑度
+            Application.SetCompatibleTextRenderingDefault(true);
             try
             {
                 Application.Run(new MainForm(demo));
