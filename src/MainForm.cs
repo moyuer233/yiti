@@ -11,13 +11,16 @@ namespace WinFontSwap
 {
     public sealed class MainForm : Form
     {
-        const int W = 900, H = 700, PadX = 24;
-        const int InnerW = W - PadX * 2;
+        const int W = 1080, H = 720, PadX = 24, RailW = 184;
+        const int InnerW = W - RailW - PadX * 2;
 
         string _demo;
         internal static bool _openPicker;
         internal static string ShotPath;
 
+        Panel _header, _page;
+        Panel[] _pages = new Panel[4];
+        NavRail _rail;
         Label _title, _subtitle;
         RoundedButton _pickBtn;
         Label _pickedLabel;
@@ -53,6 +56,7 @@ namespace WinFontSwap
                      ControlStyles.AllPaintingInWmPaint, true);
 
             BuildHeader();
+            BuildShell();
             BuildFontCard();
             BuildPreviewCard();
             BuildTargetCard();
@@ -127,8 +131,8 @@ namespace WinFontSwap
                 Text = "字体替换",
                 Font = new Font("Segoe UI", 18f, FontStyle.Bold),
                 AutoSize = false,
-                Location = new Point(PadX, 16),
-                Size = new Size(500, 34)
+                Location = new Point(PadX, 14),
+                Size = new Size(600, 34)
             };
             _subtitle = new Label
             {
@@ -136,11 +140,54 @@ namespace WinFontSwap
                 Tag = "dim",
                 Font = new Font("Segoe UI", 9f),
                 AutoSize = false,
-                Location = new Point(PadX, 52),
+                Location = new Point(PadX + 2, 50),
                 Size = new Size(W - PadX * 2, 22)
             };
-            Controls.Add(_title);
-            Controls.Add(_subtitle);
+        }
+
+        void BuildShell()
+        {
+            _header = new Panel();
+            _header.Location = new Point(0, 0);
+            _header.Size = new Size(W, 84);
+            _header.BackColor = Theme.Current.Bg;
+            _header.Controls.Add(_title);
+            _header.Controls.Add(_subtitle);
+
+            _rail = new NavRail();
+            _rail.Location = new Point(0, 84);
+            _rail.Size = new Size(RailW, H - 84);
+            _rail.Add("字体替换");
+            _rail.Add("系统元素");
+            _rail.Add("中文回退");
+            _rail.Add("预设");
+            _rail.Selected += delegate { ShowPage(_rail.SelectedIndex); };
+
+            _page = new Panel();
+            _page.Location = new Point(RailW, 84);
+            _page.Size = new Size(W - RailW, H - 84);
+            _page.BackColor = Theme.Current.Bg;
+
+            for (int i = 0; i < 4; i++)
+            {
+                var pg = new Panel();
+                pg.Location = new Point(0, 0);
+                pg.Size = _page.Size;
+                pg.BackColor = Theme.Current.Bg;
+                pg.Visible = i == 0;
+                _pages[i] = pg;
+                _page.Controls.Add(pg);
+            }
+
+            Controls.Add(_page);
+            Controls.Add(_rail);
+            Controls.Add(_header);
+        }
+
+        void ShowPage(int index)
+        {
+            if (index < 0 || index >= _pages.Length) return;
+            for (int i = 0; i < _pages.Length; i++) _pages[i].Visible = i == index;
         }
 
         Label Header(string text, int x, int y)
@@ -157,8 +204,8 @@ namespace WinFontSwap
 
         void BuildFontCard()
         {
-            var card = new CardPanel { Location = new Point(PadX, 86), Size = new Size(InnerW, 200) };
-            Controls.Add(card);
+            var card = new CardPanel { Location = new Point(PadX, 10), Size = new Size(InnerW, 200) };
+            _pages[0].Controls.Add(card);
             card.Controls.Add(Header("字体", 16, 14));
 
             _pickBtn = new RoundedButton { Text = "选择字体…", Location = new Point(16, 46), Size = new Size(120, 34) };
@@ -233,8 +280,8 @@ namespace WinFontSwap
 
         void BuildPreviewCard()
         {
-            var card = new CardPanel { Location = new Point(PadX, 298), Size = new Size(InnerW, 118) };
-            Controls.Add(card);
+            var card = new CardPanel { Location = new Point(PadX, 222), Size = new Size(InnerW, 118) };
+            _pages[0].Controls.Add(card);
             card.Controls.Add(Header("预览", 16, 10));
             _preview = new PreviewBox { Location = new Point(16, 38), Size = new Size(InnerW - 32, 68) };
             card.Controls.Add(_preview);
@@ -242,8 +289,8 @@ namespace WinFontSwap
 
         void BuildTargetCard()
         {
-            var card = new CardPanel { Location = new Point(PadX, 428), Size = new Size(InnerW, 168) };
-            Controls.Add(card);
+            var card = new CardPanel { Location = new Point(PadX, 352), Size = new Size(InnerW, 168) };
+            _pages[0].Controls.Add(card);
             card.Controls.Add(Header("替换目标", 16, 12));
 
             string[] targetNames = { "微软雅黑", "微软雅黑 粗体", "微软雅黑 细体" };
@@ -280,20 +327,20 @@ namespace WinFontSwap
 
         void BuildActions()
         {
-            _applyBtn = new RoundedButton { Text = "应用并重启生效", Primary = true, Location = new Point(PadX, 608), Size = new Size(168, 34) };
-            _genBtn = new RoundedButton { Text = "仅生成", Location = new Point(PadX + 180, 608), Size = new Size(90, 34) };
-            _rollbackBtn = new RoundedButton { Text = "回滚", Location = new Point(PadX + 282, 608), Size = new Size(80, 34) };
-            _cancelBtn = new RoundedButton { Text = "取消排队", Visible = false, Location = new Point(PadX + 374, 608), Size = new Size(96, 34) };
+            _applyBtn = new RoundedButton { Text = "应用并重启生效", Primary = true, Location = new Point(PadX, 532), Size = new Size(168, 34) };
+            _genBtn = new RoundedButton { Text = "仅生成", Location = new Point(PadX + 180, 532), Size = new Size(90, 34) };
+            _rollbackBtn = new RoundedButton { Text = "回滚", Location = new Point(PadX + 282, 532), Size = new Size(80, 34) };
+            _cancelBtn = new RoundedButton { Text = "取消排队", Visible = false, Location = new Point(PadX + 374, 532), Size = new Size(96, 34) };
 
             _applyBtn.Click += async delegate (object s, EventArgs e) { await RunApply(false); };
             _genBtn.Click += async delegate (object s, EventArgs e) { await RunApply(true); };
             _rollbackBtn.Click += async delegate (object s, EventArgs e) { await RunRollback(); };
             _cancelBtn.Click += async delegate (object s, EventArgs e) { await RunCancel(); };
 
-            Controls.Add(_applyBtn);
-            Controls.Add(_genBtn);
-            Controls.Add(_rollbackBtn);
-            Controls.Add(_cancelBtn);
+            _pages[0].Controls.Add(_applyBtn);
+            _pages[0].Controls.Add(_genBtn);
+            _pages[0].Controls.Add(_rollbackBtn);
+            _pages[0].Controls.Add(_cancelBtn);
 
             _status = new Label
             {
@@ -301,10 +348,10 @@ namespace WinFontSwap
                 Tag = "dim",
                 Font = new Font("Segoe UI", 9f),
                 AutoSize = false,
-                Location = new Point(PadX, 648),
+                Location = new Point(PadX, 572),
                 Size = new Size(InnerW, 22)
             };
-            Controls.Add(_status);
+            _pages[0].Controls.Add(_status);
         }
 
         // ---------------- 行为 ----------------
