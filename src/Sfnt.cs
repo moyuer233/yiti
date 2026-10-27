@@ -362,6 +362,19 @@ namespace WinFontSwap
             return RebuildName(name.Data, spec);
         }
 
+        /// <summary>是不是可变字体（带 fvar 表）。</summary>
+        public static bool IsVariable(byte[] source, int faceIndex)
+        {
+            try
+            {
+                var faces = FaceOffsets(source);
+                if (faceIndex < 0 || faceIndex >= faces.Length) return false;
+                var tables = ReadTables(source, faces[faceIndex]);
+                return tables.Find(t => t.Tag == "fvar") != null;
+            }
+            catch { return false; }
+        }
+
         public static byte[] BuildCollection(byte[] source, int faceIndex, NameSpec[] specs)
         {
             var faces = FaceOffsets(source);
@@ -374,8 +387,13 @@ namespace WinFontSwap
                 throw new InvalidDataException("暂不支持 CFF(.otf) 轮廓，请选择 TrueType(.ttf/.ttc) 字体");
             if (baseTables.Find(t => t.Tag == "glyf") == null)
                 throw new InvalidDataException("字体缺少 glyf 表，不是 TrueType 轮廓");
-            if (baseTables.Find(t => t.Tag == "fvar") != null)
-                throw new InvalidDataException("这是可变字体（Variable Font），暂不支持；请换同款的静态字重文件");
+            // 可变字体：去掉变体轴相关表，退化成「默认实例」的静态字体（默认字重通常是 400）
+            string[] variation = { "fvar", "gvar", "HVAR", "VVAR", "MVAR", "avar", "cvar", "STAT" };
+            foreach (var tag in variation)
+            {
+                var t = baseTables.Find(x => x.Tag == tag);
+                if (t != null) baseTables.Remove(t);
+            }
 
             // 第一个 face 带完整表；其余 face 只带自己的 name 表，别的表指向第一个 face（TTC 允许共享）
             var firstTables = new List<SfntTable>(baseTables.Count);

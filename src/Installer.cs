@@ -436,6 +436,8 @@ namespace WinFontSwap
             {
                 var specs = SpecsFor(src.TargetFile);
                 log("生成 " + src.TargetFile + "（源：" + Path.GetFileName(src.SourcePath) + "）");
+                if (Sfnt.IsVariable(src.Data, src.FaceIndex))
+                    log("  注意：源是可变字体，会取它的默认字重（通常 400，相当于常规体）");
                 var data = Sfnt.BuildCollection(src.Data, src.FaceIndex, specs);
                 string err;
                 if (!Sfnt.Verify(data, specs, out err))
@@ -502,6 +504,10 @@ namespace WinFontSwap
             state["stamp"] = stamp;
             var applied = new List<string>();
             var pairs = new List<string[]>();
+            // 安全副本放 orig\ 子目录；backup\<文件> 这个路径要留给「重启时把原文件改名搬进来」，
+            // 那个目标路径必须不存在（MOVEFILE_DELAY_UNTIL_REBOOT 不能覆盖已存在的目标）
+            var safetyDir = Path.Combine(result.BackupDir, "orig");
+            Directory.CreateDirectory(safetyDir);
 
             foreach (var path in build.BuiltFiles)
             {
@@ -511,7 +517,8 @@ namespace WinFontSwap
 
                 log("备份 " + file);
                 var backup = Path.Combine(result.BackupDir, file);
-                File.Copy(target, backup, true);
+                File.Copy(target, Path.Combine(safetyDir, file), true);
+                if (File.Exists(backup)) File.Delete(backup);   // 目标必须不存在，否则重启时改名会失败
 
                 string sddl = TakeControl(target, log);
                 GrantSystem(target);

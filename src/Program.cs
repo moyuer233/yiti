@@ -6,6 +6,38 @@ namespace WinFontSwap
 {
     static class Program
     {
+        /// <summary>命令行把某个字体应用到三个目标（内部用，方便无人值守测试）。</summary>
+        static int ApplyCli(string fontPath)
+        {
+            try
+            {
+                var entries = FontLibrary.ReadFile(fontPath);
+                if (entries.Count == 0) { Console.WriteLine("读不出字体：" + fontPath); return 2; }
+                var e = entries[0];
+                var data = File.ReadAllBytes(fontPath);
+                var list = new System.Collections.Generic.List<FontSource>();
+                foreach (var target in Installer.TargetFiles)
+                    list.Add(new FontSource
+                    {
+                        TargetFile = target,
+                        SourcePath = fontPath,
+                        FaceIndex = e.FaceIndex,
+                        Family = e.Family,
+                        Subfamily = e.Subfamily,
+                        Data = data
+                    });
+                var res = Installer.Apply(list, delegate (string m) { Console.WriteLine(m); }, false);
+                Console.WriteLine("queued=" + res.Queued);
+                Console.WriteLine("backup=" + res.BackupDir);
+                return res.Queued ? 0 : 3;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("失败：" + ex.Message);
+                return 1;
+            }
+        }
+
         [STAThread]
         static int Main(string[] args)
         {
@@ -16,6 +48,7 @@ namespace WinFontSwap
                 if (args[0] == "--acltest") return SelfTest.AclTest();
                 if (args[0] == "--applytest") return SelfTest.ApplyTest();
                 if (args[0] == "--rendertest") return SelfTest.RenderTest();
+                if (args[0] == "--apply" && args.Length >= 2) return ApplyCli(args[1]);
             }
 
             string demo = null;
