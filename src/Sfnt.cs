@@ -377,6 +377,12 @@ namespace WinFontSwap
 
         public static byte[] BuildCollection(byte[] source, int faceIndex, NameSpec[] specs)
         {
+            return BuildCollection(source, faceIndex, specs, false);
+        }
+
+        /// <summary>多 face TTC；keepVariation=true 时保留 fvar/gvar（各 face 共享同一份表）。</summary>
+        public static byte[] BuildCollection(byte[] source, int faceIndex, NameSpec[] specs, bool keepVariation)
+        {
             var faces = FaceOffsets(source);
             if (faceIndex < 0 || faceIndex >= faces.Length) throw new InvalidDataException("face 序号越界");
             int faceOff = faces[faceIndex];
@@ -387,12 +393,15 @@ namespace WinFontSwap
                 throw new InvalidDataException("暂不支持 CFF(.otf) 轮廓，请选择 TrueType(.ttf/.ttc) 字体");
             if (baseTables.Find(t => t.Tag == "glyf") == null)
                 throw new InvalidDataException("字体缺少 glyf 表，不是 TrueType 轮廓");
-            // 可变字体：去掉变体轴相关表，退化成「默认实例」的静态字体（默认字重通常是 400）
-            string[] variation = { "fvar", "gvar", "HVAR", "VVAR", "MVAR", "avar", "cvar", "STAT" };
-            foreach (var tag in variation)
+            // 可变字体：默认去掉变体轴相关表（退化成默认实例）；keepVariation 时保留
+            if (!keepVariation)
             {
-                var t = baseTables.Find(x => x.Tag == tag);
-                if (t != null) baseTables.Remove(t);
+                string[] variation = { "fvar", "gvar", "HVAR", "VVAR", "MVAR", "avar", "cvar", "STAT" };
+                foreach (var tag in variation)
+                {
+                    var t = baseTables.Find(x => x.Tag == tag);
+                    if (t != null) baseTables.Remove(t);
+                }
             }
 
             // 第一个 face 带完整表；其余 face 只带自己的 name 表，别的表指向第一个 face（TTC 允许共享）

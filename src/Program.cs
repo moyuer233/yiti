@@ -6,6 +6,42 @@ namespace WinFontSwap
 {
     static class Program
     {
+        /// <summary>生成 Segoe UI Variable 的多 face TTC（基础 + Text/Display/Small）：--seguivars src out</summary>
+        static int SegUIVarsCli(string srcPath, string outPath)
+        {
+            try
+            {
+                var data = File.ReadAllBytes(srcPath);
+                var entries = FontLibrary.ReadFile(srcPath);
+                int faceIndex = entries.Count > 0 ? entries[0].FaceIndex : 0;
+                string[] names = { "Segoe UI Variable", "Segoe UI Variable Text", "Segoe UI Variable Display", "Segoe UI Variable Small" };
+                var specs = new NameSpec[names.Length];
+                for (int i = 0; i < names.Length; i++)
+                {
+                    specs[i] = new NameSpec
+                    {
+                        Family = names[i],
+                        FamilyTypo = names[i],
+                        Subfamily = "Regular",
+                        SubfamilyTypo = "Regular",
+                        FullName = names[i],
+                        PostScript = names[i].Replace(" ", "")
+                    };
+                }
+                var built = Sfnt.BuildCollection(data, faceIndex, specs, true);
+                var dir = Path.GetDirectoryName(outPath);
+                if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+                File.WriteAllBytes(outPath, built);
+                Console.WriteLine("generated TTC " + outPath + "  " + built.Length + " bytes  faces=" + specs.Length);
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("seguivars 失败：" + ex.Message);
+                return 1;
+            }
+        }
+
         /// <summary>命令行把字体应用到三个目标（常规 / 粗体 / 细体，路径少于 3 个时后面沿用第一个）。</summary>
         static int ApplyCli(string[] fontPaths) { return ApplyCli(fontPaths, -1); }
 
@@ -85,6 +121,7 @@ namespace WinFontSwap
                 if (args[0] == "--acltest") return SelfTest.AclTest();
                 if (args[0] == "--applytest") return SelfTest.ApplyTest();
                 if (args[0] == "--rendertest") return SelfTest.RenderTest();
+                if (args[0] == "--seguivars" && args.Length >= 3) return SegUIVarsCli(args[1], args[2]);
                 if (args[0] == "--gen" && args.Length >= 6)
                 {
                     var g = new string[args.Length - 1];
