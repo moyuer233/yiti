@@ -11,14 +11,15 @@ namespace WinFontSwap
     {
         public const string RegPath = @"Control Panel\Desktop\WindowMetrics";
 
+        // 「标题栏」(CaptionFont) 不做：它被现代应用忽略，改它只会让旧程序不一致。
         public static readonly string[] Keys =
         {
-            "CaptionFont", "SmCaptionFont", "MenuFont", "MessageFont", "StatusFont", "IconFont"
+            "SmCaptionFont", "MenuFont", "MessageFont", "StatusFont", "IconFont"
         };
 
         public static readonly string[] Names =
         {
-            "标题栏", "小标题栏", "菜单", "消息框", "状态栏", "图标"
+            "小标题栏", "菜单", "消息框", "状态栏", "图标"
         };
 
         public sealed class Info

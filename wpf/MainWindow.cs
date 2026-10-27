@@ -233,10 +233,10 @@ namespace WinFontSwap.Wpf
         TextBlock[] _srcText = new TextBlock[5];
         TextBlock[] _metaText = new TextBlock[5];
         ToggleButton[] _tog = new ToggleButton[5];
-        TextBlock[] _winCur = new TextBlock[6];
-        TextBox[] _winSize = new TextBox[6];
-        Win32Fonts.Info[] _winInfo = new Win32Fonts.Info[6];
-        string[] _winFace = new string[6];
+        TextBlock[] _winCur = new TextBlock[Win32Fonts.Names.Length];
+        TextBox[] _winSize = new TextBox[Win32Fonts.Names.Length];
+        Win32Fonts.Info[] _winInfo = new Win32Fonts.Info[Win32Fonts.Names.Length];
+        string[] _winFace = new string[Win32Fonts.Names.Length];
         ToggleButton _advCache, _advUserFonts;
 
 
@@ -538,10 +538,6 @@ namespace WinFontSwap.Wpf
                 _metaText[idx] = meta;
 
 
-                var b = T.Btn2("指定", false, 13);
-                b.Margin = new Thickness(0, 0, 12, 0);
-                b.Click += delegate { PickSlot(idx); };
-                right.Children.Add(b);
 
                 var sw = T.Switch(_on[i]);
                 sw.Click += delegate { _on[idx] = sw.IsChecked == true; };
@@ -563,7 +559,7 @@ namespace WinFontSwap.Wpf
             fbBtn.Click += delegate { PointFallbackToCurrent(); };
             stack.Children.Add(T.Row("\uE8F1", "中文回退", "缺字时优先用当前字体补", fbBtn, out fbDesc));
 
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < Win32Fonts.Names.Length; i++)
             {
                 int idx = i;
                 var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
@@ -582,9 +578,6 @@ namespace WinFontSwap.Wpf
                 right.Children.Add(size);
                 _winSize[i] = size;
 
-                var b = T.Btn2("选择", false, 12);
-                b.Click += delegate { PickWin32Face(idx); };
-                right.Children.Add(b);
 
 
                 TextBlock desc;
@@ -927,7 +920,7 @@ namespace WinFontSwap.Wpf
             try
             {
                 var info = Win32Fonts.ReadAll();
-                for (int i = 0; i < 6 && i < info.Count; i++)
+                for (int i = 0; i < Win32Fonts.Names.Length && i < info.Count; i++)
                 {
                     _winInfo[i] = info[i];
                     _winFace[i] = info[i].Face;
@@ -957,7 +950,7 @@ namespace WinFontSwap.Wpf
         {
             var src = _slots[0];
             if (src == null) { SetStatus("先选一个字体。", true); return; }
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < Win32Fonts.Names.Length; i++)
             {
                 _winFace[i] = src.Family;
                 _winCur[i].Text = src.Family + "   " + _winSize[i].Text + " pt";
@@ -971,7 +964,7 @@ namespace WinFontSwap.Wpf
             {
                 Win32Fonts.BackupOnce();
                 int done = 0;
-                for (int i = 0; i < 6; i++)
+                for (int i = 0; i < Win32Fonts.Names.Length; i++)
                 {
                     if (string.IsNullOrEmpty(_winFace[i])) continue;
                     double pt;
