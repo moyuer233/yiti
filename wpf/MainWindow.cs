@@ -565,10 +565,6 @@ namespace WinFontSwap.Wpf
 
             stack.Children.Add(T.SectionHeader("系统元素", false));
 
-            TextBlock fbDesc;
-            var fbBtn = T.Btn2("指向当前字体", false, 13);
-            fbBtn.Click += delegate { PointFallbackToCurrent(); };
-            stack.Children.Add(T.Row("\uE8F1", "中文回退", "缺字时优先用当前字体补", fbBtn, out fbDesc));
 
             for (int i = 0; i < Win32Fonts.Names.Length; i++)
             {
@@ -644,98 +640,6 @@ namespace WinFontSwap.Wpf
             row.Children.Add(sw);
             toggle = sw;
             return row;
-        }
-
-        UIElement BuildFontLinkPage()
-        {
-            var root = new Grid();
-            root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            var stack = new StackPanel();
-            stack.Children.Add(T.Label("中文字体回退", 28, T.Text, true));
-            var sub1 = T.Label("字体缺字时按这里的顺序找替代字体。", 12, T.TextDim, false);
-            sub1.Margin = new Thickness(0, 6, 0, 0);
-            stack.Children.Add(sub1);
-            stack.Children.Add(new Border { Height = 16 });
-
-            var card = T.CardBox();
-            var inner = new StackPanel();
-            var keys = new ListBox { Height = 150, FontSize = 13, Background = T.B(Color.FromRgb(0x26, 0x26, 0x2B)), BorderThickness = new Thickness(0), Foreground = T.Text, Margin = new Thickness(0, 0, 0, 10) };
-            foreach (var k in FontLink.Keys()) keys.Items.Add(k);
-            var box = new TextBox
-            {
-                Height = 140,
-                AcceptsReturn = true,
-                FontSize = 13,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                Background = T.B(Color.FromRgb(0x26, 0x26, 0x2B)),
-                Foreground = T.Text,
-                BorderThickness = new Thickness(0),
-                Padding = new Thickness(8),
-                TextWrapping = TextWrapping.NoWrap
-            };
-            var bar = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 10, 0, 0) };
-            var save = T.Btn2("保存", true, 13);
-            save.Margin = new Thickness(0, 0, 8, 0);
-            var reload = T.Btn2("重新读取", false, 13);
-            reload.Margin = new Thickness(0, 0, 8, 0);
-            var del = T.Btn2("删除该键", false, 13);
-            bar.Children.Add(save);
-            bar.Children.Add(reload);
-            bar.Children.Add(del);
-
-            var status = T.Label("", 12, T.TextDim, false);
-            status.Margin = new Thickness(0, 8, 0, 0);
-
-            Action load = delegate
-            {
-                var item = keys.SelectedItem as string;
-                if (item == null) return;
-                var vals = FontLink.Read(item);
-                box.Text = string.Join("\r\n", vals);
-            };
-            keys.SelectionChanged += delegate { load(); };
-            reload.Click += delegate { load(); };
-            save.Click += delegate
-            {
-                var item = keys.SelectedItem as string;
-                if (item == null) { status.Text = "先选一个字体键"; return; }
-                try
-                {
-                    FontLink.WriteAll(item, box.Text);
-                    status.Text = "已保存 " + item + "，注销或重启后生效";
-                }
-                catch (Exception ex) { status.Text = "保存失败：" + ex.Message; }
-            };
-            del.Click += delegate
-            {
-                var item = keys.SelectedItem as string;
-                if (item == null) { status.Text = "先选一个字体键"; return; }
-                try
-                {
-                    FontLink.Write(item, new string[0]);
-                    status.Text = "已删除 " + item;
-                }
-                catch (Exception ex) { status.Text = "删除失败：" + ex.Message; }
-            };
-
-            var kLabel = T.Label("字体键", 12, T.TextDim, false);
-            kLabel.Margin = new Thickness(0, 0, 0, 6);
-            inner.Children.Add(kLabel);
-            inner.Children.Add(keys);
-            var vLabel = T.Label("替代顺序（每行一个「文件名,字体名」）", 12, T.TextDim, false);
-            vLabel.Margin = new Thickness(0, 12, 0, 6);
-            inner.Children.Add(vLabel);
-            inner.Children.Add(box);
-            card.Child = inner;
-            stack.Children.Add(card);
-            stack.Children.Add(bar);
-            stack.Children.Add(status);
-
-            var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = stack };
-            Grid.SetRow(scroll, 0);
-            root.Children.Add(scroll);
-            return root;
         }
 
         /// <summary>高级页：独立成页（用户要求），放调试与单独还原入口。</summary>
@@ -969,19 +873,6 @@ namespace WinFontSwap.Wpf
             catch { }
         }
 
-        void PointFallbackToCurrent()
-        {
-            var src = _slots[0];
-            if (src == null) { SetStatus("先选一个字体。", true); return; }
-            try
-            {
-                var entry = src.FileName + "," + src.Family;
-                FontLink.Prepend("Segoe UI", entry);
-                FontLink.Prepend("Microsoft YaHei", entry);
-                SetStatus("中文回退已指向 " + src.Family + "，注销后生效。", false);
-            }
-            catch (Exception ex) { SetStatus("写回退失败：" + ex.Message, true); }
-        }
 
         void FollowCurrentFont()
         {
