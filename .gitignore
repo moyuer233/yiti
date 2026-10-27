@@ -6,3 +6,4 @@ obj/
 !screenshot.png
 _*.txt
 _*.ps1
+.edithere/
