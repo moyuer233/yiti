@@ -212,9 +212,7 @@ namespace WinFontSwap.Wpf
         Win32Fonts.Info[] _winInfo = new Win32Fonts.Info[6];
         string[] _winFace = new string[6];
         ToggleButton _advCache, _advUserFonts;
-        ToggleButton _advPerSlot;
-        readonly List<Button> _slotPickButtons = new List<Button>();
-        readonly List<Button> _winPickButtons = new List<Button>();
+
 
         public MainWindow()
         {
@@ -333,7 +331,6 @@ namespace WinFontSwap.Wpf
                 ItemContainerStyle = NavStyle()
             };
             _nav.Items.Add(NavItem("\uE8D2", "字体替换"));
-            _nav.Items.Add(NavItem("\uE8F1", "中文回退"));
             _nav.Items.Add(NavItem("\uE8A5", "预设"));
             _nav.SelectionChanged += delegate { ShowPage(); };
             rail.Children.Add(_nav);
@@ -460,7 +457,6 @@ namespace WinFontSwap.Wpf
         {
             int i = _nav.SelectedIndex;
             if (i == 0) _content.Content = BuildFontPage();
-            else if (i == 1) _content.Content = BuildFontLinkPage();
             else _content.Content = BuildPresetPage();
         }
 
@@ -507,12 +503,11 @@ namespace WinFontSwap.Wpf
                 right.Children.Add(meta);
                 _metaText[idx] = meta;
 
+
                 var b = T.Btn2("指定", false, 13);
                 b.Margin = new Thickness(0, 0, 12, 0);
-                b.Visibility = Visibility.Collapsed;   // 默认跟主行同一字体，需要时在「高级」里打开
                 b.Click += delegate { PickSlot(idx); };
                 right.Children.Add(b);
-                _slotPickButtons.Add(b);
 
                 var sw = T.Switch(_on[i]);
                 sw.Click += delegate { _on[idx] = sw.IsChecked == true; };
@@ -536,6 +531,11 @@ namespace WinFontSwap.Wpf
             winBtns.Children.Add(winRestore);
             stack.Children.Add(T.Row("\uE713", "系统元素", "把标题栏、菜单、状态栏一次性设成当前字体", winBtns, out winDesc));
 
+            TextBlock fbDesc;
+            var fbBtn = T.Btn2("指向当前字体", false, 13);
+            fbBtn.Click += delegate { PointFallbackToCurrent(); };
+            stack.Children.Add(T.Row("\uE8F1", "中文回退", "缺字时优先用当前字体补", fbBtn, out fbDesc));
+
             for (int i = 0; i < 6; i++)
             {
                 int idx = i;
@@ -555,10 +555,9 @@ namespace WinFontSwap.Wpf
                 _winSize[i] = size;
 
                 var b = T.Btn2("选择", false, 12);
-                b.Visibility = Visibility.Collapsed;
                 b.Click += delegate { PickWin32Face(idx); };
                 right.Children.Add(b);
-                _winPickButtons.Add(b);
+
 
                 TextBlock desc;
                 stack.Children.Add(T.Row("\uE8D2", Win32Fonts.Names[i], "读取中", right, out desc));
@@ -577,24 +576,7 @@ namespace WinFontSwap.Wpf
             _advUserFonts = userSw;
             stack.Children.Add(T.Row("\uE74D", "写入时清用户级同名字体", "用户级字体优先级更高，会挡住替换", userSw, out advDesc2));
 
-            TextBlock advDescPer;
-            var perSw = T.Switch(false);
-            perSw.Click += delegate
-            {
-                bool on = perSw.IsChecked == true;
-                foreach (var b in _slotPickButtons) b.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
-            };
-            _advPerSlot = perSw;
-            stack.Children.Add(T.Row("\uE8D3", "分别指定每个字重", "打开后每行出现「指定」，可给粗体/细体单独挑字体", perSw, out advDescPer));
 
-            TextBlock advDescWin;
-            var winPerSw = T.Switch(false);
-            winPerSw.Click += delegate
-            {
-                bool on = winPerSw.IsChecked == true;
-                foreach (var b in _winPickButtons) b.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
-            };
-            stack.Children.Add(T.Row("\uE790", "逐项指定系统元素", "打开后每个元素出现「选择」，可单独换某个元素", winPerSw, out advDescWin));
 
             TextBlock advDescGen;
             var genBtn = T.Btn2("生成", false, 13);
@@ -926,6 +908,20 @@ namespace WinFontSwap.Wpf
                 }
             }
             catch { }
+        }
+
+        void PointFallbackToCurrent()
+        {
+            var src = _slots[0];
+            if (src == null) { SetStatus("先选一个字体。", true); return; }
+            try
+            {
+                var entry = src.FileName + "," + src.Family;
+                FontLink.Prepend("Segoe UI", entry);
+                FontLink.Prepend("Microsoft YaHei", entry);
+                SetStatus("中文回退已指向 " + src.Family + "，注销后生效。", false);
+            }
+            catch (Exception ex) { SetStatus("写回退失败：" + ex.Message, true); }
         }
 
         void FollowCurrentFont()

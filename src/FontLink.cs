@@ -54,6 +54,21 @@ namespace WinFontSwap
             return new string[0];
         }
 
+        /// <summary>把一条「文件,字体名」插到回退链最前面（已存在则不重复）。</summary>
+        public static void Prepend(string key, string entry)
+        {
+            var cur = Read(key);
+            var list = new List<string>();
+            list.Add(entry);
+            foreach (var v in cur)
+            {
+                if (string.IsNullOrEmpty(v)) continue;
+                if (string.Equals(v.Trim(), entry, StringComparison.OrdinalIgnoreCase)) continue;
+                list.Add(v);
+            }
+            Write(key, list.ToArray());
+        }
+
         public static void Write(string key, string[] values)
         {
             using (var k = Registry.CurrentUser.CreateSubKey(RegPath))
