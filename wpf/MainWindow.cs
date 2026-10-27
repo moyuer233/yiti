@@ -599,6 +599,11 @@ namespace WinFontSwap.Wpf
             genBtn.Click += delegate { RunApply(true); };
             stack.Children.Add(T.Row("\uE8A5", "只生成不写入", "产物放到 stage 目录，不动系统字体（调试用）", genBtn, out advDescGen));
 
+            TextBlock advDescFont;
+            var fontBtn = T.Btn2("还原", false, 13);
+            fontBtn.Click += delegate { RunRollbackFontsOnly(); };
+            stack.Children.Add(T.Row("\uE777", "只还原字体文件", "从最近备份搬回 msyh/SegUIVar/segoeui", fontBtn, out advDescFont));
+
             TextBlock advDesc3;
             var rb = T.Btn2("恢复", false, 13);
             rb.Click += delegate
@@ -606,7 +611,7 @@ namespace WinFontSwap.Wpf
                 try { SetStatus(Installer.RestoreUserFonts(), false); }
                 catch (Exception ex) { SetStatus("恢复失败：" + ex.Message, true); }
             };
-            stack.Children.Add(T.Row("\uE777", "恢复用户级字体注册", "导入最近一次的备份", rb, out advDesc3));
+            stack.Children.Add(T.Row("\uE777", "只还原用户级注册", "导入最近一次的 HKCU 字体注册备份", rb, out advDesc3));
 
             scroll.Content = stack;
             Grid.SetRow(scroll, 0);
@@ -618,8 +623,8 @@ namespace WinFontSwap.Wpf
             var apply = T.Btn2("应用", true, 13);
             apply.Margin = new Thickness(0, 0, 10, 0);
             apply.Click += delegate { RunApply(false); };
-            var rollback = T.Btn2("回滚", false, 13);
-            rollback.Click += delegate { RunRollback(); };
+            var rollback = T.Btn2("全部回滚", false, 13);
+            rollback.Click += delegate { RunRollbackAll(); };
             bar.Children.Add(apply);
             bar.Children.Add(rollback);
             bottom.Children.Add(bar);
@@ -1004,6 +1009,34 @@ namespace WinFontSwap.Wpf
                 RefreshTargets();
             }
             catch (Exception ex) { SetStatus("失败：" + ex.Message, true); }
+        }
+
+        void RunRollbackAll()
+        {
+            try
+            {
+                if (MessageBox.Show(this, "把字体文件、用户级字体注册都还原到替换前？\r\n重启后生效。", "全部回滚",
+                        MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+                string log1 = "";
+                if (Installer.LatestBackup() != null) Installer.Rollback(delegate (string m) { log1 += m + "; "; });
+                else log1 = "没有字体备份; ";
+                string log2 = Installer.RestoreUserFonts();
+                SetStatus("已全部回滚：" + log1 + log2 + " 重启后恢复。", false);
+                RefreshTargets();
+            }
+            catch (Exception ex) { SetStatus("回滚失败：" + ex.Message, true); }
+        }
+
+        void RunRollbackFontsOnly()
+        {
+            try
+            {
+                if (Installer.LatestBackup() == null) { SetStatus("没有可回滚的备份。", true); return; }
+                Installer.Rollback(delegate (string m) { });
+                SetStatus("已还原字体文件，重启后恢复。", false);
+                RefreshTargets();
+            }
+            catch (Exception ex) { SetStatus("回滚失败：" + ex.Message, true); }
         }
 
         void RunRollback()
