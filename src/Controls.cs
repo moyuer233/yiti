@@ -27,6 +27,9 @@ namespace WinFontSwap
         {
             var card = c.Parent as CardPanel;
             if (card != null) return card.Emphasis ? Theme.Current.SurfaceAlt : Theme.Current.Surface;
+            var form = c.Parent as Form;
+            if (form != null) return form.BackColor;   // 弹窗不透明，不能拿主窗的透明色键来擦
+            if (c.Parent != null && (c.Parent.Tag as string) == "surface") return Theme.Current.Surface;
             return Theme.BackPaint;
         }
 

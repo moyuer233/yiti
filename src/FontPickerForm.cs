@@ -17,7 +17,6 @@ namespace WinFontSwap
         readonly TextBox _search;
         readonly ListBox _list;
         readonly Label _hint;
-        readonly PreviewBox _preview;
         readonly RoundedButton _ok;
         readonly RoundedButton _cancel;
         readonly List<FamilyInfo> _all = new List<FamilyInfo>();
@@ -81,10 +80,10 @@ namespace WinFontSwap
             _list = new ListBox
             {
                 Location = new Point(20, 106),
-                Size = new Size(480, 336),
+                Size = new Size(480, 430),
                 BackColor = p.Surface,
                 ForeColor = p.Text,
-                BorderStyle = BorderStyle.FixedSingle,
+                BorderStyle = BorderStyle.None,
                 DrawMode = DrawMode.OwnerDrawFixed,
                 ItemHeight = 38,
                 IntegralHeight = false
@@ -92,13 +91,6 @@ namespace WinFontSwap
             _list.DrawItem += DrawItem;
             _list.SelectedIndexChanged += delegate { UpdatePreview(); };
             _list.DoubleClick += delegate { Accept(); };
-
-            _preview = new PreviewBox
-            {
-                Location = new Point(20, 452),
-                Size = new Size(480, 92),
-                Placeholder = "选中一个字体，这里会用它预览"
-            };
 
             _ok = new RoundedButton { Text = "确定", Primary = true, Location = new Point(308, 556), Size = new Size(92, 34), Enabled = false };
             _cancel = new RoundedButton { Text = "取消", Location = new Point(408, 556), Size = new Size(92, 34) };
@@ -109,7 +101,6 @@ namespace WinFontSwap
             Controls.Add(_hint);
             Controls.Add(searchHost);
             Controls.Add(_list);
-            Controls.Add(_preview);
             Controls.Add(_ok);
             Controls.Add(_cancel);
 
@@ -120,6 +111,11 @@ namespace WinFontSwap
                 if (_list.Items.Count > 0) _list.SelectedIndex = 0;
                 _search.Focus();
             };
+        }
+
+        protected override void OnPaintBackground(PaintEventArgs e)
+        {
+            e.Graphics.Clear(Theme.Current.Bg);
         }
 
         [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
@@ -201,39 +197,20 @@ namespace WinFontSwap
                 _fontCache[info.Name] = f;
             }
 
-            // 名字用系统 UI 字体画（符号字体的家族名直接用它自己画会变成一堆符号）
-            var nameRect = new Rectangle(e.Bounds.X + 12, e.Bounds.Y + 2, e.Bounds.Width - 220, 22);
-            TextRenderer.DrawText(e.Graphics, info.Name, new Font("Segoe UI", 10f), nameRect,
-                selected ? p.Accent : p.Text,
+            // 家族名直接用该字体自己渲染（用户更喜欢这个设计）
+            var nameRect = new Rectangle(e.Bounds.X + 12, e.Bounds.Y + 2, e.Bounds.Width - 24, 22);
+            TextRenderer.DrawText(e.Graphics, info.Name, f, nameRect, selected ? p.Accent : p.Text,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
-            var subRect = new Rectangle(e.Bounds.X + 12, e.Bounds.Y + 21, e.Bounds.Width - 220, 14);
+            var subRect = new Rectangle(e.Bounds.X + 12, e.Bounds.Y + 21, e.Bounds.Width - 24, 14);
             using (var f2 = new Font("Segoe UI", 8f))
                 TextRenderer.DrawText(e.Graphics, info.Entries.Count + " 个字重", f2, subRect, p.TextDim,
                     TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
-
-            // 右侧用它自己的字体画一小段样张
-            var sampleRect = new Rectangle(e.Bounds.Right - 202, e.Bounds.Y + 2, 190, 32);
-            TextRenderer.DrawText(e.Graphics, "永 Aa 123", f, sampleRect, p.TextDim,
-                TextFormatFlags.Right | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
         }
 
         void UpdatePreview()
         {
-            var info = _list.SelectedItem as FamilyInfo;
-            _ok.Enabled = info != null;
-            if (info == null) { _preview.Family = null; _preview.Invalidate(); return; }
-
-            try
-            {
-                var entry = FontLibrary.Match(info.Entries, 400);
-                if (entry == null) entry = info.Entries[0];
-                var pfc = new System.Drawing.Text.PrivateFontCollection();
-                pfc.AddFontFile(entry.Path);
-                _preview.Family = pfc.Families.Length > 0 ? pfc.Families[0] : null;
-            }
-            catch { _preview.Family = null; }
-            _preview.Invalidate();
+            _ok.Enabled = _list.SelectedItem != null;
         }
 
         void Accept()
