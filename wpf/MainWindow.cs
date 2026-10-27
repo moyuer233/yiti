@@ -187,6 +187,19 @@ namespace WinFontSwap.Wpf
             return tb;
         }
 
+        /// <summary>程序化改 IsChecked 后重刷开关外观（Track 颜色 + 圆点位置）。</summary>
+        public static void RefreshToggleVisual(ToggleButton tg)
+        {
+            if (tg == null) return;
+            var tr = tg.Template == null ? null : (Border)tg.Template.FindName("track", tg);
+            var kn = tg.Template == null ? null : (System.Windows.Shapes.Ellipse)tg.Template.FindName("knob", tg);
+            if (tr == null || kn == null) return;
+            bool on = tg.IsChecked == true;
+            tr.Background = on ? Accent : TrackOff;
+            kn.HorizontalAlignment = on ? HorizontalAlignment.Right : HorizontalAlignment.Left;
+            kn.Fill = on ? B(Color.FromRgb(0x10, 0x10, 0x12)) : B(Color.FromRgb(0xF0, 0xF0, 0xF0));
+        }
+
         public static Border CardBox()
         {
             return new Border
@@ -615,9 +628,13 @@ namespace WinFontSwap.Wpf
             apply.Margin = new Thickness(0, 0, 10, 0);
             apply.Click += delegate { RunApply(false); };
             var rollback = T.Btn2("全部回滚", false, 13);
+            rollback.Margin = new Thickness(0, 0, 10, 0);
             rollback.Click += delegate { RunRollbackAll(); };
+            var defaults = T.Btn2("默认值", false, 13);
+            defaults.Click += delegate { ResetToDefaults(); };
             bar.Children.Add(apply);
             bar.Children.Add(rollback);
+            bar.Children.Add(defaults);
             bottom.Children.Add(bar);
             _status = T.Label("", 12, T.TextDim, false);
             _status.Margin = new Thickness(0, 8, 0, 0);
@@ -976,6 +993,20 @@ namespace WinFontSwap.Wpf
                 RefreshTargets();
             }
             catch (Exception ex) { SetStatus("失败：" + ex.Message, true); }
+        }
+
+        /// <summary>把界面复位到刚打开的样子：未选择字体、开关全开、系统元素读回系统当前值。不写系统。</summary>
+        void ResetToDefaults()
+        {
+            for (int i = 0; i < _slots.Length; i++) _slots[i] = null;
+            for (int i = 0; i < _on.Length; i++)
+            {
+                _on[i] = true;
+                if (_tog[i] != null) { _tog[i].IsChecked = true; T.RefreshToggleVisual(_tog[i]); }
+            }
+            UpdateSlotLabels();
+            try { LoadWin32(); } catch { }
+            SetStatus("已恢复默认值（未写入系统）", false);
         }
 
         void RunRollbackAll()
