@@ -27,6 +27,7 @@ namespace WinFontSwap
         {
             var card = c.Parent as CardPanel;
             if (card != null) return card.Emphasis ? Theme.Current.SurfaceAlt : Theme.Current.Surface;
+            if (c.Parent != null && (c.Parent.Tag as string) == "surface") return Theme.Current.Surface;
             return Theme.BackPaint;
         }
 

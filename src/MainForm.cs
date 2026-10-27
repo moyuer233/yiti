@@ -11,12 +11,13 @@ namespace WinFontSwap
 {
     public sealed class MainForm : Form
     {
-        const int W = 900, H = 700, PadX = 24;
+        const int W = 900, H = 600, PadX = 24, TitleH = 36;
         const int InnerW = W - PadX * 2;
 
         string _demo;
 
-        Label _title, _subtitle;
+        Panel _titleBar, _content;
+
         RoundedButton _pickBtn;
         Label _pickedLabel;
         Label[] _slotLabels = new Label[3];
@@ -38,9 +39,9 @@ namespace WinFontSwap
         {
             _demo = demoFont;
             Text = "字体替换";
-            FormBorderStyle = FormBorderStyle.FixedSingle;
+            FormBorderStyle = FormBorderStyle.None;
             MaximizeBox = false;
-            ClientSize = new Size(W, H);
+            ClientSize = new Size(W, H + TitleH);
             StartPosition = FormStartPosition.CenterScreen;
             TransparencyKey = Theme.KeyColor;
             BackColor = Theme.BackPaint;
@@ -50,7 +51,10 @@ namespace WinFontSwap
             SetStyle(ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer |
                      ControlStyles.AllPaintingInWmPaint, true);
 
-            BuildHeader();
+            BuildTitleBar();
+            _content = new Panel { Location = new Point(0, TitleH), Size = new Size(W, H), Tag = "glass" };
+            Controls.Add(_content);
+
             BuildFontCard();
             BuildPreviewCard();
             BuildTargetCard();
@@ -116,27 +120,45 @@ namespace WinFontSwap
             using (var b = new SolidBrush(Theme.BackPaint)) e.Graphics.FillRectangle(b, ClientRectangle);
         }
 
-        void BuildHeader()
+        [DllImport("user32.dll")]
+        static extern bool ReleaseCapture();
+
+        [DllImport("user32.dll")]
+        static extern IntPtr SendMessage(IntPtr h, int msg, IntPtr w, IntPtr l);
+
+        void AddChild(Control c) { _content.Controls.Add(c); }
+
+        void BuildTitleBar()
         {
-            _title = new Label
+            _titleBar = new Panel { Location = new Point(0, 0), Size = new Size(W, TitleH), Tag = "surface" };
+            _titleBar.MouseDown += delegate (object s, MouseEventArgs e)
             {
-                Text = "字体替换",
-                Font = new Font("Segoe UI", 18f, FontStyle.Bold),
-                AutoSize = false,
-                Location = new Point(PadX, 16),
-                Size = new Size(500, 34)
+                if (e.Button == MouseButtons.Left)
+                {
+                    ReleaseCapture();
+                    SendMessage(Handle, 0xA1, (IntPtr)0x2, IntPtr.Zero);   // WM_NCLBUTTONDOWN / HTCAPTION
+                }
             };
-            _subtitle = new Label
+            _titleBar.Paint += delegate (object s, PaintEventArgs e)
             {
-                Text = "选一个字体，粗体细体自动匹配；重启后设置、开始菜单一起变。",
-                Tag = "dim",
-                Font = new Font("Segoe UI", 9f),
-                AutoSize = false,
-                Location = new Point(PadX, 52),
-                Size = new Size(W - PadX * 2, 22)
+                var p = Theme.Current;
+                e.Graphics.Clear(p.Surface);
+                using (var pen = new Pen(p.Line)) e.Graphics.DrawLine(pen, 0, TitleH - 1, W, TitleH - 1);
+                using (var f = new Font("Segoe UI", 10f, FontStyle.Bold))
+                using (var b = new SolidBrush(p.Text))
+                    e.Graphics.DrawString("字体替换", f, b, new PointF(14, 7));
+                using (var f2 = new Font("Segoe UI", 8.5f))
+                using (var b2 = new SolidBrush(p.TextDim))
+                    e.Graphics.DrawString("选一个字体，粗体细体自动匹配；重启后生效", f2, b2, new PointF(84, 12));
             };
-            Controls.Add(_title);
-            Controls.Add(_subtitle);
+            Controls.Add(_titleBar);
+
+            var min = new CaptionButton { Glyph = "\uE921", Location = new Point(W - 92, 2) };
+            min.Click += delegate { WindowState = FormWindowState.Minimized; };
+            var close = new CaptionButton { Glyph = "\uE8BB", Close = true, Location = new Point(W - 46, 2) };
+            close.Click += delegate { Close(); };
+            _titleBar.Controls.Add(min);
+            _titleBar.Controls.Add(close);
         }
 
         Label Header(string text, int x, int y)
@@ -153,8 +175,8 @@ namespace WinFontSwap
 
         void BuildFontCard()
         {
-            var card = new CardPanel { Location = new Point(PadX, 86), Size = new Size(InnerW, 200) };
-            Controls.Add(card);
+            var card = new CardPanel { Location = new Point(PadX, 8), Size = new Size(InnerW, 200) };
+            AddChild(card);
             card.Controls.Add(Header("字体", 16, 14));
 
             _pickBtn = new RoundedButton { Text = "选择字体…", Location = new Point(16, 46), Size = new Size(120, 34) };
@@ -229,8 +251,8 @@ namespace WinFontSwap
 
         void BuildPreviewCard()
         {
-            var card = new CardPanel { Location = new Point(PadX, 298), Size = new Size(InnerW, 118) };
-            Controls.Add(card);
+            var card = new CardPanel { Location = new Point(PadX, 220), Size = new Size(InnerW, 118) };
+            AddChild(card);
             card.Controls.Add(Header("预览", 16, 10));
             _preview = new PreviewBox { Location = new Point(16, 38), Size = new Size(InnerW - 32, 68) };
             card.Controls.Add(_preview);
@@ -238,8 +260,8 @@ namespace WinFontSwap
 
         void BuildTargetCard()
         {
-            var card = new CardPanel { Location = new Point(PadX, 428), Size = new Size(InnerW, 168) };
-            Controls.Add(card);
+            var card = new CardPanel { Location = new Point(PadX, 350), Size = new Size(InnerW, 168) };
+            AddChild(card);
             card.Controls.Add(Header("替换目标", 16, 12));
 
             string[] targetNames = { "微软雅黑", "微软雅黑 粗体", "微软雅黑 细体" };
@@ -276,20 +298,20 @@ namespace WinFontSwap
 
         void BuildActions()
         {
-            _applyBtn = new RoundedButton { Text = "应用并重启生效", Primary = true, Location = new Point(PadX, 608), Size = new Size(168, 34) };
-            _genBtn = new RoundedButton { Text = "仅生成", Location = new Point(PadX + 180, 608), Size = new Size(90, 34) };
-            _rollbackBtn = new RoundedButton { Text = "回滚", Location = new Point(PadX + 282, 608), Size = new Size(80, 34) };
-            _cancelBtn = new RoundedButton { Text = "取消排队", Visible = false, Location = new Point(PadX + 374, 608), Size = new Size(96, 34) };
+            _applyBtn = new RoundedButton { Text = "应用并重启生效", Primary = true, Location = new Point(PadX, 530), Size = new Size(168, 34) };
+            _genBtn = new RoundedButton { Text = "仅生成", Location = new Point(PadX + 180, 530), Size = new Size(90, 34) };
+            _rollbackBtn = new RoundedButton { Text = "回滚", Location = new Point(PadX + 282, 530), Size = new Size(80, 34) };
+            _cancelBtn = new RoundedButton { Text = "取消排队", Visible = false, Location = new Point(PadX + 374, 530), Size = new Size(96, 34) };
 
             _applyBtn.Click += async delegate (object s, EventArgs e) { await RunApply(false); };
             _genBtn.Click += async delegate (object s, EventArgs e) { await RunApply(true); };
             _rollbackBtn.Click += async delegate (object s, EventArgs e) { await RunRollback(); };
             _cancelBtn.Click += async delegate (object s, EventArgs e) { await RunCancel(); };
 
-            Controls.Add(_applyBtn);
-            Controls.Add(_genBtn);
-            Controls.Add(_rollbackBtn);
-            Controls.Add(_cancelBtn);
+            AddChild(_applyBtn);
+            AddChild(_genBtn);
+            AddChild(_rollbackBtn);
+            AddChild(_cancelBtn);
 
             _status = new Label
             {
@@ -297,10 +319,10 @@ namespace WinFontSwap
                 Tag = "dim",
                 Font = new Font("Segoe UI", 9f),
                 AutoSize = false,
-                Location = new Point(PadX, 648),
+                Location = new Point(PadX, 570),
                 Size = new Size(InnerW, 22)
             };
-            Controls.Add(_status);
+            AddChild(_status);
         }
 
         // ---------------- 行为 ----------------
@@ -309,7 +331,7 @@ namespace WinFontSwap
         {
             Theme.Apply("system", this);
             BackColor = Theme.BackPaint;
-            _title.ForeColor = Theme.Current.Text;
+            if (_titleBar != null) _titleBar.Invalidate(true);
             Log("程序已以管理员身份运行");
             RefreshTargets();
             await Task.Run(delegate

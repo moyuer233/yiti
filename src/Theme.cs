@@ -113,7 +113,8 @@ namespace WinFontSwap
             else if (c is Panel)
             {
                 var tag = c.Tag as string;
-                c.BackColor = tag == "surface" ? p.Surface : (tag == "alt" ? p.SurfaceAlt : p.Bg);
+                if (tag == "glass") c.BackColor = Color.Transparent;
+                else c.BackColor = tag == "surface" ? p.Surface : (tag == "alt" ? p.SurfaceAlt : p.Bg);
             }
 
             foreach (Control child in c.Controls) Restyle(child);
