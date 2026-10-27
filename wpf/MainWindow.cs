@@ -1187,9 +1187,15 @@ namespace WinFontSwap.Wpf
                 dirs.Sort(StringComparer.Ordinal);
                 dirs.Reverse();   // 从最新往回找
 
-                // 每个文件分别找：不同批次备份里的文件集合不一样，不能只看最新那一个目录
+                // 每个文件分别找：先看 Windows 组件存储（权威原版），再退回我们自己的备份
                 for (int i = 0; i < Installer.TargetFiles.Length && i < _slots.Length; i++)
                 {
+                    var sys = Installer.FindOriginalInWinSxS(Installer.TargetFiles[i]);
+                    if (sys != null)
+                    {
+                        var se = FontLibrary.ReadFile(sys);
+                        if (se.Count > 0) { _slots[i] = se[0]; filled++; continue; }
+                    }
                     foreach (var d in dirs)
                     {
                         var f = Path.Combine(Path.Combine(d, "orig"), Installer.TargetFiles[i]);

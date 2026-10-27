@@ -911,6 +911,52 @@ namespace WinFontSwap
             }
         }
 
+        /// <summary>
+        /// 找 Windows 组件存储里的原版字体：C:\Windows\WinSxS\amd64_microsoft-windows-f..*<名字>_<版本>\<文件>。
+        /// 这是最权威的原版来源（比我们自己的备份可靠——早期备份可能备份到的是已替换的文件）。
+        /// </summary>
+        public static string FindOriginalInWinSxS(string fileName)
+        {
+            try
+            {
+                var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "WinSxS");
+                if (!Directory.Exists(root)) return null;
+                // WinSxS 的目录名用的是包的“长名”（microsoftyahei / segoe_ui_variable），跟文件名不一样，得映射
+                var patterns = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+                patterns["msyh.ttc"] = new[] { "microsoftyahei" };
+                patterns["msyhbd.ttc"] = new[] { "microsoftyaheibold" };
+                patterns["msyhl.ttc"] = new[] { "microsoftyaheilight" };
+                patterns["seguiVar.ttf"] = new[] { "segoe_ui_variable" };
+                patterns["segoeui.ttf"] = new[] { "segoeui" };
+                string[] keys;
+                if (!patterns.TryGetValue(fileName, out keys)) keys = new[] { Path.GetFileNameWithoutExtension(fileName) };
+
+                string best = null;
+                long bestVer = -1;
+                foreach (var dir in Directory.GetDirectories(root))
+                {
+                    var dirName = Path.GetFileName(dir).ToLowerInvariant();
+                    bool hit = false;
+                    foreach (var k in keys) if (dirName.Contains(k.ToLowerInvariant())) { hit = true; break; }
+                    if (!hit) continue;
+                    if (fileName.Equals("msyh.ttc", StringComparison.OrdinalIgnoreCase) &&
+                        (dirName.Contains("bold") || dirName.Contains("light"))) continue;
+                    var cand = Path.Combine(dir, fileName);
+                    if (!File.Exists(cand)) continue;
+                    long ver = 0;
+                    var m = System.Text.RegularExpressions.Regex.Match(Path.GetFileName(dir), @"_(\d+\.\d+\.\d+\.\d+)_");
+                    if (m.Success)
+                    {
+                        var parts = m.Groups[1].Value.Split('.');
+                        for (int i = 0; i < parts.Length; i++) ver = ver * 1000 + long.Parse(parts[i]);
+                    }
+                    if (ver > bestVer) { bestVer = ver; best = cand; }
+                }
+                return best;
+            }
+            catch { return null; }
+        }
+
         public static string LatestBackup()
         {
             if (!Directory.Exists(BackupRoot)) return null;
