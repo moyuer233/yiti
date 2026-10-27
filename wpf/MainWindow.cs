@@ -29,6 +29,7 @@ namespace WinFontSwap.Wpf
         public static readonly Brush Btn = B(Color.FromArgb(0x14, 255, 255, 255));
         public static readonly Brush BtnHover = B(Color.FromArgb(0x24, 255, 255, 255));
         public static readonly Brush TrackOff = B(Color.FromArgb(0x3D, 255, 255, 255));
+        public static readonly Brush BDrawer = B(Color.FromRgb(0x24, 0x24, 0x29));   // 弹窗/下拉底色
 
         public static TextBlock Label(string text, double size, Brush brush, bool bold)
         {

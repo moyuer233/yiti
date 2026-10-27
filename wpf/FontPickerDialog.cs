@@ -8,22 +8,23 @@ using System.Windows.Media;
 
 namespace WinFontSwap.Wpf
 {
-    /// <summary>字体选择器：搜索 + 列表 + 确定/取消。</summary>
+    /// <summary>字体选择器：搜索 + 每行用该字体自身渲染预览。</summary>
     internal class FontPickerDialog : Window
     {
         readonly ListBox _list = new ListBox();
         readonly TextBox _search = new TextBox();
         List<FontEntry> _pool = new List<FontEntry>();
+        readonly List<FontEntry> _filtered = new List<FontEntry>();
 
         public FontEntry Picked { get; private set; }
 
         public FontPickerDialog()
         {
             Title = "选择字体";
-            Width = 520;
-            Height = 620;
+            Width = 560;
+            Height = 640;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            Background = new SolidColorBrush(Color.FromRgb(0x1E, 0x1E, 0x22));
+            Background = T.BDrawer;
             Foreground = T.Text;
             FontSize = 13;
 
@@ -75,6 +76,7 @@ namespace WinFontSwap.Wpf
             }
             catch (Exception ex)
             {
+                WpfProgram.Log("picker load failed: " + ex.Message);
                 _list.Items.Add("读取字体失败：" + ex.Message);
             }
         }
@@ -83,28 +85,59 @@ namespace WinFontSwap.Wpf
         {
             string q = (_search.Text ?? "").Trim().ToLowerInvariant();
             _list.Items.Clear();
+            _filtered.Clear();
             int n = 0;
             foreach (var f in _pool)
             {
                 if (q.Length > 0 && f.Family.ToLowerInvariant().IndexOf(q) < 0) continue;
-                _list.Items.Add(f.Display);
+                _list.Items.Add(RowFor(f));
+                _filtered.Add(f);
                 n++;
-                if (n > 800) break;
+                if (n > 600) break;
             }
+        }
+
+        /// <summary>一行预览：用该字体自身渲染「Aa + 字体名 + 字重」。</summary>
+        static UIElement RowFor(FontEntry f)
+        {
+            var sp = new StackPanel { Orientation = Orientation.Horizontal };
+            FontFamily ff = null;
+            try { ff = new FontFamily(f.Family); } catch { }
+
+            var sample = new TextBlock
+            {
+                Text = "Aa",
+                FontSize = 17,
+                Width = 40,
+                Foreground = T.Text,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            if (ff != null) sample.FontFamily = ff;
+
+            var name = new TextBlock
+            {
+                Text = f.Family,
+                FontSize = 14,
+                Foreground = T.Text,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            if (ff != null) name.FontFamily = ff;
+
+            var meta = T.Label("  w" + f.Weight + "  " + (f.Subfamily ?? ""), 11, T.TextFaint, false);
+            meta.VerticalAlignment = VerticalAlignment.Center;
+
+            sp.Children.Add(sample);
+            sp.Children.Add(name);
+            sp.Children.Add(meta);
+            return sp;
         }
 
         void Accept()
         {
             int idx = _list.SelectedIndex;
-            if (idx < 0) return;
-            string q = (_search.Text ?? "").Trim().ToLowerInvariant();
-            int seen = -1;
-            foreach (var f in _pool)
-            {
-                if (q.Length > 0 && f.Family.ToLowerInvariant().IndexOf(q) < 0) continue;
-                seen++;
-                if (seen == idx) { Picked = f; DialogResult = true; return; }
-            }
+            if (idx < 0 || idx >= _filtered.Count) return;
+            Picked = _filtered[idx];
+            DialogResult = true;
         }
     }
 }
