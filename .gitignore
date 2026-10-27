@@ -1,4 +1,4 @@
-# 构建与运行产物（dist 里的发布产物是唯一要跟仓库走的）
+﻿# 构建与运行产物（dist 里的发布产物是唯一要跟仓库走的）
 bin/
 obj/
 *.user
@@ -33,3 +33,9 @@ _*.txt
 
 Thumbs.db
 desktop.ini
+
+# probe/experiment sources, not part of the build
+wpf/Backdrop.cs
+wpf/GlyphProbe.cs
+wpf/MicaProbe2.cs
+
