@@ -539,6 +539,11 @@ namespace WinFontSwap.Wpf
 
 
 
+                var b = T.Btn2("指定", false, 13);
+                b.Margin = new Thickness(0, 0, 12, 0);
+                b.Click += delegate { PickSlot(idx); };
+                right.Children.Add(b);
+
                 var sw = T.Switch(_on[i]);
                 sw.Click += delegate { _on[idx] = sw.IsChecked == true; };
                 right.Children.Add(sw);
@@ -577,6 +582,10 @@ namespace WinFontSwap.Wpf
                 };
                 right.Children.Add(size);
                 _winSize[i] = size;
+
+                var b = T.Btn2("选择", false, 12);
+                b.Click += delegate { PickWin32Face(idx); };
+                right.Children.Add(b);
 
 
 
