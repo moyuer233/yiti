@@ -386,6 +386,10 @@ namespace WinFontSwap.Wpf
                             }
                         }
                     }
+                    else if (a == "--reset")
+                    {
+                        ResetToDefaults();
+                    }
                     else if (a.StartsWith("--scroll:") && _pageScroll != null)
                     {
                         double off;
@@ -984,8 +988,11 @@ namespace WinFontSwap.Wpf
                 var e = _slots[i];
                 _srcText[i].Text = e == null ? "未选择" : e.Family + " " + (e.Subfamily ?? "");
             }
-            if (_pickDesc != null && _slots[0] != null)
-                _pickDesc.Text = _slots[0].Family + " " + (_slots[0].Subfamily ?? "");
+            if (_pickDesc != null)
+            {
+                // 复位成「未选择」时这里也要清掉，否则顶部源字体那行会一直留着旧字体名
+                _pickDesc.Text = _slots[0] == null ? "未选择" : _slots[0].Family + " " + (_slots[0].Subfamily ?? "");
+            }
         }
 
         void RefreshTargets()
