@@ -1,6 +1,6 @@
 ﻿=== sign+trust+unblock ===
-05:17:09 sign WinFontSwapWpf.exe -> Valid
-05:17:09 zone-streams WinFontSwapWpf.exe = 0
-05:17:09 lowrisk = .exe;.lnk;
-05:17:09 apphost eval = 0
-05:17:09 done
+05:32:45 sign WinFontSwapWpf.exe -> Valid
+05:32:45 zone-streams WinFontSwapWpf.exe = 0
+05:32:45 lowrisk = .exe;.lnk;
+05:32:45 apphost eval = 0
+05:32:45 done

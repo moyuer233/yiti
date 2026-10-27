@@ -8,7 +8,9 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Shell;
+using System.Windows.Threading;
 
 namespace WinFontSwap.Wpf
 {
@@ -309,6 +311,38 @@ namespace WinFontSwap.Wpf
                             _nav.SelectedIndex = 2;
                             _nav.SelectedIndex = 0;
                         }));
+                    }
+                    else if (a.StartsWith("--shot:"))
+                    {
+                        // 自绘截图：程序自己把界面渲染成 PNG（不需要外部截图，也不受提权窗口隔离影响）
+                        var path = a.Substring(7);
+                        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1200) };
+                        timer.Tick += delegate
+                        {
+                            timer.Stop();
+                            try
+                            {
+                                var fe = (FrameworkElement)Content;
+                                fe.UpdateLayout();
+                                var w = (int)Math.Ceiling(fe.ActualWidth);
+                                var hh = (int)Math.Ceiling(fe.ActualHeight);
+                                if (w <= 0 || hh <= 0) return;
+                                var rtb = new RenderTargetBitmap(w, hh, 96, 96, PixelFormats.Pbgra32);
+                                var dv = new DrawingVisual();
+                                using (var dc = dv.RenderOpen())
+                                {
+                                    dc.DrawRectangle(new SolidColorBrush(Color.FromRgb(0x20, 0x20, 0x24)), null, new Rect(0, 0, w, hh));
+                                    dc.DrawRectangle(new VisualBrush(fe), null, new Rect(0, 0, w, hh));
+                                }
+                                rtb.Render(dv);
+                                var enc = new PngBitmapEncoder();
+                                enc.Frames.Add(BitmapFrame.Create(rtb));
+                                using (var fs = System.IO.File.Create(path)) enc.Save(fs);
+                            }
+                            catch (Exception ex) { WpfProgram.Log("shot: " + ex.Message); }
+                            Close();
+                        };
+                        timer.Start();
                     }
                     else if (a.StartsWith("--pick:"))
                     {
