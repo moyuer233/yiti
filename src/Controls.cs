@@ -101,8 +101,8 @@ namespace WinFontSwap
             var rect = new Rectangle(0, 0, Width - 1, Height - 1);
             using (var path = Draw.Rounded(rect, Radius))
             {
-                using (var b = new SolidBrush(Color.FromArgb(Emphasis ? 52 : 34, 255, 255, 255))) g.FillPath(b, path);
-                using (var pen = new Pen(Color.FromArgb(30, 255, 255, 255))) g.DrawPath(pen, path);
+                using (var b = new SolidBrush(Color.FromArgb(Emphasis ? 26 : 18, 255, 255, 255))) g.FillPath(b, path);
+                using (var pen = new Pen(Color.FromArgb(12, 255, 255, 255))) g.DrawPath(pen, path);
             }
         }
     }
@@ -328,8 +328,8 @@ namespace WinFontSwap
             var rect = new Rectangle(0, 0, Width - 1, Height - 1);
             using (var path = Draw.Rounded(rect, 8))
             {
-                using (var b = new SolidBrush(Color.FromArgb(80, 0, 0, 0))) g.FillPath(b, path);
-                using (var pen = new Pen(Color.FromArgb(26, 255, 255, 255))) g.DrawPath(pen, path);
+                using (var b = new SolidBrush(Color.FromArgb(40, 0, 0, 0))) g.FillPath(b, path);
+                using (var pen = new Pen(Color.FromArgb(14, 255, 255, 255))) g.DrawPath(pen, path);
             }
 
             var sf = new StringFormat();

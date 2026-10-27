@@ -41,10 +41,10 @@ namespace WinFontSwap
                     {
                         g.InterpolationMode = InterpolationMode.HighQualityBicubic;
                         g.DrawImage(small, new Rectangle(0, 0, size.Width, size.Height));
-                        using (var dark = new SolidBrush(Color.FromArgb(92, 8, 10, 14)))
+                        using (var dark = new SolidBrush(Color.FromArgb(60, 8, 10, 14)))
                             g.FillRectangle(dark, 0, 0, size.Width, size.Height);
                         using (var veil = new LinearGradientBrush(new Rectangle(0, 0, size.Width, size.Height),
-                                   Color.FromArgb(14, 0, 0, 0), Color.FromArgb(54, 0, 0, 0), 90f))
+                                   Color.FromArgb(8, 0, 0, 0), Color.FromArgb(30, 0, 0, 0), 90f))
                             g.FillRectangle(veil, 0, 0, size.Width, size.Height);
                     }
                     Swap(result, size);

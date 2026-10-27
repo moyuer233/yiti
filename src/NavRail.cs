@@ -80,7 +80,7 @@ namespace WinFontSwap
             var p = Theme.Current;
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.Clear(p.Bg);
+            Backdrop.Paint(g, this);
 
             for (int i = 0; i < _items.Count; i++)
             {
@@ -94,13 +94,15 @@ namespace WinFontSwap
                     using (var path = Draw.Rounded(r, 6))
                     using (var b = new SolidBrush(p.Hover))
                         g.FillPath(b, path);
+                    using (var b2 = new SolidBrush(Color.FromArgb(26, 255, 255, 255)))
+                        g.FillPath(b2, Draw.Rounded(r, 6));
                     using (var bar = new SolidBrush(p.Accent))
                         g.FillRectangle(bar, new Rectangle(2, r.Y + 10, 3, r.Height - 20));
                 }
                 else if (hov)
                 {
                     using (var path = Draw.Rounded(r, 6))
-                    using (var b = new SolidBrush(p.Surface))
+                    using (var b = new SolidBrush(Color.FromArgb(20, 255, 255, 255)))
                         g.FillPath(b, path);
                 }
 
