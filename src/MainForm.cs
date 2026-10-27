@@ -105,7 +105,7 @@ namespace WinFontSwap
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
-            e.Graphics.Clear(Theme.BackPaint);
+            e.Graphics.Clear(Theme.Current.Bg);   // 主窗用整体透明度，不再用色键
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -116,7 +116,7 @@ namespace WinFontSwap
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            using (var b = new SolidBrush(Theme.BackPaint)) e.Graphics.FillRectangle(b, ClientRectangle);
+            using (var b = new SolidBrush(Theme.Current.Bg)) e.Graphics.FillRectangle(b, ClientRectangle);
         }
 
         void BuildHeader()

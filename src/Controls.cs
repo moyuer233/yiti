@@ -70,7 +70,9 @@ namespace WinFontSwap
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
-            e.Graphics.Clear(Theme.BackPaint);
+            // 卡片外圈要跟“父级实际画的底色”一致：主窗是纯色背景、弹窗是透明色键
+            var back = Parent != null ? Parent.BackColor : Theme.BackPaint;
+            e.Graphics.Clear(back);
         }
 
         protected override void OnPaint(PaintEventArgs e)
