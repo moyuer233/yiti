@@ -397,17 +397,24 @@ namespace WinFontSwap
 
         void PickForSlot(int index)
         {
-            using (var dlg = new OpenFileDialog())
+            // 和顶部「选择字体…」用同一个选择器：先选字体家族，再按该字重自动匹配
+            using (var dlg = new FontPickerForm())
             {
-                dlg.Filter = "字体文件 (*.ttf;*.ttc)|*.ttf;*.ttc";
-                dlg.Title = "指定" + new[] { "常规", "粗体", "细体" }[index] + "字重";
                 if (dlg.ShowDialog(this) != DialogResult.OK) return;
-                var entries = FontLibrary.ReadFile(dlg.FileName);
-                if (entries.Count == 0) { Status("这个文件读不出字体名", true); return; }
-                _slots[index] = entries[0];
+
+                var pool = new List<FontEntry>();
+                foreach (var e in FontLibrary.All)
+                    if (string.Equals(e.Family, dlg.SelectedFamily, StringComparison.OrdinalIgnoreCase)) pool.Add(e);
+                if (pool.Count == 0) { Status("没有找到这个字体的文件", true); return; }
+
+                int weight = index == 0 ? 400 : (index == 1 ? 700 : 300);
+                var pick = FontLibrary.Match(pool, weight);
+                if (pick == null) pick = pool[0];
+
+                _slots[index] = pick;
                 UpdateSlotLabels();
                 UpdateToggles();
-                Log("手动指定" + new[] { "常规", "粗体", "细体" }[index] + "：" + entries[0].FileName);
+                Log("手动指定" + new[] { "常规", "粗体", "细体" }[index] + "：" + pick.FileName);
             }
         }
 
