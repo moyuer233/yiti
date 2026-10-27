@@ -118,6 +118,17 @@ namespace WinFontSwap.Wpf
         /// <summary>LF 式卡片行：图标 + 标题/说明 + 右侧控件。</summary>
         public static Border Row(string glyph, string title, string desc, UIElement control, out TextBlock descBlock)
         {
+            return Row(glyph, title, desc, control, out descBlock, false);
+        }
+
+        /// <summary>disabled=true 时整行变灰且右侧控件不可点（用于「此系统不支持」的功能）。</summary>
+        public static Border Row(string glyph, string title, string desc, UIElement control, out TextBlock descBlock, bool disabled)
+        {
+            return Row(glyph, title, desc, control, out descBlock, disabled, "不支持当前系统");
+        }
+
+        public static Border Row(string glyph, string title, string desc, UIElement control, out TextBlock descBlock, bool disabled, string disabledTip)
+        {
             var card = new Border
             {
                 Background = Card,
@@ -153,6 +164,14 @@ namespace WinFontSwap.Wpf
             }
             card.Child = g;
             descBlock = d;
+            if (disabled)
+            {
+                card.Opacity = 0.45;
+                if (control != null) control.IsEnabled = false;   // 右侧控件不可点
+                card.ToolTip = disabledTip;
+                ToolTipService.SetShowOnDisabled(card, true);     // 禁用状态下也要能弹出提示
+                ToolTipService.SetInitialShowDelay(card, 250);
+            }
             return card;
         }
 
@@ -258,6 +277,7 @@ namespace WinFontSwap.Wpf
         ToggleButton[] _winTog = new ToggleButton[Win32Fonts.Names.Length];
         ToggleButton _advCache, _advUserFonts;
         bool _advCacheOn = true, _advUserFontsOn = true;
+        bool _fakeOld;
 
 
         /// <summary>从 exe 内嵌资源读应用图标（csc /resource: 的 LogicalName 是 app.ico，用清单资源名更可靠）。</summary>
@@ -690,8 +710,17 @@ namespace WinFontSwap.Wpf
             string[] glyphs = { "\uE8D2", "\uE8DD", "\uE8D3", "\uE8D2", "\uE8D2" };
             for (int i = 0; i < 5 && i < Installer.TargetFiles.Length; i++)
             {
-                // Win7 等系统没有 msyhl.ttc / SegUIVar.ttf：不存在就不画这一行
-                if (!File.Exists(Path.Combine(Installer.FontsDir, Installer.TargetFiles[i]))) continue;
+                // Win7 等系统没有 msyhl.ttc / SegUIVar.ttf：行还在，但整行置灰不可点
+                bool missing = !File.Exists(Path.Combine(Installer.FontsDir, Installer.TargetFiles[i]));
+                // 自测：模拟老系统（细体/英数不存在、无用户级字体），用来核对置灰样式
+                foreach (var a in Environment.GetCommandLineArgs())
+                {
+                    if (a == "--fake-old")
+                    {
+                        if (i == 2 || i == 3) missing = true;
+                        _fakeOld = true;
+                    }
+                }
                 int idx = i;
                 var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
                 var st = T.Label("当前状态：", 11, T.TextFaint, false);
@@ -722,8 +751,10 @@ namespace WinFontSwap.Wpf
                 right.Children.Add(sw);
 
                 TextBlock src;
-                stack.Children.Add(T.Row(glyphs[i], names[i], "未选择", right, out src));
+                var rowCard = T.Row(glyphs[i], names[i], missing ? "此版本 Windows 没有这个字体" : "未选择", right, out src, missing);
+                stack.Children.Add(rowCard);
                 _srcText[i] = src;
+                if (missing) _on[i] = false;
             }
 
             stack.Children.Add(T.SectionHeader("系统元素", false));
@@ -828,15 +859,14 @@ namespace WinFontSwap.Wpf
             _advCache = cacheSw;
             stack.Children.Add(T.Row("\uE72C", "写入时清字体缓存", "重启后由系统重建", cacheSw, out advDesc1));
 
-            // 老系统没有「按用户安装字体」，这一项没有作用，直接不显示
-            if (Installer.SupportsUserFonts())
-            {
-                TextBlock advDesc2;
-                var userSw = T.Switch(_advUserFontsOn);
-                userSw.Click += delegate { _advUserFontsOn = userSw.IsChecked == true; };
-                _advUserFonts = userSw;
-                stack.Children.Add(T.Row("\uE74D", "写入时清用户级同名字体", "会挡住替换", userSw, out advDesc2));
-            }
+            // 老系统没有「按用户安装字体」：这一项显示但置灰不可点
+            bool canUserFonts = Installer.SupportsUserFonts() && !_fakeOld;
+            TextBlock advDesc2;
+            var userSw = T.Switch(_advUserFontsOn && canUserFonts);
+            userSw.Click += delegate { _advUserFontsOn = userSw.IsChecked == true; };
+            _advUserFonts = userSw;
+            stack.Children.Add(T.Row("\uE74D", "写入时清用户级同名字体",
+                canUserFonts ? "会挡住替换" : "此版本 Windows 没有用户级字体", userSw, out advDesc2, !canUserFonts));
 
             TextBlock advDescGen;
             var genBtn = T.Btn2("生成", false, 13);

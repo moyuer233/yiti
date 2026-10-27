@@ -11,6 +11,26 @@ namespace WinFontSwap.Wpf
 <ResourceDictionary xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'
                     xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'>
   <SolidColorBrush x:Key='InputBg' Color='#26262B'/>
+  <!-- 深色提示气泡：默认是白底黑字，在暗色界面里很扎眼 -->
+  <Style TargetType='ToolTip'>
+    <Setter Property='Background' Value='#303038'/>
+    <Setter Property='Foreground' Value='#F0F0F2'/>
+    <Setter Property='BorderBrush' Value='#3E3E46'/>
+    <Setter Property='BorderThickness' Value='1'/>
+    <Setter Property='Padding' Value='8,5'/>
+    <Setter Property='FontSize' Value='12'/>
+    <Setter Property='HasDropShadow' Value='True'/>
+    <Setter Property='Template'>
+      <Setter.Value>
+        <ControlTemplate TargetType='ToolTip'>
+          <Border Background='{TemplateBinding Background}' BorderBrush='{TemplateBinding BorderBrush}'
+                  BorderThickness='{TemplateBinding BorderThickness}' CornerRadius='6' Padding='{TemplateBinding Padding}'>
+            <ContentPresenter/>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
   <SolidColorBrush x:Key='ItemHover' Color='#1FFFFFFF'/>
   <SolidColorBrush x:Key='ItemSel' Color='#33FFFFFF'/>
 
