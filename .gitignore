@@ -1,0 +1,8 @@
+bin/
+obj/
+*.user
+*.suo
+*.png
+!screenshot.png
+_*.txt
+_*.ps1
