@@ -657,7 +657,7 @@ namespace WinFontSwap
                     Font = new Font("Segoe UI", 9f),
                     AutoSize = false,
                     Location = new Point(16, y),
-                    Size = new Size(52, 24),
+                    Size = new Size(68, 24),
                     TextAlign = ContentAlignment.MiddleLeft
                 };
                 var val = new Label
@@ -667,8 +667,8 @@ namespace WinFontSwap
                     Font = new Font("Segoe UI", 9f),
                     AutoSize = false,
                     AutoEllipsis = true,
-                    Location = new Point(68, y),
-                    Size = new Size(InnerW - 28 - 68 - 72, 24),
+                    Location = new Point(84, y),
+                    Size = new Size(InnerW - 28 - 84 - 72, 24),
                     TextAlign = ContentAlignment.MiddleLeft
                 };
                 var btn = new RoundedButton
