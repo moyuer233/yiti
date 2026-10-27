@@ -232,6 +232,7 @@ namespace WinFontSwap.Wpf
         bool[] _on = new bool[5] { true, true, true, true, true };
         TextBlock[] _srcText = new TextBlock[5];
         TextBlock[] _metaText = new TextBlock[5];
+        TextBlock[] _fontPreview = new TextBlock[5];
         ToggleButton[] _tog = new ToggleButton[5];
         TextBlock[] _winCur = new TextBlock[Win32Fonts.Names.Length];
         TextBox[] _winSize = new TextBox[Win32Fonts.Names.Length];
@@ -365,6 +366,7 @@ namespace WinFontSwap.Wpf
                 ItemContainerStyle = NavStyle()
             };
             _nav.Items.Add(NavItem("\uE8D2", "字体替换"));
+            _nav.Items.Add(NavItem("\uE713", "高级"));
             _nav.Items.Add(NavItem("\uE8A5", "预设"));
             _nav.SelectionChanged += delegate { ShowPage(); };
             rail.Children.Add(_nav);
@@ -491,6 +493,7 @@ namespace WinFontSwap.Wpf
         {
             int i = _nav.SelectedIndex;
             if (i == 0) _content.Content = BuildFontPage();
+            else if (i == 1) _content.Content = BuildAdvancedPage();
             else _content.Content = BuildPresetPage();
         }
 
@@ -510,9 +513,6 @@ namespace WinFontSwap.Wpf
             };
             var stack = new StackPanel();
             stack.Children.Add(T.Label("字体替换", 28, T.Text, true));
-            var sub = T.Label("选一个字体，粗体细体自动匹配；重启后设置、开始菜单一起变。", 12, T.TextDim, false);
-            sub.Margin = new Thickness(0, 6, 0, 0);
-            stack.Children.Add(sub);
             var spacer = new Border { Height = 14 };
             stack.Children.Add(spacer);
 
@@ -522,7 +522,7 @@ namespace WinFontSwap.Wpf
             var pickBtn = T.Btn2("选择字体…", false, 13);
             pickBtn.Click += delegate { PickFont(); };
             TextBlock pickDesc;
-            stack.Children.Add(T.Row("\uE8D2", "源字体", "还没有选择字体", pickBtn, out pickDesc));
+            stack.Children.Add(T.Row("\uE8D2", "源字体", "未选择", pickBtn, out pickDesc));
             _pickDesc = pickDesc;
 
             string[] names = { "常规", "粗体", "细体", "英文数字", "Segoe UI" };
@@ -531,7 +531,17 @@ namespace WinFontSwap.Wpf
             {
                 int idx = i;
                 var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-                var meta = T.Label("读取中", 12, T.TextFaint, false);
+                var st = T.Label("当前状态：", 11, T.TextFaint, false);
+                st.VerticalAlignment = VerticalAlignment.Center;
+                right.Children.Add(st);
+
+                var prev = T.Label("读取中", 13, T.Text, false);
+                prev.Margin = new Thickness(0, 0, 10, 0);
+                prev.VerticalAlignment = VerticalAlignment.Center;
+                right.Children.Add(prev);
+                _fontPreview[idx] = prev;
+
+                var meta = T.Label("", 11, T.TextFaint, false);
                 meta.Margin = new Thickness(0, 0, 14, 0);
                 meta.VerticalAlignment = VerticalAlignment.Center;
                 right.Children.Add(meta);
@@ -549,15 +559,11 @@ namespace WinFontSwap.Wpf
                 right.Children.Add(sw);
 
                 TextBlock src;
-                stack.Children.Add(T.Row(glyphs[i], names[i], "未指定", right, out src));
+                stack.Children.Add(T.Row(glyphs[i], names[i], "未选择", right, out src));
                 _srcText[i] = src;
             }
 
-            var winFollow = T.Btn2("跟随当前字体", true, 12);
-            winFollow.Click += delegate { FollowCurrentFont(); };
-            var winRestore = T.Btn2("还原", false, 12);
-            winRestore.Click += delegate { RestoreWin32(); };
-            stack.Children.Add(T.SectionHeader("系统元素", false, winFollow, winRestore));
+            stack.Children.Add(T.SectionHeader("系统元素", false));
 
             TextBlock fbDesc;
             var fbBtn = T.Btn2("指向当前字体", false, 13);
@@ -568,6 +574,11 @@ namespace WinFontSwap.Wpf
             {
                 int idx = i;
                 var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+
+                var sizeLabel = T.Label("字号", 11, T.TextFaint, false);
+                sizeLabel.Margin = new Thickness(0, 0, 6, 0);
+                sizeLabel.VerticalAlignment = VerticalAlignment.Center;
+                right.Children.Add(sizeLabel);
 
                 var size = new TextBox
                 {
@@ -594,38 +605,6 @@ namespace WinFontSwap.Wpf
                 _winCur[i] = desc;
             }
 
-            stack.Children.Add(T.SectionTitle("高级", false));
-
-            TextBlock advDesc1;
-            var cacheSw = T.Switch(true);
-            _advCache = cacheSw;
-            stack.Children.Add(T.Row("\uE72C", "写入时清字体缓存", "重启后由系统重建", cacheSw, out advDesc1));
-
-            TextBlock advDesc2;
-            var userSw = T.Switch(true);
-            _advUserFonts = userSw;
-            stack.Children.Add(T.Row("\uE74D", "写入时清用户级同名字体", "用户级字体优先级更高，会挡住替换", userSw, out advDesc2));
-
-
-
-            TextBlock advDescGen;
-            var genBtn = T.Btn2("生成", false, 13);
-            genBtn.Click += delegate { RunApply(true); };
-            stack.Children.Add(T.Row("\uE8A5", "只生成不写入", "产物放到 stage 目录，不动系统字体（调试用）", genBtn, out advDescGen));
-
-            TextBlock advDescFont;
-            var fontBtn = T.Btn2("还原", false, 13);
-            fontBtn.Click += delegate { RunRollbackFontsOnly(); };
-            stack.Children.Add(T.Row("\uE777", "只还原字体文件", "从最近备份搬回 msyh/SegUIVar/segoeui", fontBtn, out advDescFont));
-
-            TextBlock advDesc3;
-            var rb = T.Btn2("恢复", false, 13);
-            rb.Click += delegate
-            {
-                try { SetStatus(Installer.RestoreUserFonts(), false); }
-                catch (Exception ex) { SetStatus("恢复失败：" + ex.Message, true); }
-            };
-            stack.Children.Add(T.Row("\uE777", "只还原用户级注册", "导入最近一次的 HKCU 字体注册备份", rb, out advDesc3));
 
             scroll.Content = stack;
             _pageScroll = scroll;
@@ -643,7 +622,7 @@ namespace WinFontSwap.Wpf
             bar.Children.Add(apply);
             bar.Children.Add(rollback);
             bottom.Children.Add(bar);
-            _status = T.Label("选好字体后点「应用」，重启即可生效。", 12, T.TextDim, false);
+            _status = T.Label("", 12, T.TextDim, false);
             _status.Margin = new Thickness(0, 8, 0, 0);
             bottom.Children.Add(_status);
             Grid.SetRow(bottom, 1);
@@ -757,6 +736,47 @@ namespace WinFontSwap.Wpf
             Grid.SetRow(scroll, 0);
             root.Children.Add(scroll);
             return root;
+        }
+
+        /// <summary>高级页：独立成页（用户要求），放调试与单独还原入口。</summary>
+        UIElement BuildAdvancedPage()
+        {
+            var stack = new StackPanel();
+            stack.Children.Add(T.Label("高级", 28, T.Text, true));
+            stack.Children.Add(new Border { Height = 16 });
+
+            TextBlock advDesc1;
+            var cacheSw = T.Switch(true);
+            _advCache = cacheSw;
+            stack.Children.Add(T.Row("\uE72C", "写入时清字体缓存", "重启后由系统重建", cacheSw, out advDesc1));
+
+            TextBlock advDesc2;
+            var userSw = T.Switch(true);
+            _advUserFonts = userSw;
+            stack.Children.Add(T.Row("\uE74D", "写入时清用户级同名字体", "用户级字体优先级更高，会挡住替换", userSw, out advDesc2));
+
+            TextBlock advDescGen;
+            var genBtn = T.Btn2("生成", false, 13);
+            genBtn.Click += delegate { RunApply(true); };
+            stack.Children.Add(T.Row("\uE8A5", "只生成不写入", "产物放到 stage 目录，不动系统字体（调试用）", genBtn, out advDescGen));
+
+            TextBlock advDescFont;
+            var fontBtn = T.Btn2("还原", false, 13);
+            fontBtn.Click += delegate { RunRollbackFontsOnly(); };
+            stack.Children.Add(T.Row("\uE777", "只还原字体文件", "从最近备份搬回 msyh/SegUIVar/segoeui", fontBtn, out advDescFont));
+
+            TextBlock advDesc3;
+            var rb = T.Btn2("恢复", false, 13);
+            rb.Click += delegate
+            {
+                try { SetStatus(Installer.RestoreUserFonts(), false); }
+                catch (Exception ex) { SetStatus("恢复失败：" + ex.Message, true); }
+            };
+            stack.Children.Add(T.Row("\uE777", "只还原用户级注册", "导入最近一次的 HKCU 字体注册备份", rb, out advDesc3));
+
+            var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = stack, Padding = new Thickness(0, 0, 6, 12) };
+            _pageScroll = scroll;
+            return scroll;
         }
 
         UIElement BuildPresetPage()
@@ -893,7 +913,7 @@ namespace WinFontSwap.Wpf
             {
                 if (_srcText[i] == null) continue;
                 var e = _slots[i];
-                _srcText[i].Text = e == null ? "未指定" : e.FileName + "   " + e.Family + " " + (e.Subfamily ?? "");
+                _srcText[i].Text = e == null ? "未选择" : e.FileName + "   " + e.Family + " " + (e.Subfamily ?? "");
             }
             if (_pickDesc != null && _slots[0] != null)
                 _pickDesc.Text = _slots[0].FileName + "   " + _slots[0].Family + " " + (_slots[0].Subfamily ?? "");
@@ -909,12 +929,20 @@ namespace WinFontSwap.Wpf
                     if (_metaText[i] == null) continue;
                     var info = infos[i];
                     var parts = new List<string>();
-                    if (!info.Exists) parts.Add("文件缺失");
+                    if (!info.Exists)
+                    {
+                        if (_fontPreview[i] != null) _fontPreview[i].Text = "文件缺失";
+                        parts.Add("缺文件");
+                    }
                     else
                     {
-                        // 用户要看的是“这个槽位现在实际是什么字体”，不是字体文件内部的版本号
-                        parts.Add(string.IsNullOrEmpty(info.Family) ? "未识别" : info.Family);
-                        parts.Add(Installer.HumanSize(info.Size));
+                        // 按反馈：不显示文件大小；字体名用该字体自身渲染，前面带「当前状态：」
+                        var fam = string.IsNullOrEmpty(info.Family) ? "未识别" : info.Family;
+                        if (_fontPreview[i] != null)
+                        {
+                            _fontPreview[i].Text = fam;
+                            try { _fontPreview[i].FontFamily = new FontFamily(fam); } catch { }
+                        }
                         if (info.Applied) parts.Add("已替换");
                         if (info.Queued) parts.Add("待重启");
                     }
@@ -1039,6 +1067,7 @@ namespace WinFontSwap.Wpf
                 bool cache = _advCache != null && _advCache.IsChecked == true;
                 bool userFonts = _advUserFonts != null && _advUserFonts.IsChecked == true;
                 var res = Installer.Apply(list, delegate (string m) { }, generateOnly, cache, userFonts);
+                if (!generateOnly) { try { FollowCurrentFont(); } catch { } }
                 SetStatus(generateOnly ? ("已生成到 " + res.OutputDir) : "已写入，重启后生效。", false);
                 RefreshTargets();
             }
@@ -1054,6 +1083,7 @@ namespace WinFontSwap.Wpf
                 string log1 = "";
                 if (Installer.LatestBackup() != null) Installer.Rollback(delegate (string m) { log1 += m + "; "; });
                 else log1 = "没有字体备份; ";
+                try { Win32Fonts.Restore(); } catch { }
                 string log2 = Installer.RestoreUserFonts();
                 SetStatus("已全部回滚：" + log1 + log2 + " 重启后恢复。", false);
                 RefreshTargets();
