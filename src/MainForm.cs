@@ -749,10 +749,10 @@ namespace WinFontSwap
 
         void BuildActions()
         {
-            _applyBtn = new RoundedButton { Text = "应用并重启生效", Primary = true, Location = new Point(PadX, 532), Size = new Size(168, 34) };
-            _genBtn = new RoundedButton { Text = "仅生成", Location = new Point(PadX + 180, 532), Size = new Size(90, 34) };
-            _rollbackBtn = new RoundedButton { Text = "回滚", Location = new Point(PadX + 282, 532), Size = new Size(80, 34) };
-            _cancelBtn = new RoundedButton { Text = "取消排队", Visible = false, Location = new Point(PadX + 374, 532), Size = new Size(96, 34) };
+            _applyBtn = new RoundedButton { Text = "应用", Primary = true, Location = new Point(PadX, 532), Size = new Size(96, 34) };
+            _genBtn = new RoundedButton { Text = "仅生成", Location = new Point(PadX + 108, 532), Size = new Size(90, 34) };
+            _rollbackBtn = new RoundedButton { Text = "回滚", Location = new Point(PadX + 210, 532), Size = new Size(80, 34) };
+            _cancelBtn = new RoundedButton { Text = "取消排队", Visible = false, Location = new Point(PadX + 302, 532), Size = new Size(96, 34) };
 
             _applyBtn.Click += async delegate (object s, EventArgs e) { await RunApply(false); };
             _genBtn.Click += async delegate (object s, EventArgs e) { await RunApply(true); };
@@ -762,7 +762,7 @@ namespace WinFontSwap
             _pages[0].Controls.Add(_applyBtn);
             _pages[0].Controls.Add(_genBtn);
             _pages[0].Controls.Add(_rollbackBtn);
-            _pages[0].Controls.Add(_cancelBtn);
+            // 「取消排队」不再放进界面：队列对用户不可见
 
             _status = new Label
             {
@@ -1079,8 +1079,16 @@ namespace WinFontSwap
                 }
                 else
                 {
-                    Status("已排入替换队列，重启后生效。", false);
+                    Status("已准备好，重启后替换生效。", false);
                     Log("备份目录：" + result.BackupDir);
+                    if (MessageBox.Show(this,
+                            "字体文件正被系统占用，只能在重启时替换。\r\n\r\n现在重启吗？",
+                            "需要重启", MessageBoxButtons.YesNo, MessageBoxIcon.Question,
+                            MessageBoxDefaultButton.Button1) == DialogResult.Yes)
+                    {
+                        try { System.Diagnostics.Process.Start("shutdown", "/r /t 0"); }
+                        catch (Exception ex) { Status("重启失败：" + ex.Message, true); }
+                    }
                 }
             }
             catch (Exception ex)
