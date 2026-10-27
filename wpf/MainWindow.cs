@@ -300,7 +300,8 @@ namespace WinFontSwap.Wpf
                     int got = DwmGetWindowAttribute(hwnd, 38, out back, 4);
                     log.AppendLine("readback_hr=0x" + got.ToString("x8") + " type=" + back);
                     log.AppendLine("os=" + Environment.OSVersion);
-                    File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mica.log"), log.ToString());
+                    // 诊断信息写进主日志，不再往 dist 里落文件
+                    WpfProgram.Log("backdrop: " + log.ToString().Replace("\r\n", " | "));
                 }
                 catch { }
 

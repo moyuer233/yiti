@@ -2,7 +2,7 @@
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 $srcDir = Join-Path $root 'src'
-$outDir = Join-Path $root 'dist'
+$outDir = Join-Path $root 'build'
 New-Item -ItemType Directory -Force $outDir | Out-Null
 
 $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
@@ -21,7 +21,7 @@ if ($LASTEXITCODE -ne 0) { throw "GUI compile failed: $LASTEXITCODE" }
 & $csc @flags '/target:exe' ('/out:' + (Join-Path $outDir 'WinFontSwap.console.exe')) $sources
 if ($LASTEXITCODE -ne 0) { throw "console compile failed: $LASTEXITCODE" }
 
-# sign all outputs as moyuer233 (elevated, silent because UAC is off)
+# sign outputs as moyuer233 (elevated, silent because UAC is off)
 try {
   $pr = Start-Process powershell -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $root 'sign.ps1') -Verb RunAs -WindowStyle Hidden -PassThru -Wait
   Write-Host ("sign exit " + $pr.ExitCode)

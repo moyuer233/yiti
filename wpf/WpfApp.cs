@@ -13,16 +13,26 @@ namespace WinFontSwap.Wpf
         /// <summary>日志写到程序数据目录，别污染 dist 产物目录。</summary>
         static string PickLogPath()
         {
-            try
+            // 依次尝试：程序数据目录 → 用户 LocalAppData → 程序目录，取第一个真正可写的
+            var candidates = new string[]
             {
-                var dir = Installer.DataDir;
-                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                return Path.Combine(dir, "wpf.log");
-            }
-            catch
+                Installer.DataDir,
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WinFontSwap"),
+                AppDomain.CurrentDomain.BaseDirectory
+            };
+            foreach (var dir in candidates)
             {
-                return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wpf.log");
+                try
+                {
+                    if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                    var probe = Path.Combine(dir, "wpf.log.probe");
+                    File.WriteAllText(probe, "x");
+                    File.Delete(probe);
+                    return Path.Combine(dir, "wpf.log");
+                }
+                catch { }
             }
+            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wpf.log");
         }
 
         public static void Log(string s)
