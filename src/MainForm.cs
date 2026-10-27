@@ -15,6 +15,7 @@ namespace WinFontSwap
         const int InnerW = W - PadX * 2;
 
         string _demo;
+        internal static bool _openPicker;
 
         Label _title, _subtitle;
         RoundedButton _pickBtn;
@@ -319,6 +320,7 @@ namespace WinFontSwap
             });
             RefreshTargets();
             if (!string.IsNullOrEmpty(_demo)) PickByPath(_demo);
+            if (_openPicker) { _openPicker = false; PickFont(); }
         }
 
         void UiLog(string m) { try { BeginInvoke(new Action(delegate { Log(m); })); } catch { } }

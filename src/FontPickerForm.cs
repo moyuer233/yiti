@@ -5,19 +5,19 @@ using System.Windows.Forms;
 
 namespace WinFontSwap
 {
-    /// <summary>从系统已安装字体里挑一个家族（带搜索和字体本身预览）。</summary>
+    /// <summary>从系统已安装字体里挑一个家族：搜索 + 按字体本身渲染 + 底部样张。</summary>
     internal sealed class FontPickerForm : Form
     {
         internal sealed class FamilyInfo
         {
             public string Name;
             public List<FontEntry> Entries = new List<FontEntry>();
-            public Font Preview;
         }
 
         readonly TextBox _search;
         readonly ListBox _list;
         readonly Label _hint;
+        readonly PreviewBox _preview;
         readonly RoundedButton _ok;
         readonly RoundedButton _cancel;
         readonly List<FamilyInfo> _all = new List<FamilyInfo>();
@@ -34,9 +34,10 @@ namespace WinFontSwap
             MinimizeBox = false;
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.CenterParent;
-            ClientSize = new Size(480, 560);
+            ClientSize = new Size(520, 620);
             BackColor = p.Bg;
             Font = new Font("Segoe UI", 9.5f);
+            Opacity = 1;
 
             var title = new Label
             {
@@ -44,13 +45,22 @@ namespace WinFontSwap
                 Font = new Font("Segoe UI", 12f, FontStyle.Bold),
                 ForeColor = p.Text,
                 AutoSize = false,
-                Location = new Point(20, 16),
-                Size = new Size(420, 28)
+                Location = new Point(20, 14),
+                Size = new Size(300, 26)
+            };
+            _hint = new Label
+            {
+                Text = "",
+                Tag = "dim",
+                ForeColor = p.TextDim,
+                AutoSize = false,
+                Location = new Point(20, 40),
+                Size = new Size(480, 18)
             };
             _search = new TextBox
             {
-                Location = new Point(20, 52),
-                Size = new Size(440, 26),
+                Location = new Point(20, 66),
+                Size = new Size(480, 26),
                 BackColor = p.Surface,
                 ForeColor = p.Text,
                 BorderStyle = BorderStyle.FixedSingle
@@ -59,42 +69,64 @@ namespace WinFontSwap
 
             _list = new ListBox
             {
-                Location = new Point(20, 88),
-                Size = new Size(440, 400),
+                Location = new Point(20, 102),
+                Size = new Size(480, 340),
                 BackColor = p.Surface,
                 ForeColor = p.Text,
                 BorderStyle = BorderStyle.FixedSingle,
                 DrawMode = DrawMode.OwnerDrawFixed,
-                ItemHeight = 34,
+                ItemHeight = 38,
                 IntegralHeight = false
             };
             _list.DrawItem += DrawItem;
             _list.SelectedIndexChanged += delegate { UpdatePreview(); };
             _list.DoubleClick += delegate { Accept(); };
 
-            _hint = new Label
+            _preview = new PreviewBox
             {
-                Text = "选一个字体家族，粗体/细体会按字重自动匹配。",
-                ForeColor = p.TextDim,
-                AutoSize = false,
-                Location = new Point(20, 494),
-                Size = new Size(440, 20)
+                Location = new Point(20, 452),
+                Size = new Size(480, 92),
+                Placeholder = "选中一个字体，这里会用它预览"
             };
 
-            _ok = new RoundedButton { Text = "确定", Primary = true, Location = new Point(268, 516), Size = new Size(92, 32), Enabled = false };
-            _cancel = new RoundedButton { Text = "取消", Location = new Point(368, 516), Size = new Size(92, 32) };
+            _ok = new RoundedButton { Text = "确定", Primary = true, Location = new Point(308, 556), Size = new Size(92, 34), Enabled = false };
+            _cancel = new RoundedButton { Text = "取消", Location = new Point(408, 556), Size = new Size(92, 34) };
             _ok.Click += delegate { Accept(); };
             _cancel.Click += delegate { DialogResult = DialogResult.Cancel; Close(); };
 
             Controls.Add(title);
+            Controls.Add(_hint);
             Controls.Add(_search);
             Controls.Add(_list);
-            Controls.Add(_hint);
+            Controls.Add(_preview);
             Controls.Add(_ok);
             Controls.Add(_cancel);
 
             LoadFamilies();
-            Shown += delegate { _search.Focus(); };
+            Shown += delegate
+            {
+                _list.ItemHeight = 38;   // 句柄创建后再设一次，否则会被重置
+                if (_list.Items.Count > 0) _list.SelectedIndex = 0;
+                _search.Focus();
+            };
+        }
+
+        [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
+        static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+        static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, string lParam);
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            try
+            {
+                if (Theme.Current == Theme.Dark) { int dark = 1; DwmSetWindowAttribute(Handle, 20, ref dark, 4); }
+                // 搜索框占位提示
+                SendMessage(_search.Handle, 0x1501, (IntPtr)1, "搜索字体名…");
+            }
+            catch { }
         }
 
         void LoadFamilies()
@@ -119,6 +151,7 @@ namespace WinFontSwap
         void ApplyFilter()
         {
             string q = _search.Text.Trim();
+            var keep = _list.SelectedItem as FamilyInfo;
             _list.BeginUpdate();
             _list.Items.Clear();
             int count = 0;
@@ -130,7 +163,12 @@ namespace WinFontSwap
             }
             _list.EndUpdate();
             _hint.Text = count + " 个字体家族" + (q.Length > 0 ? "（过滤：" + q + "）" : "");
-            if (_list.Items.Count > 0) _list.SelectedIndex = 0;
+            if (_list.Items.Count > 0)
+            {
+                int idx = keep == null ? 0 : _list.Items.IndexOf(keep);
+                _list.SelectedIndex = idx < 0 ? 0 : idx;
+            }
+            else UpdatePreview();
         }
 
         void DrawItem(object sender, DrawItemEventArgs e)
@@ -147,24 +185,44 @@ namespace WinFontSwap
             Font f;
             if (!_fontCache.TryGetValue(info.Name, out f))
             {
-                try { f = new Font(info.Name, 11f); }
-                catch { f = new Font("Segoe UI", 11f); }
+                try { f = new Font(info.Name, 12f); }
+                catch { f = new Font("Segoe UI", 12f); }
                 _fontCache[info.Name] = f;
             }
 
-            var textRect = new Rectangle(e.Bounds.X + 10, e.Bounds.Y + 3, e.Bounds.Width - 120, 20);
-            TextRenderer.DrawText(e.Graphics, info.Name, f, textRect, selected ? p.Accent : p.Text,
+            // 名字用系统 UI 字体画（符号字体的家族名直接用它自己画会变成一堆符号）
+            var nameRect = new Rectangle(e.Bounds.X + 12, e.Bounds.Y + 2, e.Bounds.Width - 220, 22);
+            TextRenderer.DrawText(e.Graphics, info.Name, new Font("Segoe UI", 10f), nameRect,
+                selected ? p.Accent : p.Text,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
-            var subRect = new Rectangle(e.Bounds.X + 10, e.Bounds.Y + 19, e.Bounds.Width - 20, 14);
-            TextRenderer.DrawText(e.Graphics, info.Entries.Count + " 个字重", new Font("Segoe UI", 8f), subRect, p.TextDim,
-                TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+            var subRect = new Rectangle(e.Bounds.X + 12, e.Bounds.Y + 21, e.Bounds.Width - 220, 14);
+            using (var f2 = new Font("Segoe UI", 8f))
+                TextRenderer.DrawText(e.Graphics, info.Entries.Count + " 个字重", f2, subRect, p.TextDim,
+                    TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+
+            // 右侧用它自己的字体画一小段样张
+            var sampleRect = new Rectangle(e.Bounds.Right - 202, e.Bounds.Y + 2, 190, 32);
+            TextRenderer.DrawText(e.Graphics, "永 Aa 123", f, sampleRect, p.TextDim,
+                TextFormatFlags.Right | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
         }
 
         void UpdatePreview()
         {
             var info = _list.SelectedItem as FamilyInfo;
             _ok.Enabled = info != null;
+            if (info == null) { _preview.Family = null; _preview.Invalidate(); return; }
+
+            try
+            {
+                var entry = FontLibrary.Match(info.Entries, 400);
+                if (entry == null) entry = info.Entries[0];
+                var pfc = new System.Drawing.Text.PrivateFontCollection();
+                pfc.AddFontFile(entry.Path);
+                _preview.Family = pfc.Families.Length > 0 ? pfc.Families[0] : null;
+            }
+            catch { _preview.Family = null; }
+            _preview.Invalidate();
         }
 
         void Accept()
