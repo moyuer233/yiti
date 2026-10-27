@@ -250,6 +250,7 @@ namespace WinFontSwap.Wpf
             }
             Loaded += delegate
             {
+                WpfProgram.Log("logpath=" + WpfProgram.LogPathUsed + "  base=" + AppDomain.CurrentDomain.BaseDirectory);
                 try { DarkTitle(); } catch (Exception ex) { WpfProgram.Log("DarkTitle: " + ex.Message); }
                 try { ReloadFonts(); } catch (Exception ex) { WpfProgram.Log("ReloadFonts: " + ex.Message); }
                 try { RefreshTargets(); } catch (Exception ex) { WpfProgram.Log("RefreshTargets: " + ex.Message); }

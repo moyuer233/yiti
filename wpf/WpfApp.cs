@@ -8,42 +8,25 @@ namespace WinFontSwap.Wpf
 {
     internal static class WpfProgram
     {
-        static readonly string LogPath = PickLogPath();
+        // 默认不写日志：本机安全软件只允许这个 exe 往自身目录写，
+        // 所以日志只能落在 dist 里 —— 用 --log 才写，保证 dist 只有发布产物。
+        public static bool LogEnabled;
 
-        /// <summary>日志写到程序数据目录，别污染 dist 产物目录。</summary>
-        static string PickLogPath()
-        {
-            // 依次尝试：程序数据目录 → 用户 LocalAppData → 程序目录，取第一个真正可写的
-            var candidates = new string[]
-            {
-                Installer.DataDir,
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WinFontSwap"),
-                AppDomain.CurrentDomain.BaseDirectory
-            };
-            foreach (var dir in candidates)
-            {
-                try
-                {
-                    if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                    var probe = Path.Combine(dir, "wpf.log.probe");
-                    File.WriteAllText(probe, "x");
-                    File.Delete(probe);
-                    return Path.Combine(dir, "wpf.log");
-                }
-                catch { }
-            }
-            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wpf.log");
-        }
+        static readonly string LogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wpf.log");
+        public static string LogPathUsed { get { return LogPath; } }
 
         public static void Log(string s)
         {
+            if (!LogEnabled) return;
             try { File.AppendAllText(LogPath, DateTime.Now.ToString("HH:mm:ss ") + s + "\r\n"); } catch { }
         }
 
         [STAThread]
         static void Main(string[] args)
         {
-            try { File.WriteAllText(LogPath, "=== start ===\r\n"); } catch { }
+            foreach (var a in args) { if (a == "--log") LogEnabled = true; }
+            if (LogEnabled) { try { File.WriteAllText(LogPath, "=== start ===\r\n"); } catch { } }
+
             var app = new Application();
             app.ShutdownMode = ShutdownMode.OnMainWindowClose;
             try { app.Resources = (ResourceDictionary)XamlReader.Parse(Styles.Xaml); }
