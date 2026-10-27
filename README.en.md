@@ -25,6 +25,21 @@ Picking one font is enough: weights are matched automatically (regular 400, bold
 2. Click **Apply**
 3. Reboot once (font files are swapped at boot time)
 
+## How it differs from noMeiryoUI
+
+[noMeiryoUI](https://github.com/Tatsu-syo/noMeiryoUI) changes the UI font *setting* (registry `HKCU\Control Panel`), so its own README lists four things it cannot do: the taskbar, preinstalled apps (Settings, Paint), applications that ignore the system font, and the title bar font on Windows 11.
+
+Yiti replaces the **font files themselves**, so all of those change too. Three differences that matter:
+
+| | Yiti | noMeiryoUI |
+|---|---|---|
+| Mechanism | Replaces the system font files (YaHei trio + Segoe UI) | Changes the UI font setting |
+| Settings, Start menu, taskbar, title bar | ✅ all follow | ❌ explicitly unsupported |
+| Weights | Pick once, regular/bold/light matched automatically | Specify each one by hand |
+| Undo | Automatic backup + one-click rollback, and from the component store if the backup is gone | Export the registry yourself |
+
+What it does not fix, we do not claim: text rendering sharpness (ClearType), apps that ship their own fonts (Office, Electron apps), and the one reboot required after the first apply.
+
 ## Undo
 
 | Entry | What it does |
