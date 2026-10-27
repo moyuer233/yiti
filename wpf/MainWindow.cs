@@ -1171,10 +1171,45 @@ namespace WinFontSwap.Wpf
             catch (Exception ex) { SetStatus("失败：" + ex.Message, true); }
         }
 
-        /// <summary>把界面复位到刚打开的样子：未选择字体、开关全开、系统元素读回系统当前值。不写系统。</summary>
+        /// <summary>
+        /// 「默认值」= 把源字体换成微软原版（从最近一次备份的 orig\ 里取），
+        /// 左侧五格显示 Microsoft YaHei / Segoe UI，接着点「应用」就写回原版。不写系统。
+        /// </summary>
+        /// <summary>从最近备份的 orig\ 目录取出原版字体，填进五个槽位（顺序与 TargetFiles 对应）。</summary>
+        int LoadDefaultSources()
+        {
+            int filled = 0;
+            try
+            {
+                var rootDir = Installer.BackupRoot;
+                if (!Directory.Exists(rootDir)) return 0;
+                var dirs = new List<string>(Directory.GetDirectories(rootDir));
+                dirs.Sort(StringComparer.Ordinal);
+                dirs.Reverse();   // 从最新往回找
+
+                // 每个文件分别找：不同批次备份里的文件集合不一样，不能只看最新那一个目录
+                for (int i = 0; i < Installer.TargetFiles.Length && i < _slots.Length; i++)
+                {
+                    foreach (var d in dirs)
+                    {
+                        var f = Path.Combine(Path.Combine(d, "orig"), Installer.TargetFiles[i]);
+                        if (!File.Exists(f)) continue;
+                        var entries = FontLibrary.ReadFile(f);
+                        if (entries.Count == 0) continue;
+                        _slots[i] = entries[0];
+                        filled++;
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex) { SetStatus("读原版字体失败：" + ex.Message, true); }
+            return filled;
+        }
+
         void ResetToDefaults()
         {
             for (int i = 0; i < _slots.Length; i++) _slots[i] = null;
+            int filled = LoadDefaultSources();
             for (int i = 0; i < _on.Length; i++)
             {
                 _on[i] = true;
@@ -1186,8 +1221,9 @@ namespace WinFontSwap.Wpf
                 if (_winTog[i] != null) { _winTog[i].IsChecked = true; T.RefreshToggleVisual(_winTog[i]); }
             }
             UpdateSlotLabels();
+            SyncWin32FromChoice();
             try { LoadWin32(); } catch { }
-            SetStatus("已恢复默认值", false);
+            SetStatus(filled > 0 ? "已切到默认字体，点「应用」写回" : "没有可用备份，只能选字体", filled == 0);
         }
 
         void RunRollbackAll()
