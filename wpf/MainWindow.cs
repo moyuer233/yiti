@@ -675,17 +675,17 @@ namespace WinFontSwap.Wpf
             TextBlock advDesc2;
             var userSw = T.Switch(true);
             _advUserFonts = userSw;
-            stack.Children.Add(T.Row("\uE74D", "写入时清用户级同名字体", "用户级字体优先级更高，会挡住替换", userSw, out advDesc2));
+            stack.Children.Add(T.Row("\uE74D", "写入时清用户级同名字体", "会挡住替换", userSw, out advDesc2));
 
             TextBlock advDescGen;
             var genBtn = T.Btn2("生成", false, 13);
             genBtn.Click += delegate { RunApply(true); };
-            stack.Children.Add(T.Row("\uE8A5", "只生成不写入", "产物放到 stage 目录，不动系统字体（调试用）", genBtn, out advDescGen));
+            stack.Children.Add(T.Row("\uE8A5", "只生成不写入", "只生成字体文件，不动系统", genBtn, out advDescGen));
 
             TextBlock advDescFont;
             var fontBtn = T.Btn2("还原", false, 13);
             fontBtn.Click += delegate { RunRollbackFontsOnly(); };
-            stack.Children.Add(T.Row("\uE777", "只还原字体文件", "从最近备份搬回 msyh/SegUIVar/segoeui", fontBtn, out advDescFont));
+            stack.Children.Add(T.Row("\uE777", "只还原字体文件", "从最近一次备份还原字体文件", fontBtn, out advDescFont));
 
             TextBlock advDesc3;
             var rb = T.Btn2("恢复", false, 13);
@@ -694,7 +694,7 @@ namespace WinFontSwap.Wpf
                 try { SetStatus(Installer.RestoreUserFonts(), false); }
                 catch (Exception ex) { SetStatus("恢复失败：" + ex.Message, true); }
             };
-            stack.Children.Add(T.Row("\uE777", "只还原用户级注册", "导入最近一次的 HKCU 字体注册备份", rb, out advDesc3));
+            stack.Children.Add(T.Row("\uE777", "只还原用户级注册", "导入最近一次的注册表备份", rb, out advDesc3));
 
             var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = stack, Padding = new Thickness(0, 0, 6, 12) };
             _pageScroll = scroll;
@@ -935,7 +935,7 @@ namespace WinFontSwap.Wpf
                         src != null && src.Italic);
                     done++;
                 }
-                SetStatus("系统元素已写入（" + done + " 项），注销后生效。", false);
+                SetStatus("系统元素已写入 " + done + " 项，注销后生效。", false);
             }
             catch (Exception ex) { SetStatus("写入失败：" + ex.Message, true); }
         }
@@ -1006,7 +1006,7 @@ namespace WinFontSwap.Wpf
             }
             UpdateSlotLabels();
             try { LoadWin32(); } catch { }
-            SetStatus("已恢复默认值（未写入系统）", false);
+            SetStatus("已恢复默认值", false);
         }
 
         void RunRollbackAll()
