@@ -23,32 +23,74 @@ namespace WinFontSwap
             try
             {
                 src = LoadWallpaper();
-                if (src == null) { Swap(Fallback(size), size); return; }
+                var colors = src == null ? new Color[0] : Dominant(src, 5);
 
-                int sw = Math.Max(8, size.Width / 24);
-                int sh = Math.Max(8, size.Height / 24);
-                using (var small = new Bitmap(sw, sh))
+                var result = new Bitmap(size.Width, size.Height);
+                using (var g = Graphics.FromImage(result))
                 {
-                    using (var g = Graphics.FromImage(small))
+                    // 底色
+                    using (var baseBrush = new LinearGradientBrush(new Rectangle(0, 0, size.Width, size.Height),
+                               Color.FromArgb(18, 22, 30), Color.FromArgb(8, 10, 14), 90f))
+                        g.FillRectangle(baseBrush, 0, 0, size.Width, size.Height);
+
+                    // 参考 Lyricify-Backgrounds（Apache-2.0）的三层结构：一层主色 + 两层辅助，
+                    // 各自缩放/旋转后叠加（我们省掉了动画与 GPU 网格，只保留观感）
+                    if (colors.Length > 0)
                     {
-                        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                        float scale = Math.Max((float)sw / src.Width, (float)sh / src.Height);
-                        int dw = (int)(src.Width * scale), dh = (int)(src.Height * scale);
-                        g.DrawImage(src, new Rectangle((sw - dw) / 2, (sh - dh) / 2, dw, dh));
+                        float[] scale = { 1.4f, 0.7f, 0.7f };
+                        float[] angle = { -6f, 12f, -20f };
+                        int[] alpha = { 170, 110, 95 };
+                        float[][] px = new float[][]
+                        {
+                            new float[] { 0.16f, 0.80f, 0.50f },
+                            new float[] { 0.72f, 0.26f, 0.58f },
+                            new float[] { 0.34f, 0.86f, 0.62f },
+                        };
+                        float[][] py = new float[][]
+                        {
+                            new float[] { 0.20f, 0.22f, 0.74f },
+                            new float[] { 0.72f, 0.18f, 0.86f },
+                            new float[] { 0.88f, 0.62f, 0.16f },
+                        };
+                        float[] radFactor = { 0.62f, 0.48f, 0.44f };
+
+                        for (int layer = 0; layer < 3; layer++)
+                        {
+                            using (var tmp = new Bitmap(size.Width, size.Height))
+                            {
+                                using (var gt = Graphics.FromImage(tmp))
+                                {
+                                    gt.SmoothingMode = SmoothingMode.AntiAlias;
+                                    gt.TranslateTransform(size.Width / 2f, size.Height / 2f);
+                                    gt.RotateTransform(angle[layer]);
+                                    gt.ScaleTransform(scale[layer], scale[layer]);
+                                    gt.TranslateTransform(-size.Width / 2f, -size.Height / 2f);
+                                    for (int i = 0; i < colors.Length && i < 3; i++)
+                                    {
+                                        float cx = size.Width * px[layer][i];
+                                        float cy = size.Height * py[layer][i];
+                                        float rad = Math.Max(size.Width, size.Height) * radFactor[layer];
+                                        using (var brush = new PathGradientBrush(Oval(cx, cy, rad)))
+                                        {
+                                            brush.CenterColor = Color.FromArgb(alpha[layer], colors[(i + layer) % colors.Length]);
+                                            brush.SurroundColors = new[] { Color.FromArgb(0, colors[(i + layer) % colors.Length]) };
+                                            gt.FillEllipse(brush, cx - rad, cy - rad, rad * 2, rad * 2);
+                                        }
+                                    }
+                                }
+                                g.DrawImage(tmp, 0, 0, size.Width, size.Height);
+                            }
+                        }
                     }
-                    var result = new Bitmap(size.Width, size.Height);
-                    using (var g = Graphics.FromImage(result))
-                    {
-                        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                        g.DrawImage(small, new Rectangle(0, 0, size.Width, size.Height));
-                        using (var dark = new SolidBrush(Color.FromArgb(60, 8, 10, 14)))
-                            g.FillRectangle(dark, 0, 0, size.Width, size.Height);
-                        using (var veil = new LinearGradientBrush(new Rectangle(0, 0, size.Width, size.Height),
-                                   Color.FromArgb(8, 0, 0, 0), Color.FromArgb(30, 0, 0, 0), 90f))
-                            g.FillRectangle(veil, 0, 0, size.Width, size.Height);
-                    }
-                    Swap(result, size);
+
+                    // 压暗（用户指定 60）
+                    using (var dark = new SolidBrush(Color.FromArgb(60, 8, 10, 14)))
+                        g.FillRectangle(dark, 0, 0, size.Width, size.Height);
+                    using (var veil = new LinearGradientBrush(new Rectangle(0, 0, size.Width, size.Height),
+                               Color.FromArgb(8, 0, 0, 0), Color.FromArgb(30, 0, 0, 0), 90f))
+                        g.FillRectangle(veil, 0, 0, size.Width, size.Height);
                 }
+                Swap(result, size);
             }
             catch { Swap(Fallback(size), size); }
             finally { if (src != null) src.Dispose(); }
@@ -69,6 +111,58 @@ namespace WinFontSwap
                        Color.FromArgb(24, 28, 36), Color.FromArgb(10, 12, 16), 90f))
                 g.FillRectangle(lg, 0, 0, size.Width, size.Height);
             return b;
+        }
+
+        static GraphicsPath Oval(float cx, float cy, float rad)
+        {
+            var p = new GraphicsPath();
+            p.AddEllipse(cx - rad, cy - rad, rad * 2, rad * 2);
+            return p;
+        }
+
+        /// <summary>从壁纸里取几个主色（跳过近黑/近灰，饱和度提上来一点）。</summary>
+        static Color[] Dominant(Bitmap src, int want)
+        {
+            var buckets = new System.Collections.Generic.Dictionary<int, int>();
+            var list = new System.Collections.Generic.List<Color>();
+            using (var tiny = new Bitmap(48, 27))
+            {
+                using (var g = Graphics.FromImage(tiny))
+                {
+                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    g.DrawImage(src, 0, 0, 48, 27);
+                }
+                for (int y = 0; y < 27; y++)
+                    for (int x = 0; x < 48; x++)
+                    {
+                        var c = tiny.GetPixel(x, y);
+                        int max = Math.Max(c.R, Math.Max(c.G, c.B));
+                        int min = Math.Min(c.R, Math.Min(c.G, c.B));
+                        if (max < 40) continue;                    // 近黑
+                        if (max - min < 18) continue;              // 近灰
+                        int key = ((c.R / 32) << 16) | ((c.G / 32) << 8) | (c.B / 32);
+                        int n;
+                        buckets.TryGetValue(key, out n);
+                        buckets[key] = n + 1;
+                    }
+            }
+            var ordered = new System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<int, int>>(buckets);
+            ordered.Sort(delegate (System.Collections.Generic.KeyValuePair<int, int> a, System.Collections.Generic.KeyValuePair<int, int> b) { return b.Value.CompareTo(a.Value); });
+            foreach (var kv in ordered)
+            {
+                int cr = ((kv.Key >> 16) & 0xFF) * 32 + 16;
+                int cg = ((kv.Key >> 8) & 0xFF) * 32 + 16;
+                int cb = (kv.Key & 0xFF) * 32 + 16;
+                list.Add(Color.FromArgb(Math.Min(255, cr), Math.Min(255, cg), Math.Min(255, cb)));
+                if (list.Count >= want) break;
+            }
+            if (list.Count == 0)
+            {
+                list.Add(Color.FromArgb(38, 68, 110));
+                list.Add(Color.FromArgb(90, 46, 96));
+                list.Add(Color.FromArgb(36, 92, 74));
+            }
+            return list.ToArray();
         }
 
         static Bitmap LoadWallpaper()
