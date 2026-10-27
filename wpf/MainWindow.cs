@@ -895,10 +895,15 @@ namespace WinFontSwap.Wpf
                     if (_metaText[i] == null) continue;
                     var info = infos[i];
                     var parts = new List<string>();
-                    parts.Add(info.Exists ? ("系统 " + (info.Version ?? "?")) : "缺失");
-                    if (info.Exists) parts.Add(Installer.HumanSize(info.Size));
-                    if (info.Applied) parts.Add("已替换");
-                    if (info.Queued) parts.Add("待重启");
+                    if (!info.Exists) parts.Add("文件缺失");
+                    else
+                    {
+                        // 用户要看的是“这个槽位现在实际是什么字体”，不是字体文件内部的版本号
+                        parts.Add(string.IsNullOrEmpty(info.Family) ? "未识别" : info.Family);
+                        parts.Add(Installer.HumanSize(info.Size));
+                        if (info.Applied) parts.Add("已替换");
+                        if (info.Queued) parts.Add("待重启");
+                    }
                     _metaText[i].Text = string.Join("   ", parts.ToArray());
                 }
             }
