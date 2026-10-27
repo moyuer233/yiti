@@ -263,7 +263,7 @@ namespace WinFontSwap.Wpf
         public MainWindow()
         {
             for (int i = 0; i < _winOn.Length; i++) _winOn[i] = true;
-            Title = "字体替换";
+            Title = "易体";
             Width = 1080;
             Height = 720;
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
