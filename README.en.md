@@ -88,7 +88,7 @@ No Visual Studio needed, only the .NET Framework compiler shipped with Windows:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build-wpf.ps1
 ```
 
-The output is always `dist\WinFontSwapWpf.exe`.
+The output is always `dist\YiTi.exe`.
 
 ## Disclaimer
 

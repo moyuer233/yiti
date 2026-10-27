@@ -88,7 +88,7 @@ Windows 7 / 8 / 10 / 11。需要管理员权限（要写 `C:\Windows\Fonts`）�
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build-wpf.ps1
 ```
 
-产物固定在 `dist\WinFontSwapWpf.exe`。
+产物固定在 `dist\YiTi.exe`。
 
 ## 免责
 

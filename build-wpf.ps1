@@ -8,7 +8,7 @@ $csc = 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 $gac = 'C:\Windows\Microsoft.NET\assembly'
 $outDir = Join-Path $root 'dist'
 New-Item -ItemType Directory -Force $outDir | Out-Null
-$out = Join-Path $outDir 'WinFontSwapWpf.exe'
+$out = Join-Path $outDir 'YiTi.exe'
 
 Get-Process WinFontSwapWpf -ErrorAction SilentlyContinue | ForEach-Object { $_.Kill() }
 Start-Sleep -Milliseconds 400
@@ -29,7 +29,7 @@ $a += ('/r:' + (Join-Path $gac 'GAC_MSIL\WindowsBase\v4.0_4.0.0.0__31bf3856ad364
 $a += ('/r:' + (Join-Path $gac 'GAC_MSIL\System.Xaml\v4.0_4.0.0.0__b77a5c561934e089\System.Xaml.dll'))
 $a += '/r:System.Drawing.dll'
 $a += '/r:System.Core.dll'
-foreach ($f in @('Sfnt.cs','Installer.cs','FontLibrary.cs','Win32Fonts.cs')) {
+foreach ($f in @('AssemblyInfo.cs','Sfnt.cs','Installer.cs','FontLibrary.cs','Win32Fonts.cs')) {
   $a += (Join-Path $root ('src\' + $f))
 }
 foreach ($f in @('WpfApp.cs','MainWindow.cs','FontPickerDialog.cs','Styles.cs')) {
@@ -48,5 +48,3 @@ try {
 
 $fi = Get-Item $out
 'WPF OK  ' + $fi.FullName + '  ' + $fi.Length + ' bytes  ' + $signed
-
-

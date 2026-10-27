@@ -4,11 +4,11 @@ $log = 'H:\1\WinFontSwap\_sign.log'
 function L($m) { Add-Content -Path $log -Value ((Get-Date -Format 'HH:mm:ss') + ' ' + $m) -Encoding UTF8 }
 Set-Content -Path $log -Value '=== sign+trust+unblock ===' -Encoding UTF8
 $subject = 'CN=moyuer233'
-taskkill /F /IM WinFontSwapWpf.exe 2>&1 | Out-Null
+taskkill /F /IM YiTi.exe 2>&1 | Out-Null
 taskkill /F /IM WinFontSwap.exe 2>&1 | Out-Null
 
 $exes = @(
-  'H:\1\WinFontSwap\dist\WinFontSwapWpf.exe',
+  'H:\1\WinFontSwap\dist\YiTi.exe',
   'H:\1\WinFontSwap\build\WinFontSwap.exe',
   'H:\1\WinFontSwap\build\WinFontSwap.console.exe')
 
