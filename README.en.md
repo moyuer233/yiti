@@ -69,6 +69,23 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build-wpf.ps1
 
 The output is always `dist\WinFontSwapWpf.exe`.
 
+## Risks (read before using)
+
+This tool rewrites **system font files**, which means "reboot to finish, and hard to undo before that". Known risks:
+
+- **A font with incomplete coverage can leave missing glyphs.** If the chosen font lacks CJK glyphs or the needed weights, menus and title bars may show boxes or blurry text after the reboot, and some legacy apps may render badly. The app validates that the font file parses, but it cannot judge whether the typeface looks right or covers every character.
+- **Office / WPS layout and export can change.** A document that asks for "Microsoft YaHei" now gets your font, so exported images, printing and PDF conversion will differ from before (every tool in this category has the same issue).
+- **The first apply requires a reboot.** Font files are swapped at boot; a forced shutdown in between can leave a partial swap that needs one more reboot to finish.
+- **Antivirus may block or flag it.** Writing to `C:\Windows\Fonts` triggers security software on some machines (noMeiryoUI documents the same). A block is reported as an error, not silently ignored.
+- **Windows updates may reset it.** Feature updates restore the original system fonts, so you need to apply again afterwards.
+- **Undo relies on the backup or the component store.** Originals are backed up automatically and can also be taken from `C:\Windows\WinSxS`; if both were cleaned, only a restore point or installation media helps. **Create a restore point yourself before the first run.**
+
+In short: the app backs up, rolls back and can restore originals, but it cannot promise a perfect one-click undo in every environment. Use it only if you can accept the risk of a system reinstall.
+
+## Disclaimer
+
+The software is provided "as is", without warranty of any kind (see [LICENSE](LICENSE)). The author is not liable for system damage, data loss or any other loss caused by using it.
+
 ## License
 
 [MIT](LICENSE) — free to use, modify and redistribute, **as long as the author attribution and this license notice are kept**.
