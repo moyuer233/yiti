@@ -5,6 +5,10 @@
   <a href="https://github.com/moyuer233/yiti"><img alt=".NET" src="https://img.shields.io/badge/.NET-4.8-512BD4?style=flat-square&labelColor=161b22&logo=dotnet&logoColor=white"></a>
 </p>
 
+<p align="center">
+  <img src="docs/icon.png" width="96" height="96" alt="易体">
+</p>
+
 # 易体
 
 把 Windows 系统字体换成你喜欢的字体。选一次，点应用，重启，设置、开始菜单、资源管理器就都是新字体了。

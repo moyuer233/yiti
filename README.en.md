@@ -5,6 +5,10 @@
   <a href="https://github.com/moyuer233/yiti"><img alt=".NET" src="https://img.shields.io/badge/.NET-4.8-512BD4?style=flat-square&labelColor=161b22&logo=dotnet&logoColor=white"></a>
 </p>
 
+<p align="center">
+  <img src="docs/icon.png" width="96" height="96" alt="Yiti">
+</p>
+
 # Yiti (易体)
 
 Swap the Windows system fonts for any font you like. Pick a font, hit Apply, reboot — Settings, the Start menu and Explorer all follow.
