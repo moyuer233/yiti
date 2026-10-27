@@ -7,13 +7,16 @@ namespace WinFontSwap
     static class Program
     {
         /// <summary>命令行把字体应用到三个目标（常规 / 粗体 / 细体，路径少于 3 个时后面沿用第一个）。</summary>
-        static int ApplyCli(string[] fontPaths)
+        static int ApplyCli(string[] fontPaths) { return ApplyCli(fontPaths, -1); }
+
+        static int ApplyCli(string[] fontPaths, int onlySlot)
         {
             try
             {
                 var list = new System.Collections.Generic.List<FontSource>();
                 for (int i = 0; i < Installer.TargetFiles.Length; i++)
                 {
+                    if (onlySlot >= 0 && i != onlySlot) continue;
                     string fontPath = fontPaths[Math.Min(i, fontPaths.Length - 1)];
                     var entries = FontLibrary.ReadFile(fontPath);
                     if (entries.Count == 0) { Console.WriteLine("读不出字体：" + fontPath); return 2; }
@@ -40,6 +43,38 @@ namespace WinFontSwap
             }
         }
 
+        /// <summary>生成一个单 face 字体文件（内部用）：--gen src out family subfamily psname [keepvar]</summary>
+        static int GenCli(string[] a)
+        {
+            try
+            {
+                var src = File.ReadAllBytes(a[0]);
+                var entries = FontLibrary.ReadFile(a[0]);
+                int faceIndex = entries.Count > 0 ? entries[0].FaceIndex : 0;
+                var spec = new NameSpec
+                {
+                    Family = a[2],
+                    FamilyTypo = a[2],
+                    Subfamily = a[3],
+                    SubfamilyTypo = a[3],
+                    FullName = a[2] + (a[3] == "Regular" ? "" : " " + a[3]),
+                    PostScript = a[4]
+                };
+                bool keepVar = a.Length > 5 && a[5] == "1";
+                var data = Sfnt.BuildSingle(src, faceIndex, spec, keepVar);
+                var dir = Path.GetDirectoryName(a[1]);
+                if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+                File.WriteAllBytes(a[1], data);
+                Console.WriteLine("generated " + a[1] + "  " + data.Length + " bytes  family=" + a[2] + " sub=" + a[3]);
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("gen 失败：" + ex.Message);
+                return 1;
+            }
+        }
+
         [STAThread]
         static int Main(string[] args)
         {
@@ -50,6 +85,18 @@ namespace WinFontSwap
                 if (args[0] == "--acltest") return SelfTest.AclTest();
                 if (args[0] == "--applytest") return SelfTest.ApplyTest();
                 if (args[0] == "--rendertest") return SelfTest.RenderTest();
+                if (args[0] == "--gen" && args.Length >= 6)
+                {
+                    var g = new string[args.Length - 1];
+                    Array.Copy(args, 1, g, 0, args.Length - 1);
+                    return GenCli(g);
+                }
+                if (args[0] == "--applyslot" && args.Length >= 3)
+                {
+                    int slot;
+                    if (!int.TryParse(args[1], out slot)) { Console.WriteLine("槽位号无效"); return 2; }
+                    return ApplyCli(new[] { args[2] }, slot);
+                }
                 if (args[0] == "--apply" && args.Length >= 2)
                 {
                     var fonts = new string[args.Length - 1];
