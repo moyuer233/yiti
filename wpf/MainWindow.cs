@@ -233,6 +233,7 @@ namespace WinFontSwap.Wpf
         TextBlock[] _srcText = new TextBlock[5];
         TextBlock[] _metaText = new TextBlock[5];
         TextBlock[] _fontPreview = new TextBlock[5];
+        readonly Dictionary<string, string> _appliedFamily = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         ToggleButton[] _tog = new ToggleButton[5];
         TextBlock[] _winCur = new TextBlock[Win32Fonts.Names.Length];
         TextBox[] _winSize = new TextBox[Win32Fonts.Names.Length];
@@ -828,6 +829,12 @@ namespace WinFontSwap.Wpf
             try
             {
                 var infos = Installer.Inspect();
+                var state = Installer.ReadState();
+                _appliedFamily.Clear();
+                foreach (var kv in state)
+                {
+                    if (kv.Key.StartsWith("family_")) _appliedFamily[kv.Key.Substring(7)] = kv.Value;
+                }
                 for (int i = 0; i < infos.Count && i < _metaText.Length; i++)
                 {
                     if (_metaText[i] == null) continue;
@@ -840,8 +847,14 @@ namespace WinFontSwap.Wpf
                     }
                     else
                     {
-                        // 按反馈：不显示文件大小；字体名用该字体自身渲染，前面带「当前状态：」
-                        var fam = string.IsNullOrEmpty(info.Family) ? "未识别" : info.Family;
+                        // 按反馈：直接显示“现在装进去的是哪个字体”，不再显示槽位原始族名；不显示文件大小
+                        var fam = info.Family;
+                        if (info.Applied)
+                        {
+                            string replaced;
+                            if (_appliedFamily.TryGetValue(info.FileName, out replaced) && !string.IsNullOrEmpty(replaced)) fam = replaced;
+                        }
+                        if (string.IsNullOrEmpty(fam)) fam = "未识别";
                         if (_fontPreview[i] != null)
                         {
                             _fontPreview[i].Text = fam;

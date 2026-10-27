@@ -664,6 +664,12 @@ namespace WinFontSwap
             state["stamp"] = stamp;
             var applied = new List<string>();
             var pairs = new List<string[]>();
+            // 记录每个目标写进去的是哪个字体族，界面才能显示“已替换为 X”
+            var srcFamily = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var s in sources)
+            {
+                if (s != null && !string.IsNullOrEmpty(s.TargetFile)) srcFamily[s.TargetFile] = s.Family == null ? "" : s.Family;
+            }
             // 安全副本放 orig\ 子目录；backup\<文件> 这个路径要留给「重启时把原文件改名搬进来」，
             // 那个目标路径必须不存在（MOVEFILE_DELAY_UNTIL_REBOOT 不能覆盖已存在的目标）
             var safetyDir = Path.Combine(result.BackupDir, "orig");
@@ -690,6 +696,8 @@ namespace WinFontSwap
 
                 state["sddl_" + file] = sddl;
                 state["sha_" + file] = Sha256(path);
+                string fam;
+                if (srcFamily.TryGetValue(file, out fam)) state["family_" + file] = fam;
                 applied.Add(file);
             }
 
@@ -850,6 +858,7 @@ namespace WinFontSwap
                 }
 
                 state["sha_" + f] = Sha256(bak);
+            state.Remove("family_" + f);
             }
 
             AddQueuePairs(pairs);
