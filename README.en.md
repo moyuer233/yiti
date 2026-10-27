@@ -1,33 +1,39 @@
 <p align="center">
-  <a href="https://github.com/moyuer233/yiti/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-3DA639?style=flat-square&labelColor=161b22"></a>
-  <a href="https://github.com/moyuer233/yiti"><img alt="Release" src="https://img.shields.io/badge/release-v0.1.0-4D6BFE?style=flat-square&labelColor=161b22"></a>
-  <a href="https://github.com/moyuer233/yiti"><img alt="Platform" src="https://img.shields.io/badge/platform-Windows%207%20%7C%208%20%7C%2010%20%7C%2011-2088FF?style=flat-square&labelColor=161b22&logo=windows&logoColor=white"></a>
-  <a href="https://github.com/moyuer233/yiti"><img alt=".NET" src="https://img.shields.io/badge/.NET-4.8-512BD4?style=flat-square&labelColor=161b22&logo=dotnet&logoColor=white"></a>
+  <a href="https://github.com/moyuer233/yiti"><img src="docs/icon.png" width="200" height="200" alt="Yiti"></a>
 </p>
 
-<p align="center">
-  <img src="docs/icon.png" width="96" height="96" alt="Yiti">
-</p>
+<div align="center">
 
 # Yiti (易体)
 
-Swap the Windows system fonts for any font you like. Pick a font, hit Apply, reboot — Settings, the Start menu and Explorer all follow.
+_✨ Swap the Windows system fonts for any font you like — Settings and the Start menu follow ✨_
+
+</div>
+
+<p align="center">
+  <a href="https://github.com/moyuer233/yiti/blob/main/LICENSE"><img alt="license" src="https://img.shields.io/github/license/moyuer233/yiti?style=flat-square&labelColor=161b22&color=3DA639&logo=github&logoColor=white"/></a>
+  <a href="https://github.com/moyuer233/yiti/releases"><img alt="release" src="https://img.shields.io/badge/release-v0.1.0-4D6BFE?style=flat-square&labelColor=161b22&color=4D6BFE&logo=github&logoColor=white"/></a>
+  <a href="https://github.com/moyuer233/yiti/releases"><img alt="downloads" src="https://img.shields.io/github/downloads/moyuer233/yiti/total?style=flat-square&labelColor=161b22&color=2088FF&logo=github&logoColor=white"/></a>
+  <a href="https://github.com/moyuer233/yiti/commits/main"><img alt="commit activity" src="https://img.shields.io/github/commit-activity/m/moyuer233/yiti?style=flat-square&labelColor=161b22&color=2088FF&logo=github&logoColor=white"/></a>
+  <a href="https://github.com/moyuer233/yiti/commits/main"><img alt="last commit" src="https://img.shields.io/github/last-commit/moyuer233/yiti?style=flat-square&labelColor=161b22&color=2088FF&logo=github&logoColor=white"/></a>
+</p>
+<p align="center">
+  <a href="https://www.microsoft.com/windows"><img alt="platform" src="https://img.shields.io/badge/platform-Windows%207%2F8%2F10%2F11-0078D4?style=flat-square&labelColor=161b22&color=0078D4&logo=windows&logoColor=white"/></a>
+  <a href="https://dotnet.microsoft.com"><img alt=".NET" src="https://img.shields.io/badge/.NET-4.8-512BD4?style=flat-square&labelColor=161b22&color=512BD4&logo=dotnet&logoColor=white"/></a>
+  <a href="https://github.com/moyuer233/yiti"><img alt="deps" src="https://img.shields.io/badge/single%20exe-no%20deps-5C2D91?style=flat-square&labelColor=161b22&color=5C2D91"/></a>
+</p>
 
 ![Font replacement](docs/font.png)
 
-## What it replaces
+## Features
 
-- **Chinese**: Microsoft YaHei Regular / Bold / Light
+- **Chinese**: Microsoft YaHei Regular / Bold / Light, all three weights at once
 - **Latin and digits**: Segoe UI, Segoe UI Variable
 - **Legacy shell elements**: small caption, menu, message box, status bar, icon
-
-Picking one font is enough: weights are matched automatically (regular 400, bold 700, light 300). Use the per-row **Select** button when you want to override a single slot.
-
-## Quick start
-
-1. Click **Select font…** and choose a font
-2. Click **Apply**
-3. Reboot once (font files are swapped at boot time)
+- **Automatic weight matching**: pick one font, weights 400 / 700 / 300 are matched for you; override a single row with its **Select** button
+- **Settings, Start menu, taskbar, title bar**: they all follow because the font files themselves are replaced
+- **Backup and rollback built in**: one-click rollback, and originals can also be taken from the Windows component store if the backup is gone
+- **Older systems degrade gracefully**: fonts that do not exist there (Light or Segoe UI Variable on Windows 7) are shown greyed out with a reason
 
 ## How it differs from noMeiryoUI
 
@@ -40,9 +46,15 @@ Yiti replaces the **font files themselves**, so all of those change too. Three d
 | Mechanism | Replaces the system font files (YaHei trio + Segoe UI) | Changes the UI font setting |
 | Settings, Start menu, taskbar, title bar | ✅ all follow | ❌ explicitly unsupported |
 | Weights | Pick once, regular/bold/light matched automatically | Specify each one by hand |
-| Undo | Automatic backup + one-click rollback, and from the component store if the backup is gone | Export the registry yourself |
+| Undo | Automatic backup + one-click rollback, plus the component store if the backup is gone | Export the registry yourself |
 
 What it does not fix, we do not claim: text rendering sharpness (ClearType), apps that ship their own fonts (Office, Electron apps), and the one reboot required after the first apply.
+
+## Quick start
+
+1. Click **Select font…** and choose a font
+2. Click **Apply**
+3. Reboot once (font files are swapped at boot)
 
 ## Undo
 
@@ -51,17 +63,22 @@ What it does not fix, we do not claim: text rendering sharpness (ClearType), app
 | **Roll back all** | Restores the original font files and the shell element settings |
 | **Defaults → Apply** | Switches the source fonts back to the Microsoft originals and writes them |
 
-Originals come from the Windows component store (`C:\Windows\WinSxS`) first, then from the automatic backup made on the first apply — **undo keeps working even if the backup is gone**.
+Originals come from the Windows component store (`C:\Windows\WinSxS`) first, then from the automatic backup made on the first apply.
+
+## Risks (read before using)
+
+This tool rewrites **system font files**, which means "reboot to finish, and hard to undo before that". Known risks:
+
+- **A font with incomplete coverage can leave missing glyphs.** If the chosen font lacks CJK glyphs or the needed weights, menus and title bars may show boxes or blurry text after the reboot, and some legacy apps may render badly. The app validates that the font file parses, but it cannot judge whether the typeface looks right or covers every character.
+- **Office / WPS layout and export can change.** A document that asks for "Microsoft YaHei" now gets your font, so exported images, printing and PDF conversion will differ (every tool in this category has the same issue).
+- **The first apply requires a reboot.** Font files are swapped at boot; a forced shutdown in between can leave a partial swap that needs one more reboot.
+- **Antivirus may block or flag it.** Writing to `C:\Windows\Fonts` triggers security software on some machines (noMeiryoUI documents the same). A block is reported as an error, not silently ignored.
+- **Windows updates may reset it.** Feature updates restore the original system fonts, so you need to apply again afterwards.
+- **Undo relies on the backup or the component store.** If both were cleaned, only a restore point or installation media helps. **Create a restore point yourself before the first run.**
 
 ## Supported systems
 
-Windows 7 / 8 / 10 / 11. Fonts missing on older systems (for example Light or Segoe UI Variable on Windows 7) are shown greyed out with a reason instead of a button that does nothing.
-
-## Notes
-
-- Administrator rights are required (it writes to `C:\Windows\Fonts`); the executable is manifested, so just double-click it
-- A reboot is required after the first apply
-- Only the system UI changes — apps that ship their own fonts are untouched
+Windows 7 / 8 / 10 / 11. Administrator rights are required (it writes to `C:\Windows\Fonts`); the executable is manifested, so just double-click it.
 
 ## Build from source
 
@@ -72,19 +89,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build-wpf.ps1
 ```
 
 The output is always `dist\WinFontSwapWpf.exe`.
-
-## Risks (read before using)
-
-This tool rewrites **system font files**, which means "reboot to finish, and hard to undo before that". Known risks:
-
-- **A font with incomplete coverage can leave missing glyphs.** If the chosen font lacks CJK glyphs or the needed weights, menus and title bars may show boxes or blurry text after the reboot, and some legacy apps may render badly. The app validates that the font file parses, but it cannot judge whether the typeface looks right or covers every character.
-- **Office / WPS layout and export can change.** A document that asks for "Microsoft YaHei" now gets your font, so exported images, printing and PDF conversion will differ from before (every tool in this category has the same issue).
-- **The first apply requires a reboot.** Font files are swapped at boot; a forced shutdown in between can leave a partial swap that needs one more reboot to finish.
-- **Antivirus may block or flag it.** Writing to `C:\Windows\Fonts` triggers security software on some machines (noMeiryoUI documents the same). A block is reported as an error, not silently ignored.
-- **Windows updates may reset it.** Feature updates restore the original system fonts, so you need to apply again afterwards.
-- **Undo relies on the backup or the component store.** Originals are backed up automatically and can also be taken from `C:\Windows\WinSxS`; if both were cleaned, only a restore point or installation media helps. **Create a restore point yourself before the first run.**
-
-In short: the app backs up, rolls back and can restore originals, but it cannot promise a perfect one-click undo in every environment. Use it only if you can accept the risk of a system reinstall.
 
 ## Disclaimer
 
