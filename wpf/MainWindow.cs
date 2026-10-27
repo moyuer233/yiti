@@ -253,6 +253,7 @@ namespace WinFontSwap.Wpf
         Win32Fonts.Info[] _winInfo = new Win32Fonts.Info[Win32Fonts.Names.Length];
         string[] _winFace = new string[Win32Fonts.Names.Length];
         ToggleButton _advCache, _advUserFonts;
+        bool _advCacheOn = true, _advUserFontsOn = true;
 
 
         public MainWindow()
@@ -296,7 +297,17 @@ namespace WinFontSwap.Wpf
                 try { LoadWin32(); } catch (Exception ex) { WpfProgram.Log("LoadWin32: " + ex.Message); }
                 foreach (var a in Environment.GetCommandLineArgs())
                 {
-                    if (a.StartsWith("--scroll:") && _pageScroll != null)
+                    // 自测：切一圈页再回来，验证状态不会停在「读取中」
+                    if (a == "--cycle" && _nav != null)
+                    {
+                        Dispatcher.BeginInvoke(new Action(delegate
+                        {
+                            _nav.SelectedIndex = 1;
+                            _nav.SelectedIndex = 2;
+                            _nav.SelectedIndex = 0;
+                        }));
+                    }
+                    else if (a.StartsWith("--scroll:") && _pageScroll != null)
                     {
                         double off;
                         if (double.TryParse(a.Substring(9), out off)) _pageScroll.ScrollToVerticalOffset(off);
@@ -506,7 +517,14 @@ namespace WinFontSwap.Wpf
         void ShowPage()
         {
             int i = _nav.SelectedIndex;
-            if (i == 0) _content.Content = BuildFontPage();
+            if (i == 0)
+            {
+                _content.Content = BuildFontPage();
+                // 页面每次切换都会重建控件，必须重新灌一次真实状态，否则永远停在「读取中」
+                try { UpdateSlotLabels(); } catch { }
+                try { RefreshTargets(); } catch { }
+                try { LoadWin32(); } catch { }
+            }
             else if (i == 1) _content.Content = BuildAdvancedPage();
             else _content.Content = BuildPresetPage();
         }
@@ -668,12 +686,14 @@ namespace WinFontSwap.Wpf
             stack.Children.Add(new Border { Height = 16 });
 
             TextBlock advDesc1;
-            var cacheSw = T.Switch(true);
+            var cacheSw = T.Switch(_advCacheOn);
+            cacheSw.Click += delegate { _advCacheOn = cacheSw.IsChecked == true; };
             _advCache = cacheSw;
             stack.Children.Add(T.Row("\uE72C", "写入时清字体缓存", "重启后由系统重建", cacheSw, out advDesc1));
 
             TextBlock advDesc2;
-            var userSw = T.Switch(true);
+            var userSw = T.Switch(_advUserFontsOn);
+            userSw.Click += delegate { _advUserFontsOn = userSw.IsChecked == true; };
             _advUserFonts = userSw;
             stack.Children.Add(T.Row("\uE74D", "写入时清用户级同名字体", "会挡住替换", userSw, out advDesc2));
 
