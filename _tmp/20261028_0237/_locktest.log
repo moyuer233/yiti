@@ -1,2 +1,0 @@
-﻿opened-for-write=NO MethodInvocationException 使用“4”个参数调用“Open”时发生异常:“文件“C:\Windows\Fonts\msyh.ttc”正由另一进程使用，因此该进程无法访问此文件。”
-share-readwrite=YES

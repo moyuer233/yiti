@@ -1,4 +1,0 @@
-﻿before 417,141
-move ok=True err=0
-after 120,80
-backdrop-diff=71.3

@@ -1,6 +1,0 @@
-== 字体引擎自检 ==
-[FAIL] 用系统 msyh.ttc 重建 TTC（常规） -> 对路径“C:\Users\19195\AppData\Local\Temp\WinFontSwapTest\selftest_regular.ttc”的访问被拒绝。
-[FAIL] 用 Deng.ttf 生成 常规/粗体/细体 -> 对路径“C:\Users\19195\AppData\Local\Temp\WinFontSwapTest\selftest_msyh.ttc”的访问被拒绝。
-[OK]   名字落到正确的家族
-SELFTEST FAILED: 2
-

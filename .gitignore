@@ -1,9 +1,35 @@
+# 构建与运行产物（dist 里的发布产物是唯一要跟仓库走的）
 bin/
 obj/
 *.user
 *.suo
-*.png
-!screenshot.png
-_*.txt
-_*.ps1
+*.log
+wpf.log
+
+# 临时/调试
+_tmp/
+_probe/
+_proto/
+_shots/
 .edithere/
+*.edithere
+
+# 备份与缓存抓取
+_backup_*/
+_fontcache-backup/
+_dwritecache-backup/
+_userfont-backup/
+_origyahei.ttf
+
+# 旧版 WinForms 源码：留在 git 历史里，不进当前仓库
+legacy/
+
+# 一次性脚本与截图草稿（README 用的截图在 docs/ 里，单独放行）
+_*.py
+_*.ps1
+_*.txt
+*.png
+!docs/*.png
+
+Thumbs.db
+desktop.ini
