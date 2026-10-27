@@ -47,6 +47,45 @@ namespace WinFontSwap
                 }
             });
 
+            Check("五个目标走同一套分派（含 SegUIVar 四族名 / segoeui 单 face）", () =>
+            {
+                var src = File.ReadAllBytes(Path.Combine(Installer.FontsDir, "Deng.ttf"));
+                var dir = Path.Combine(_tempDir ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "selftest_tmp"), "dispatch");
+                Directory.CreateDirectory(dir);
+                var list = new List<FontSource>();
+                for (int i = 0; i < Installer.TargetFiles.Length; i++)
+                {
+                    list.Add(new FontSource
+                    {
+                        TargetFile = Installer.TargetFiles[i],
+                        SourcePath = Path.Combine(Installer.FontsDir, "Deng.ttf"),
+                        FaceIndex = 0,
+                        Family = "DengXian",
+                        Subfamily = "Regular",
+                        Data = src
+                    });
+                }
+                var built = Installer.BuildFonts(list, dir, delegate (string m) { Line("    " + m); });
+                if (built.BuiltFiles.Count != 5) throw new Exception("产物数不是 5：" + built.BuiltFiles.Count);
+
+                var uiPath = Path.Combine(dir, "SegUIVar.ttf");
+                var uiFaces = Sfnt.FaceOffsets(File.ReadAllBytes(uiPath));
+                if (uiFaces.Length != 4) throw new Exception("SegUIVar face 数不是 4：" + uiFaces.Length);
+                var uiData = File.ReadAllBytes(uiPath);
+                string fam, sub, ver, full; int wt;
+                var expect = new[] { "Segoe UI Variable", "Segoe UI Variable Text", "Segoe UI Variable Display", "Segoe UI Variable Small" };
+                for (int i = 0; i < 4; i++)
+                {
+                    Sfnt.TryReadNames(uiData, uiFaces[i], out fam, out sub, out ver, out full, out wt);
+                    if (fam != expect[i]) throw new Exception("第 " + i + " 个 face 家族名不对：" + fam);
+                }
+
+                var seData = File.ReadAllBytes(Path.Combine(dir, "segoeui.ttf"));
+                if (Sfnt.FaceOffsets(seData).Length != 1) throw new Exception("segoeui 不是单 face");
+                Sfnt.TryReadNames(seData, 0, out fam, out sub, out ver, out full, out wt);
+                if (fam != "Segoe UI") throw new Exception("segoeui 家族名不对：" + fam);
+            });
+
             Check("名字落到正确的家族", () =>
             {
                 var src = File.ReadAllBytes(Path.Combine(Installer.FontsDir, "msyh.ttc"));
@@ -236,11 +275,29 @@ namespace WinFontSwap
             return _fail;
         }
 
+        static string _tempDir;
+
         static string TempPath(string name)
         {
-            var dir = Path.Combine(Path.GetTempPath(), "WinFontSwapTest");
-            Directory.CreateDirectory(dir);
-            return Path.Combine(dir, name);
+            if (_tempDir == null)
+            {
+                // 本机上安全软件会拦「陌生 exe 往 Temp 写文件」，所以优先写在自己的目录下
+                var dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "selftest_tmp");
+                try
+                {
+                    Directory.CreateDirectory(dir);
+                    var probe = Path.Combine(dir, "probe.bin");
+                    File.WriteAllBytes(probe, new byte[] { 1, 2, 3 });
+                    File.Delete(probe);
+                }
+                catch
+                {
+                    dir = Path.Combine(Path.GetTempPath(), "WinFontSwapTest");
+                    Directory.CreateDirectory(dir);
+                }
+                _tempDir = dir;
+            }
+            return Path.Combine(_tempDir, name);
         }
 
         static void LoadCheck(string path)

@@ -27,10 +27,10 @@ namespace WinFontSwap
         Label _title, _subtitle;
         RoundedButton _pickBtn;
         Label _pickedLabel;
-        Label[] _slotLabels = new Label[4];
-        RoundedButton[] _slotBtns = new RoundedButton[4];
-        ToggleSwitch[] _toggles = new ToggleSwitch[4];
-        Label[] _targetMeta = new Label[4];
+        Label[] _slotLabels = new Label[5];
+        RoundedButton[] _slotBtns = new RoundedButton[5];
+        ToggleSwitch[] _toggles = new ToggleSwitch[5];
+        Label[] _targetMeta = new Label[5];
         RoundedButton _applyBtn, _genBtn, _rollbackBtn, _cancelBtn;
         Label _status;
 
@@ -52,7 +52,9 @@ namespace WinFontSwap
 
         FontEntry _picked;
         List<FontEntry> _pool = new List<FontEntry>();
-        FontEntry[] _slots = new FontEntry[4];
+        FontEntry[] _slots = new FontEntry[5];
+        ToggleSwitch _advCache;
+        ToggleSwitch _advUserFonts;
         PrivateFontCollection _pfc;
 
         public MainForm() : this(null) { }
@@ -216,7 +218,7 @@ namespace WinFontSwap
                 Text = "系统元素",
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
                 AutoSize = false,
-                Location = new Point(16, 248),
+                Location = new Point(16, 246),
                 Size = new Size(200, 22)
             });
 
@@ -229,14 +231,14 @@ namespace WinFontSwap
 
             for (int i = 0; i < 6; i++)
             {
-                int y = 278 + i * 26;
+                int y = 270 + i * 22;
                 card.Controls.Add(new Label
                 {
                     Text = Win32Fonts.Names[i],
                     Font = new Font("Segoe UI", 9f),
                     AutoSize = false,
                     Location = new Point(16, y),
-                    Size = new Size(90, 24),
+                    Size = new Size(90, 22),
                     TextAlign = ContentAlignment.MiddleLeft
                 });
                 var cur = new Label
@@ -247,7 +249,7 @@ namespace WinFontSwap
                     AutoSize = false,
                     AutoEllipsis = true,
                     Location = new Point(110, y),
-                    Size = new Size(InnerW - 28 - 52 - 6 - 56 - 110 - 12, 24),
+                    Size = new Size(InnerW - 28 - 52 - 6 - 56 - 110 - 12, 22),
                     TextAlign = ContentAlignment.MiddleLeft
                 };
                 var size = new NumericUpDown
@@ -266,7 +268,7 @@ namespace WinFontSwap
                     Text = "选择",
                     Font = new Font("Segoe UI", 8.5f),
                     Location = new Point(InnerW - 28 - 52, y),
-                    Size = new Size(52, 24)
+                    Size = new Size(52, 22)
                 };
                 btn.Click += delegate { PickWin32Face(idx); };
                 card.Controls.Add(cur);
@@ -282,7 +284,7 @@ namespace WinFontSwap
                 Tag = "dim",
                 Font = new Font("Segoe UI", 8.5f),
                 AutoSize = false,
-                Location = new Point(16, 442),
+                Location = new Point(16, 404),
                 Size = new Size(InnerW - 32, 18)
             };
             card.Controls.Add(_winStatus);
@@ -614,7 +616,7 @@ namespace WinFontSwap
 
         void BuildFontCard()
         {
-            var card = new CardPanel { Location = new Point(PadX, 10), Size = new Size(InnerW, 468) };
+            var card = new CardPanel { Location = new Point(PadX, 10), Size = new Size(InnerW, 530) };
             _pages[0].Controls.Add(card);
             card.Controls.Add(Header("字体", 16, 14));
 
@@ -634,10 +636,10 @@ namespace WinFontSwap
             card.Controls.Add(_pickBtn);
             card.Controls.Add(_pickedLabel);
 
-            string[] slotNames = { "常规", "粗体", "细体", "英文数字" };
+            string[] slotNames = { "常规", "粗体", "细体", "英文数字", "Segoe UI" };
             for (int i = 0; i < slotNames.Length; i++)
             {
-                int y = 86 + i * 34;
+                int y = 76 + i * 30;
                 var name = new Label
                 {
                     Text = slotNames[i],
@@ -645,7 +647,7 @@ namespace WinFontSwap
                     Font = new Font("Segoe UI", 9f),
                     AutoSize = false,
                     Location = new Point(16, y),
-                    Size = new Size(64, 30),
+                    Size = new Size(64, 26),
                     TextAlign = ContentAlignment.MiddleLeft
                 };
                 var val = new Label
@@ -656,7 +658,7 @@ namespace WinFontSwap
                     AutoSize = false,
                     AutoEllipsis = true,
                     Location = new Point(84, y),
-                    Size = new Size(172, 30),
+                    Size = new Size(172, 26),
                     TextAlign = ContentAlignment.MiddleLeft
                 };
                 var meta = new Label
@@ -667,7 +669,7 @@ namespace WinFontSwap
                     AutoSize = false,
                     AutoEllipsis = true,
                     Location = new Point(260, y),
-                    Size = new Size(InnerW - 28 - 44 - 6 - 52 - 8 - 260, 30),
+                    Size = new Size(InnerW - 28 - 44 - 6 - 52 - 8 - 260, 26),
                     TextAlign = ContentAlignment.MiddleLeft
                 };
                 var btn = new RoundedButton
@@ -676,11 +678,11 @@ namespace WinFontSwap
                     Font = new Font("Segoe UI", 8.5f),
                     Height = 26,
                     Tag = i,
-                    Location = new Point(InnerW - 28 - 44 - 6 - 52, y + 2),
+                    Location = new Point(InnerW - 28 - 44 - 6 - 52, y - 1),
                     Size = new Size(52, 26)
                 };
                 btn.Click += delegate (object s, EventArgs e) { PickForSlot((int)((RoundedButton)s).Tag); };
-                var tog = new ToggleSwitch { Location = new Point(InnerW - 28 - 44, y + 2), Enabled = false };
+                var tog = new ToggleSwitch { Location = new Point(InnerW - 28 - 44, y - 1), Enabled = false };
 
                 card.Controls.Add(name);
                 card.Controls.Add(val);
@@ -704,14 +706,72 @@ namespace WinFontSwap
             });
 
             BuildWin32Section(card);
+            BuildAdvancedSection(card);
+        }
+
+        /// <summary>「高级」分区：清缓存 / 清用户级注册 / 恢复用户级字体。</summary>
+        void BuildAdvancedSection(CardPanel card)
+        {
+            card.Controls.Add(new Label
+            {
+                Text = "高级",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                AutoSize = false,
+                Location = new Point(16, 424),
+                Size = new Size(120, 22)
+            });
+
+            string[] titles = { "写入时清字体缓存", "写入时清用户级同名字体", "恢复用户级字体注册" };
+            string[] descs = { "重启后由系统重建", "HKCU 里的同名会挡住替换", "导入最近一次的备份" };
+            for (int i = 0; i < titles.Length; i++)
+            {
+                int y = 446 + i * 24;
+                card.Controls.Add(new Label
+                {
+                    Text = titles[i],
+                    Font = new Font("Segoe UI", 9f),
+                    AutoSize = false,
+                    Location = new Point(16, y),
+                    Size = new Size(160, 22),
+                    TextAlign = ContentAlignment.MiddleLeft
+                });
+                card.Controls.Add(new Label
+                {
+                    Text = descs[i],
+                    Tag = "dim",
+                    Font = new Font("Segoe UI", 8.5f),
+                    AutoSize = false,
+                    Location = new Point(182, y),
+                    Size = new Size(InnerW - 28 - 50 - 182 - 12, 22),
+                    TextAlign = ContentAlignment.MiddleLeft
+                });
+            }
+
+            _advCache = new ToggleSwitch { Location = new Point(InnerW - 28 - 44, 446), On = true };
+            _advUserFonts = new ToggleSwitch { Location = new Point(InnerW - 28 - 44, 470), On = true };
+            var restoreBtn = new RoundedButton
+            {
+                Text = "恢复",
+                Font = new Font("Segoe UI", 8.5f),
+                Location = new Point(InnerW - 28 - 52, 493),
+                Size = new Size(52, 22)
+            };
+            restoreBtn.Click += delegate
+            {
+                try { Status(Installer.RestoreUserFonts(), false); }
+                catch (Exception ex) { Status("恢复失败：" + ex.Message, true); }
+            };
+            card.Controls.Add(_advCache);
+            card.Controls.Add(_advUserFonts);
+            card.Controls.Add(restoreBtn);
         }
 
 
         void BuildActions()
         {
-            _applyBtn = new RoundedButton { Text = "应用", Primary = true, Location = new Point(PadX, 486), Size = new Size(96, 34) };
-            _genBtn = new RoundedButton { Text = "仅生成", Location = new Point(PadX + 108, 486), Size = new Size(90, 34) };
-            _rollbackBtn = new RoundedButton { Text = "回滚", Location = new Point(PadX + 210, 486), Size = new Size(80, 34) };
+            _applyBtn = new RoundedButton { Text = "应用", Primary = true, Location = new Point(PadX, 548), Size = new Size(96, 34) };
+            _genBtn = new RoundedButton { Text = "仅生成", Location = new Point(PadX + 108, 548), Size = new Size(90, 34) };
+            _rollbackBtn = new RoundedButton { Text = "回滚", Location = new Point(PadX + 210, 548), Size = new Size(80, 34) };
             _cancelBtn = new RoundedButton { Text = "取消排队", Visible = false, Location = new Point(PadX + 302, 532), Size = new Size(96, 34) };
 
             _applyBtn.Click += async delegate (object s, EventArgs e) { await RunApply(false); };
@@ -730,7 +790,7 @@ namespace WinFontSwap
                 Tag = "dim",
                 Font = new Font("Segoe UI", 9f),
                 AutoSize = false,
-                Location = new Point(PadX, 526),
+                Location = new Point(PadX, 590),
                 Size = new Size(InnerW, 22)
             };
             _pages[0].Controls.Add(_status);
@@ -747,7 +807,10 @@ namespace WinFontSwap
             {
                 Backdrop.HideFromCapture(Handle);
                 Application.DoEvents();
-                Backdrop.Capture();
+                // 只截窗口本身（外扩 40px）：整屏截图 + 模糊太重，导致背景延迟
+                var area = Bounds;
+                area.Inflate(40, 40);
+                Backdrop.Capture(area);
                 Backdrop.ShowInCapture(Handle);
                 Invalidate(true);
             }
@@ -779,7 +842,7 @@ namespace WinFontSwap
 
                 if (!Captureable && _bgTimer == null)
                 {
-                    _bgTimer = new System.Windows.Forms.Timer { Interval = 500 };
+                    _bgTimer = new System.Windows.Forms.Timer { Interval = 200 };
                     _bgTimer.Tick += delegate
                     {
                         // 拍之前先把窗口藏起来，避免把自己（或上一帧底板）拍进去
@@ -891,6 +954,7 @@ namespace WinFontSwap
             _slots[1] = FontLibrary.Match(pool, 700);
             _slots[2] = FontLibrary.Match(pool, 300);
             _slots[3] = _slots[0];
+            _slots[4] = _slots[0];
 
             _pickedLabel.Text = family + "   ·   " + pool.Count + " 个字重   ·   " + _picked.FileName;
             _pickedLabel.ForeColor = Theme.Current.Text;
@@ -919,7 +983,7 @@ namespace WinFontSwap
                 _slots[index] = pick;
                 UpdateSlotLabels();
                 UpdateToggles();
-                Log("手动指定" + new[] { "常规", "粗体", "细体", "英文数字" }[index] + "：" + pick.FileName);
+                Log("手动指定" + new[] { "常规", "粗体", "细体", "英文数字", "Segoe UI" }[index] + "：" + pick.FileName);
             }
         }
 
@@ -934,6 +998,7 @@ namespace WinFontSwap
             _slots[1] = FontLibrary.Match(_pool, 700);
             _slots[2] = FontLibrary.Match(_pool, 300);
             _slots[3] = _slots[0];
+            _slots[4] = _slots[0];
 
             _pickedLabel.Text = _picked.Family + "   ·   " + (_picked.Subfamily ?? "") + "   ·   " + _picked.FileName;
             _pickedLabel.ForeColor = Theme.Current.Text;
@@ -1070,7 +1135,7 @@ namespace WinFontSwap
             SetBusy(true, generateOnly ? "正在生成…" : "正在生成并写入替换队列…");
             try
             {
-                var result = await Task.Run(delegate { return Installer.Apply(list, UiLog, generateOnly); });
+                var result = await Task.Run(delegate { return Installer.Apply(list, UiLog, generateOnly, _advCache.On, _advUserFonts.On); });
                 if (generateOnly)
                 {
                     Status("已生成到 " + result.OutputDir, false);

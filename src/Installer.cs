@@ -58,10 +58,10 @@ namespace WinFontSwap
         /// <summary>多 face 且要保留可变轴的目标（Segoe UI Variable：Variable/Text/Display/Small）。</summary>
         public static bool IsVariableTtc(string file) { return file == "SegUIVar.ttf"; }
 
-        /// <summary>目标文件属于哪个界面槽位（0 常规 / 1 粗体 / 2 细体 / 3 英文数字）。</summary>
+        /// <summary>目标文件与界面行一一对应（0 常规 / 1 粗体 / 2 细体 / 3 英文数字 / 4 Segoe UI）。</summary>
         public static int SlotOf(int targetIndex)
         {
-            return targetIndex >= 3 ? 3 : targetIndex;
+            return targetIndex;
         }
 
         public static string LabelOf(string file)
@@ -510,6 +510,24 @@ namespace WinFontSwap
             }
         }
 
+        /// <summary>把最近一次导出过的 HKCU 字体注册备份导回去（恢复用户级字体）。</summary>
+        public static string RestoreUserFonts()
+        {
+            if (!Directory.Exists(BackupRoot)) return "没有备份";
+            string newest = null;
+            DateTime newestTime = DateTime.MinValue;
+            foreach (var f in Directory.GetFiles(BackupRoot, "HKCU-Fonts*.reg", SearchOption.AllDirectories))
+            {
+                var t = File.GetLastWriteTime(f);
+                if (t > newestTime) { newestTime = t; newest = f; }
+            }
+            if (newest == null) return "没有备份";
+            var psi = new ProcessStartInfo("reg.exe", "import \"" + newest + "\"") { CreateNoWindow = true, UseShellExecute = false };
+            var p = Process.Start(psi);
+            if (p != null) p.WaitForExit(15000);
+            return "已恢复：" + Path.GetFileName(newest);
+        }
+
         /// <summary>清字体缓存，让 DWrite/WinUI 重启后按新文件重建（失败只记日志，不阻断）。</summary>
         static void ClearFontCaches(Action<string> log)
         {
@@ -614,6 +632,11 @@ namespace WinFontSwap
 
         public static ApplyResult Apply(IList<FontSource> sources, Action<string> log, bool generateOnly)
         {
+            return Apply(sources, log, generateOnly, true, true);
+        }
+
+        public static ApplyResult Apply(IList<FontSource> sources, Action<string> log, bool generateOnly, bool clearCaches, bool clearUserFonts)
+        {
             if (!IsAdmin) throw new InvalidOperationException("需要管理员权限");
             if (sources == null || sources.Count == 0) throw new InvalidOperationException("没有选择字体");
 
@@ -631,8 +654,11 @@ namespace WinFontSwap
 
             EnablePrivileges();
             Directory.CreateDirectory(result.BackupDir);
-            try { ClearUserFontShadows(result.BackupDir, log); }
-            catch (Exception ex) { log("清理用户级字体注册失败：" + ex.Message); }
+            if (clearUserFonts)
+            {
+                try { ClearUserFontShadows(result.BackupDir, log); }
+                catch (Exception ex) { log("清理用户级字体注册失败：" + ex.Message); }
+            }
 
             var state = ReadState();
             state["stamp"] = stamp;
@@ -670,7 +696,7 @@ namespace WinFontSwap
             if (applied.Count == 0) throw new InvalidOperationException("没有可替换的目标");
 
             AddQueuePairs(pairs);
-            ClearFontCaches(log);
+            if (clearCaches) ClearFontCaches(log);
             state["applied"] = string.Join(";", applied.ToArray());
             state["aclPending"] = "1";
             state["date"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm");

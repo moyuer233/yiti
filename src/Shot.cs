@@ -13,17 +13,55 @@ namespace WinFontSwap
 
         public static void Capture()
         {
+            Capture(SystemInformation.VirtualScreen);
+        }
+
+        [System.Runtime.InteropServices.DllImport("gdi32.dll")]
+        static extern IntPtr CreateCompatibleDC(IntPtr hdc);
+        [System.Runtime.InteropServices.DllImport("gdi32.dll")]
+        static extern IntPtr CreateCompatibleBitmap(IntPtr hdc, int w, int h);
+        [System.Runtime.InteropServices.DllImport("gdi32.dll")]
+        static extern IntPtr SelectObject(IntPtr hdc, IntPtr obj);
+        [System.Runtime.InteropServices.DllImport("gdi32.dll")]
+        static extern bool BitBlt(IntPtr dst, int x, int y, int w, int h, IntPtr src, int sx, int sy, int rop);
+        [System.Runtime.InteropServices.DllImport("gdi32.dll")]
+        static extern bool DeleteObject(IntPtr obj);
+        [System.Runtime.InteropServices.DllImport("gdi32.dll")]
+        static extern bool DeleteDC(IntPtr hdc);
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        static extern IntPtr GetDC(IntPtr hwnd);
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        static extern int ReleaseDC(IntPtr hwnd, IntPtr hdc);
+
+        /// <summary>最近一次截屏+模糊耗时（毫秒），用于排查延迟。</summary>
+        public static double LastCaptureMs { get; private set; }
+
+        /// <summary>用 BitBlt 直接从屏幕抓一块（比 Graphics.CopyFromScreen 少一层 GDI+ 封装）。</summary>
+        static Bitmap GrabScreen(Rectangle vs)
+        {
+            IntPtr screenDc = GetDC(IntPtr.Zero);
+            IntPtr memDc = CreateCompatibleDC(screenDc);
+            IntPtr bmp = CreateCompatibleBitmap(screenDc, vs.Width, vs.Height);
+            IntPtr old = SelectObject(memDc, bmp);
+            BitBlt(memDc, 0, 0, vs.Width, vs.Height, screenDc, vs.Left, vs.Top, 0x00CC0020 /*SRCCOPY*/);
+            SelectObject(memDc, old);
+            var result = Image.FromHbitmap(bmp);
+            DeleteObject(bmp);
+            DeleteDC(memDc);
+            ReleaseDC(IntPtr.Zero, screenDc);
+            return result;
+        }
+
+        /// <summary>只截指定屏幕区域（比整屏快得多，用于窗口实时刷新）。</summary>
+        public static void Capture(Rectangle vs)
+        {
             try
             {
-                var vs = SystemInformation.VirtualScreen;
                 if (vs.Width <= 0 || vs.Height <= 0) return;
+                var sw2 = System.Diagnostics.Stopwatch.StartNew();
 
-                using (var raw = new Bitmap(vs.Width, vs.Height))
+                using (var raw = GrabScreen(vs))
                 {
-                    using (var g = Graphics.FromImage(raw))
-                    {
-                        g.CopyFromScreen(vs.Left, vs.Top, 0, 0, new Size(vs.Width, vs.Height), CopyPixelOperation.SourceCopy);
-                    }
 
                     int sw = Math.Max(16, vs.Width / 12);
                     int sh = Math.Max(16, vs.Height / 12);
@@ -56,6 +94,8 @@ namespace WinFontSwap
                         _bounds = vs;
                     }
                 }
+                sw2.Stop();
+                LastCaptureMs = sw2.Elapsed.TotalMilliseconds;
             }
             catch { }
         }
