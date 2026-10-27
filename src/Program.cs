@@ -34,6 +34,9 @@ namespace WinFontSwap
             if (args != null)
                 for (int i = 0; i < args.Length - 1; i++)
                     if (args[i] == "--shot") MainForm.ShotPath = args[i + 1];
+            if (args != null)
+                for (int i = 0; i < args.Length - 1; i++)
+                    if (args[i] == "--page") { int pg; if (int.TryParse(args[i + 1], out pg)) MainForm.StartPage = pg; }
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
