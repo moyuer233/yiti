@@ -433,6 +433,74 @@ namespace WinFontSwap
             return outBuf;
         }
 
+        /// <summary>生成单 face 的普通 sfnt（.ttf）；keepVariation=true 时保留 fvar/gvar 等可变轴表。</summary>
+        public static byte[] BuildSingle(byte[] source, int faceIndex, NameSpec spec, bool keepVariation)
+        {
+            var faces = FaceOffsets(source);
+            if (faceIndex < 0 || faceIndex >= faces.Length) throw new InvalidDataException("face 序号越界");
+            int faceOff = faces[faceIndex];
+            uint version = FaceVersion(source, faceOff);
+            var tables = ReadTables(source, faceOff);
+
+            if (tables.Find(t => t.Tag == "CFF ") != null)
+                throw new InvalidDataException("暂不支持 CFF(.otf) 轮廓，请选择 TrueType(.ttf/.ttc) 字体");
+            if (tables.Find(t => t.Tag == "glyf") == null)
+                throw new InvalidDataException("字体缺少 glyf 表，不是 TrueType 轮廓");
+            if (!keepVariation)
+            {
+                string[] variation = { "fvar", "gvar", "HVAR", "VVAR", "MVAR", "avar", "cvar", "STAT" };
+                foreach (var tag in variation)
+                {
+                    var t2 = tables.Find(x => x.Tag == tag);
+                    if (t2 != null) tables.Remove(t2);
+                }
+            }
+
+            int nameIdx = tables.FindIndex(t => t.Tag == "name");
+            if (nameIdx < 0) throw new InvalidDataException("字体缺少 name 表");
+            tables[nameIdx] = new SfntTable("name", RebuildName(tables[nameIdx].Data, spec));
+            tables.Sort(delegate (SfntTable a, SfntTable b) { return string.CompareOrdinal(a.Tag, b.Tag); });
+
+            int n = tables.Count;
+            int total = 12 + 16 * n;
+            var offs = new int[n];
+            for (int i = 0; i < n; i++)
+            {
+                offs[i] = total;
+                total += Align4(tables[i].Data.Length);
+            }
+
+            var buf = new byte[total];
+            W32(buf, 0, version);
+            W16(buf, 4, n);
+            int pow = 1, log = 0;
+            while (pow * 2 <= n) { pow *= 2; log++; }
+            W16(buf, 6, pow * 16);
+            W16(buf, 8, log);
+            W16(buf, 10, n * 16 - pow * 16);
+
+            int headPos = -1;
+            for (int i = 0; i < n; i++)
+            {
+                int rec = 12 + i * 16;
+                Buffer.BlockCopy(Encoding.ASCII.GetBytes(tables[i].Tag), 0, buf, rec, 4);
+                W32(buf, rec + 4, TableChecksum(tables[i].Data));
+                W32(buf, rec + 8, (uint)offs[i]);
+                W32(buf, rec + 12, (uint)tables[i].Data.Length);
+                Buffer.BlockCopy(tables[i].Data, 0, buf, offs[i], tables[i].Data.Length);
+                if (tables[i].Tag == "head") headPos = offs[i] + 8;
+            }
+            if (headPos > 0)
+            {
+                W32(buf, headPos, 0);
+                uint sum = 0;
+                for (int i = 0; i + 4 <= total; i += 4)
+                    sum += ((uint)buf[i] << 24) | ((uint)buf[i + 1] << 16) | ((uint)buf[i + 2] << 8) | buf[i + 3];
+                W32(buf, headPos, 0xB1B0AFBA - sum);
+            }
+            return buf;
+        }
+
         /// <summary>把第一个 face 的表偏移从「相对 face」改成「相对文件」，顺便修 head 校验和。</summary>
         static Dictionary<string, TableLoc> RebaseFace(byte[] buf, int faceStart, int faceLen)
         {

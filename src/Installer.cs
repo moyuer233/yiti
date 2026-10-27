@@ -50,7 +50,10 @@ namespace WinFontSwap
 
         public const string SessionManagerKey = @"SYSTEM\CurrentControlSet\Control\Session Manager";
 
-        public static readonly string[] TargetFiles = { "msyh.ttc", "msyhbd.ttc", "msyhl.ttc" };
+        public static readonly string[] TargetFiles = { "msyh.ttc", "msyhbd.ttc", "msyhl.ttc", "SegUIVar.ttf" };
+
+        /// <summary>单 face 目标（英文数字），生成时保留可变轴。</summary>
+        public static bool IsSingleFace(string file) { return file == "SegUIVar.ttf"; }
 
         public static string LabelOf(string file)
         {
@@ -59,6 +62,7 @@ namespace WinFontSwap
                 case "msyh.ttc": return "常规";
                 case "msyhbd.ttc": return "粗体";
                 case "msyhl.ttc": return "细体";
+                case "SegUIVar.ttf": return "英文数字";
                 default: return file;
             }
         }
@@ -66,6 +70,18 @@ namespace WinFontSwap
         /// <summary>目标文件里要写进去的两个 face 的名字（微软雅黑 + 微软雅黑 UI）。</summary>
         public static NameSpec[] SpecsFor(string file)
         {
+            if (file == "SegUIVar.ttf")
+            {
+                return new[] { new NameSpec
+                {
+                    Family = "Segoe UI Variable",
+                    FamilyTypo = "Segoe UI Variable",
+                    Subfamily = "Regular",
+                    SubfamilyTypo = "Regular",
+                    FullName = "Segoe UI Variable",
+                    PostScript = "SegoeUIVariable-Regular"
+                } };
+            }
             bool ui = false;
             var list = new List<NameSpec>(2);
             for (int i = 0; i < 2; i++)
@@ -436,9 +452,21 @@ namespace WinFontSwap
             {
                 var specs = SpecsFor(src.TargetFile);
                 log("生成 " + src.TargetFile + "（源：" + Path.GetFileName(src.SourcePath) + "）");
-                if (Sfnt.IsVariable(src.Data, src.FaceIndex))
-                    log("  注意：源是可变字体，会取它的默认字重（通常 400，相当于常规体）");
-                var data = Sfnt.BuildCollection(src.Data, src.FaceIndex, specs);
+                byte[] data;
+                if (IsSingleFace(src.TargetFile))
+                {
+                    if (Sfnt.IsVariable(src.Data, src.FaceIndex))
+                        log("  可变字体：保留字重轴（粗细仍然生效）");
+                    else
+                        log("  注意：源不是可变字体，英文数字的字重会变单一");
+                    data = Sfnt.BuildSingle(src.Data, src.FaceIndex, specs[0], true);
+                }
+                else
+                {
+                    if (Sfnt.IsVariable(src.Data, src.FaceIndex))
+                        log("  注意：源是可变字体，会取它的默认字重（通常 400，相当于常规体）");
+                    data = Sfnt.BuildCollection(src.Data, src.FaceIndex, specs);
+                }
                 string err;
                 if (!Sfnt.Verify(data, specs, out err))
                     throw new InvalidDataException(src.TargetFile + " 校验失败：" + err);
