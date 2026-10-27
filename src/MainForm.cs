@@ -342,13 +342,33 @@ namespace WinFontSwap
 
         void PickFont()
         {
-            using (var dlg = new OpenFileDialog())
+            using (var dlg = new FontPickerForm())
             {
-                dlg.Filter = "字体文件 (*.ttf;*.ttc)|*.ttf;*.ttc";
-                dlg.Title = "选择一个字体（粗体细体会自动匹配）";
                 if (dlg.ShowDialog(this) != DialogResult.OK) return;
-                PickByPath(dlg.FileName);
+                PickByFamily(dlg.SelectedFamily);
             }
+        }
+
+        void PickByFamily(string family)
+        {
+            var pool = new List<FontEntry>();
+            foreach (var e in FontLibrary.All)
+                if (string.Equals(e.Family, family, StringComparison.OrdinalIgnoreCase)) pool.Add(e);
+            if (pool.Count == 0) { Status("没有找到这个字体的文件", true); return; }
+
+            _picked = FontLibrary.Match(pool, 400);
+            if (_picked == null) _picked = pool[0];
+            _pool = pool;
+            _slots[0] = FontLibrary.Match(pool, 400);
+            _slots[1] = FontLibrary.Match(pool, 700);
+            _slots[2] = FontLibrary.Match(pool, 300);
+
+            _pickedLabel.Text = family + "   ·   " + pool.Count + " 个字重   ·   " + _picked.FileName;
+            _pickedLabel.ForeColor = Theme.Current.Text;
+            UpdateSlotLabels();
+            UpdateToggles();
+            UpdatePreview();
+            Log("已选字体：" + family + "，共 " + pool.Count + " 个字重");
         }
 
         void PickForSlot(int index)

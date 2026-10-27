@@ -22,6 +22,9 @@ namespace WinFontSwap
             if (args != null)
                 for (int i = 0; i < args.Length - 1; i++)
                     if (args[i] == "--demo") demo = args[i + 1];
+            if (args != null)
+                for (int i = 0; i < args.Length; i++)
+                    if (args[i] == "--opaque") Theme.Glass = false;
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

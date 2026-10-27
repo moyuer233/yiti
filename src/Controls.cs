@@ -22,6 +22,14 @@ namespace WinFontSwap
             return path;
         }
 
+        /// <summary>控件该用哪种底色擦除自己：卡片里用卡片色，直接挂在窗体上用窗体底色（透明模式下是色键）。</summary>
+        public static Color Back(Control c)
+        {
+            var card = c.Parent as CardPanel;
+            if (card != null) return card.Emphasis ? Theme.Current.SurfaceAlt : Theme.Current.Surface;
+            return Theme.BackPaint;
+        }
+
         public static Color Mix(Color a, Color b, float t)
         {
             return Color.FromArgb(
@@ -95,6 +103,7 @@ namespace WinFontSwap
             var p = Theme.Current;
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.Clear(Draw.Back(this));
             var rect = new Rectangle(0, 0, Width - 1, Height - 1);
 
             Color fill = Primary ? p.Accent : p.Surface;
@@ -142,7 +151,7 @@ namespace WinFontSwap
             var p = Theme.Current;
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.Clear(Theme.BackPaint);
+            g.Clear(Draw.Back(this));
 
             int h = 20, w = 40, top = (Height - h) / 2, left = (Width - w) / 2;
             var track = new Rectangle(left, top, w, h);
@@ -158,8 +167,8 @@ namespace WinFontSwap
             int knob = 12;
             int kx = _on ? track.Right - knob - 4 : track.Left + 4;
             int ky = track.Top + (h - knob) / 2;
-            using (var b = new SolidBrush(p.Surface)) g.FillEllipse(b, kx, ky, knob, knob);
-            using (var pen = new Pen(Draw.Mix(p.Line, p.TextDim, 0.3f)))
+            using (var b = new SolidBrush(Color.White)) g.FillEllipse(b, kx, ky, knob, knob);
+            using (var pen = new Pen(Color.FromArgb(0xD0, 0xD0, 0xD0)))
                 g.DrawEllipse(pen, kx, ky, knob - 1, knob - 1);
         }
     }
@@ -242,7 +251,7 @@ namespace WinFontSwap
         {
             var p = Theme.Current;
             var g = e.Graphics;
-            g.Clear(Theme.BackPaint);
+            g.Clear(Draw.Back(this));
             if (_hover)
             {
                 using (var b = new SolidBrush(Close ? Color.FromArgb(0xC4, 0x2B, 0x1C) : p.Hover))
