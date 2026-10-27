@@ -252,12 +252,15 @@ namespace WinFontSwap.Wpf
         TextBox[] _winSize = new TextBox[Win32Fonts.Names.Length];
         Win32Fonts.Info[] _winInfo = new Win32Fonts.Info[Win32Fonts.Names.Length];
         string[] _winFace = new string[Win32Fonts.Names.Length];
+        bool[] _winOn = new bool[Win32Fonts.Names.Length];
+        ToggleButton[] _winTog = new ToggleButton[Win32Fonts.Names.Length];
         ToggleButton _advCache, _advUserFonts;
         bool _advCacheOn = true, _advUserFontsOn = true;
 
 
         public MainWindow()
         {
+            for (int i = 0; i < _winOn.Length; i++) _winOn[i] = true;
             Title = "字体替换";
             Width = 1080;
             Height = 720;
@@ -623,8 +626,14 @@ namespace WinFontSwap.Wpf
                 _winSize[i] = size;
 
                 var b = T.Btn2("选择", false, 12);
+                b.Margin = new Thickness(0, 0, 10, 0);
                 b.Click += delegate { PickWin32Face(idx); };
                 right.Children.Add(b);
+
+                var sw = T.Switch(_winOn[idx]);
+                sw.Click += delegate { _winOn[idx] = sw.IsChecked == true; };
+                right.Children.Add(sw);
+                _winTog[idx] = sw;
 
 
 
@@ -936,6 +945,7 @@ namespace WinFontSwap.Wpf
             if (src == null) { SetStatus("先选一个字体。", true); return; }
             for (int i = 0; i < Win32Fonts.Names.Length; i++)
             {
+                if (!_winOn[i]) continue;
                 _winFace[i] = src.Family;
                 _winCur[i].Text = src.Family + "   " + _winSize[i].Text + " pt";
             }
@@ -950,6 +960,7 @@ namespace WinFontSwap.Wpf
                 int done = 0;
                 for (int i = 0; i < Win32Fonts.Names.Length; i++)
                 {
+                    if (!_winOn[i]) continue;
                     if (string.IsNullOrEmpty(_winFace[i])) continue;
                     double pt;
                     double.TryParse(_winSize[i].Text, out pt);
@@ -1029,6 +1040,11 @@ namespace WinFontSwap.Wpf
             {
                 _on[i] = true;
                 if (_tog[i] != null) { _tog[i].IsChecked = true; T.RefreshToggleVisual(_tog[i]); }
+            }
+            for (int i = 0; i < _winOn.Length; i++)
+            {
+                _winOn[i] = true;
+                if (_winTog[i] != null) { _winTog[i].IsChecked = true; T.RefreshToggleVisual(_winTog[i]); }
             }
             UpdateSlotLabels();
             try { LoadWin32(); } catch { }
