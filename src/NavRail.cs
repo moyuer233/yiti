@@ -21,6 +21,7 @@ namespace WinFontSwap
         }
 
         readonly List<Item> _items = new List<Item>();
+        Font _bold;
         int _hover = -1;
 
         public int SelectedIndex = -1;
@@ -32,6 +33,7 @@ namespace WinFontSwap
             SetStyle(ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer |
                      ControlStyles.AllPaintingInWmPaint | ControlStyles.ResizeRedraw, true);
             BackColor = Theme.Current.Bg;
+            _bold = new Font("Segoe UI", 9.5f, FontStyle.Bold);
         }
 
         public void Add(string text)
@@ -91,22 +93,21 @@ namespace WinFontSwap
 
                 if (sel)
                 {
-                    using (var path = Draw.Rounded(r, 6))
-                    using (var b = new SolidBrush(p.Hover))
-                        g.FillPath(b, path);
+                    // LF 风格：选中项不铺底，只在最左画一根蓝色竖条
                     using (var bar = new SolidBrush(p.Accent))
                         g.FillRectangle(bar, new Rectangle(2, r.Y + 10, 3, r.Height - 20));
                 }
                 else if (hov)
                 {
                     using (var path = Draw.Rounded(r, 6))
-                    using (var b = new SolidBrush(p.Surface))
+                    using (var b = new SolidBrush(Color.FromArgb(14, 255, 255, 255)))
                         g.FillPath(b, path);
                 }
 
                 var textRect = new Rectangle(r.X + 14, r.Y, r.Width - 20, r.Height);
-                TextRenderer.DrawText(g, it.Text, Font, textRect,
-                    sel ? p.Text : p.TextDim,
+                Font f = sel ? _bold : Font;
+                TextRenderer.DrawText(g, it.Text, f, textRect,
+                    sel ? p.Text : Color.FromArgb(0xB4, 0xFF, 0xFF, 0xFF),
                     TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
             }
         }

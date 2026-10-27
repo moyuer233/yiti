@@ -198,9 +198,9 @@ namespace WinFontSwap
             var track = new Rectangle(left, top, w, h);
 
             Color fill;
-            if (!Enabled) fill = Draw.Mix(p.Surface, p.Line, 0.5f);
+            if (!Enabled) fill = Color.FromArgb(16, 255, 255, 255);
             else if (_on) fill = p.Accent;
-            else fill = _hover ? Draw.Mix(p.TextDim, p.Surface, 0.5f) : Draw.Mix(p.TextDim, p.Surface, 0.35f);
+            else fill = _hover ? Color.FromArgb(52, 255, 255, 255) : Color.FromArgb(34, 255, 255, 255);
 
             using (var path = Draw.Rounded(track, h / 2))
             using (var b = new SolidBrush(fill)) g.FillPath(b, path);
@@ -209,8 +209,6 @@ namespace WinFontSwap
             int kx = _on ? track.Right - knob - 4 : track.Left + 4;
             int ky = track.Top + (h - knob) / 2;
             using (var b = new SolidBrush(Color.White)) g.FillEllipse(b, kx, ky, knob, knob);
-            using (var pen = new Pen(Color.FromArgb(0xD0, 0xD0, 0xD0)))
-                g.DrawEllipse(pen, kx, ky, knob - 1, knob - 1);
         }
     }
 
