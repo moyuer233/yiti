@@ -875,6 +875,7 @@ namespace WinFontSwap.Wpf
             _slots[3] = regular;
             _slots[4] = regular;
             UpdateSlotLabels();
+            SyncWin32FromChoice();
         }
 
         void PickSlot(int slot)
@@ -966,6 +967,20 @@ namespace WinFontSwap.Wpf
             catch { }
         }
 
+
+        /// <summary>把当前选中的字体同步到系统元素那几行（只改界面，不写注册表）。</summary>
+        void SyncWin32FromChoice()
+        {
+            var src = _slots[0];
+            if (src == null) return;
+            for (int i = 0; i < Win32Fonts.Names.Length; i++)
+            {
+                if (!_winOn[i]) continue;
+                _winFace[i] = src.Family;
+                if (_winCur[i] != null && _winSize[i] != null)
+                    _winCur[i].Text = src.Family + "   " + _winSize[i].Text + " pt";
+            }
+        }
 
         void FollowCurrentFont()
         {
