@@ -111,6 +111,27 @@ namespace WinFontSwap
         protected override void OnMouseLeave(EventArgs e) { _hover = false; Invalidate(); base.OnMouseLeave(e); }
         protected override void OnEnabledChanged(EventArgs e) { Invalidate(); base.OnEnabledChanged(e); }
 
+        void UpdateRegion()
+        {
+            // 用窗口 Region 裁成圆角：四角露出的是父级真实绘制结果，
+            // 不靠“猜父级底色”，因此不受 Mica / 透明窗口影响
+            if (Width <= 0 || Height <= 0) return;
+            using (var path = Draw.Rounded(new Rectangle(0, 0, Width, Height), Radius))
+                Region = new Region(path);
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            UpdateRegion();
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            UpdateRegion();
+        }
+
         protected override void OnPaintBackground(PaintEventArgs e) { }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -118,7 +139,6 @@ namespace WinFontSwap
             var p = Theme.Current;
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.Clear(Draw.Back(this));
             var rect = new Rectangle(0, 0, Width - 1, Height - 1);
 
             Color fill = Primary ? p.Accent : (Parent is CardPanel ? p.SurfaceAlt : p.Surface);
