@@ -26,5 +26,13 @@ foreach ($f in @('WpfApp.cs','MainWindow.cs','FontPickerDialog.cs','Styles.cs'))
 
 & $csc $a
 if ($LASTEXITCODE -ne 0) { throw ('WPF compile failed: ' + $LASTEXITCODE) }
+
+# sign as moyuer233 (elevated, silent because UAC is off)
+$signed = 'not signed'
+try {
+  $pr = Start-Process powershell -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $root 'sign.ps1') -Verb RunAs -WindowStyle Hidden -PassThru -Wait
+  $signed = 'sign exit ' + $pr.ExitCode
+} catch { $signed = 'sign skipped' }
+
 $fi = Get-Item $out
-'WPF OK  ' + $fi.Length + ' bytes'
+'WPF OK  ' + $fi.Length + ' bytes  ' + $signed
