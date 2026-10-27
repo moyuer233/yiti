@@ -141,6 +141,59 @@ namespace WinFontSwap
             return list;
         }
 
+        static readonly string[] WeightWords = { "ultra light", "extra light", "semi light", "demi light", "ultralight", "extralight", "semilight", "demilight", "extra bold", "semi bold", "ultra bold", "extrabold", "semibold", "ultrabold", "thin", "light", "regular", "normal", "book", "medium", "bold", "black", "heavy", "italic", "oblique" };
+
+        /// <summary>去掉尾部字重词，得到“家族基名”：HarmonyOS Sans SC Light → harmonyos sans sc。</summary>
+        public static string FamilyBase(string family)
+        {
+            if (string.IsNullOrEmpty(family)) return "";
+            var s = family.ToLowerInvariant().Trim();
+            bool changed = true;
+            while (changed)
+            {
+                changed = false;
+                foreach (var w in WeightWords)
+                {
+                    if (s.EndsWith(" " + w))
+                    {
+                        s = s.Substring(0, s.Length - w.Length - 1).Trim();
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+            return s;
+        }
+
+        /// <summary>按“家族基名”找同家族的各字重（跨文件、跨 Light/Bold 这类独立家族名）。</summary>
+        public static List<FontEntry> CandidatesForBase(FontEntry picked)
+        {
+            var list = new List<FontEntry>();
+            if (picked == null) return list;
+            var baseName = FamilyBase(picked.Family);
+            if (baseName.Length == 0) return CandidatesFor(picked);
+
+            foreach (var e in All)
+                if (FamilyBase(e.Family) == baseName) AddUnique(list, e);
+
+            var dir = System.IO.Path.GetDirectoryName(picked.Path);
+            if (dir != null)
+            {
+                try
+                {
+                    foreach (var file in Directory.GetFiles(dir))
+                    {
+                        var ext = System.IO.Path.GetExtension(file).ToLowerInvariant();
+                        if (ext != ".ttf" && ext != ".ttc" && ext != ".otf") continue;
+                        foreach (var e in ReadFile(file))
+                            if (FamilyBase(e.Family) == baseName) AddUnique(list, e);
+                    }
+                }
+                catch { }
+            }
+            return list;
+        }
+
         static void AddUnique(List<FontEntry> list, FontEntry e)
         {
             foreach (var x in list)

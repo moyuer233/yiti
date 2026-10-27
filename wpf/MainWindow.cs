@@ -310,6 +310,18 @@ namespace WinFontSwap.Wpf
                             _nav.SelectedIndex = 0;
                         }));
                     }
+                    else if (a.StartsWith("--pick:"))
+                    {
+                        var want = a.Substring(7).ToLowerInvariant();
+                        foreach (var f in FontLibrary.All)
+                        {
+                            if (f.Family.ToLowerInvariant().Contains(want))
+                            {
+                                ApplyPicked(f);
+                                break;
+                            }
+                        }
+                    }
                     else if (a.StartsWith("--scroll:") && _pageScroll != null)
                     {
                         double off;
@@ -845,7 +857,23 @@ namespace WinFontSwap.Wpf
             var dlg = new FontPickerDialog();
             dlg.Owner = this;
             if (dlg.ShowDialog() != true) return;
-            for (int i = 0; i < 5; i++) _slots[i] = dlg.Picked;
+
+            ApplyPicked(dlg.Picked);
+        }
+
+        /// <summary>选定一个字体后：按字重自动挑同家族文件（常规 400 / 粗体 700 / 细体 300），英文数字与 Segoe UI 跟常规。 </summary>
+        void ApplyPicked(FontEntry picked)
+        {
+            if (picked == null) return;
+            var pool = FontLibrary.CandidatesForBase(picked);
+            var regular = FontLibrary.Match(pool, 400) ?? picked;
+            var bold = FontLibrary.Match(pool, 700) ?? regular;
+            var light = FontLibrary.Match(pool, 300) ?? regular;
+            _slots[0] = regular;
+            _slots[1] = bold;
+            _slots[2] = light;
+            _slots[3] = regular;
+            _slots[4] = regular;
             UpdateSlotLabels();
         }
 
