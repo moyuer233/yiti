@@ -8,7 +8,22 @@ namespace WinFontSwap.Wpf
 {
     internal static class WpfProgram
     {
-        static readonly string LogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wpf.log");
+        static readonly string LogPath = PickLogPath();
+
+        /// <summary>日志写到程序数据目录，别污染 dist 产物目录。</summary>
+        static string PickLogPath()
+        {
+            try
+            {
+                var dir = Installer.DataDir;
+                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                return Path.Combine(dir, "wpf.log");
+            }
+            catch
+            {
+                return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wpf.log");
+            }
+        }
 
         public static void Log(string s)
         {

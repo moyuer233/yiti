@@ -2,8 +2,8 @@
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 $srcDir = Join-Path $root 'src'
-$binDir = Join-Path $root 'bin'
-New-Item -ItemType Directory -Force $binDir | Out-Null
+$outDir = Join-Path $root 'dist'
+New-Item -ItemType Directory -Force $outDir | Out-Null
 
 $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 if (-not (Test-Path $csc)) { throw "csc.exe not found: $csc" }
@@ -15,11 +15,17 @@ $flags = @(
   '/r:System.dll', '/r:System.Drawing.dll', '/r:System.Windows.Forms.dll', '/r:System.Core.dll'
 )
 
-& $csc @flags '/target:winexe' ('/out:' + (Join-Path $binDir 'WinFontSwap.exe')) ('/win32manifest:' + $manifest) $sources
+& $csc @flags '/target:winexe' ('/out:' + (Join-Path $outDir 'WinFontSwap.exe')) ('/win32manifest:' + $manifest) $sources
 if ($LASTEXITCODE -ne 0) { throw "GUI compile failed: $LASTEXITCODE" }
 
-& $csc @flags '/target:exe' ('/out:' + (Join-Path $binDir 'WinFontSwap.console.exe')) $sources
+& $csc @flags '/target:exe' ('/out:' + (Join-Path $outDir 'WinFontSwap.console.exe')) $sources
 if ($LASTEXITCODE -ne 0) { throw "console compile failed: $LASTEXITCODE" }
 
-Get-ChildItem $binDir -Filter *.exe | Select-Object Name, Length | Format-Table -AutoSize
+# sign all outputs as moyuer233 (elevated, silent because UAC is off)
+try {
+  $pr = Start-Process powershell -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $root 'sign.ps1') -Verb RunAs -WindowStyle Hidden -PassThru -Wait
+  Write-Host ("sign exit " + $pr.ExitCode)
+} catch { Write-Host "sign skipped" }
+
+Get-ChildItem $outDir -Filter *.exe | Select-Object Name, Length | Format-Table -AutoSize
 Write-Host "OK"

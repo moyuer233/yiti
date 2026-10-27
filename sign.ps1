@@ -16,7 +16,10 @@ try {
   Export-Certificate -Cert $cert -FilePath $cer -Force | Out-Null
   Import-Certificate -FilePath $cer -CertStoreLocation Cert:\LocalMachine\Root | Out-Null
   Import-Certificate -FilePath $cer -CertStoreLocation Cert:\LocalMachine\TrustedPublisher | Out-Null
-  foreach ($exe in @('H:\1\WinFontSwap\bin\WinFontSwapWpf.exe','H:\1\WinFontSwap\bin\WinFontSwap.exe','H:\1\WinFontSwap\bin\WinFontSwap.console.exe')) {
+  foreach ($exe in @(
+      'H:\1\WinFontSwap\dist\WinFontSwapWpf.exe',
+      'H:\1\WinFontSwap\dist\WinFontSwap.exe',
+      'H:\1\WinFontSwap\dist\WinFontSwap.console.exe')) {
     if (Test-Path $exe) {
       $sig = Set-AuthenticodeSignature -FilePath $exe -Certificate $cert
       L ('sign ' + (Split-Path $exe -Leaf) + ' -> ' + $sig.Status)
@@ -25,20 +28,9 @@ try {
 } catch { L ('sign ERROR ' + $_.Exception.Message) }
 
 try {
-  $k = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\AppHost'
+  $k = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Associations'
   if (-not (Test-Path $k)) { New-Item -Path $k -Force | Out-Null }
-  New-ItemProperty -Path $k -Name 'EnableWebContentEvaluation' -Value 0 -PropertyType DWord -Force | Out-Null
-  L ('apphost eval = ' + (Get-ItemProperty $k -Name EnableWebContentEvaluation).EnableWebContentEvaluation)
-} catch { L ('apphost ERROR ' + $_.Exception.Message) }
-
-try {
-  $k2 = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Associations'
-  if (-not (Test-Path $k2)) { New-Item -Path $k2 -Force | Out-Null }
-  New-ItemProperty -Path $k2 -Name 'LowRiskFileTypes' -Value '.exe;.lnk;' -PropertyType String -Force | Out-Null
-  L ('lowrisk = ' + (Get-ItemProperty $k2 -Name LowRiskFileTypes).LowRiskFileTypes)
+  New-ItemProperty -Path $k -Name 'LowRiskFileTypes' -Value '.exe;.lnk;' -PropertyType String -Force | Out-Null
+  L ('lowrisk = ' + (Get-ItemProperty $k -Name LowRiskFileTypes).LowRiskFileTypes)
 } catch { L ('lowrisk ERROR ' + $_.Exception.Message) }
-
-foreach ($p in @('H:\1\WinFontSwap\bin\GlyphProbe.exe','H:\1\WinFontSwap\bin\MicaProbe2.exe')) {
-  if (Test-Path $p) { Remove-Item $p -Force -ErrorAction SilentlyContinue; L ('removed ' + (Split-Path $p -Leaf)) }
-}
 L 'done'

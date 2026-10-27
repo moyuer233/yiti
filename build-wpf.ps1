@@ -2,10 +2,13 @@ $ErrorActionPreference = 'Stop'
 # Gate: every tracked .ps1 must stay ASCII-only
 & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path 'H:\1\WinFontSwap' 'check-ascii.ps1')
 if ($LASTEXITCODE -ne 0) { throw 'ASCII check failed' }
+
 $root = 'H:\1\WinFontSwap'
 $csc = 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 $gac = 'C:\Windows\Microsoft.NET\assembly'
-$out = Join-Path $root 'bin\WinFontSwapWpf.exe'
+$outDir = Join-Path $root 'dist'
+New-Item -ItemType Directory -Force $outDir | Out-Null
+$out = Join-Path $outDir 'WinFontSwapWpf.exe'
 
 Get-Process WinFontSwapWpf -ErrorAction SilentlyContinue | ForEach-Object { $_.Kill() }
 Start-Sleep -Milliseconds 400
@@ -38,4 +41,4 @@ try {
 } catch { $signed = 'sign skipped' }
 
 $fi = Get-Item $out
-'WPF OK  ' + $fi.Length + ' bytes  ' + $signed
+'WPF OK  ' + $fi.FullName + '  ' + $fi.Length + ' bytes  ' + $signed
