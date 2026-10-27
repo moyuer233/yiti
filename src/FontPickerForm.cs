@@ -57,20 +57,31 @@ namespace WinFontSwap
                 Location = new Point(20, 40),
                 Size = new Size(480, 18)
             };
+            var searchHost = new Panel
+            {
+                Location = new Point(20, 60),
+                Size = new Size(480, 34),
+                BackColor = p.Surface
+            };
+            searchHost.Paint += delegate (object s, PaintEventArgs e)
+            {
+                using (var pen = new Pen(p.Line)) e.Graphics.DrawRectangle(pen, 0, 0, searchHost.Width - 1, searchHost.Height - 1);
+            };
             _search = new TextBox
             {
-                Location = new Point(20, 66),
-                Size = new Size(480, 26),
+                Location = new Point(10, 8),
+                Size = new Size(458, 20),
                 BackColor = p.Surface,
                 ForeColor = p.Text,
-                BorderStyle = BorderStyle.FixedSingle
+                BorderStyle = BorderStyle.None
             };
             _search.TextChanged += delegate { ApplyFilter(); };
+            searchHost.Controls.Add(_search);
 
             _list = new ListBox
             {
-                Location = new Point(20, 102),
-                Size = new Size(480, 340),
+                Location = new Point(20, 106),
+                Size = new Size(480, 336),
                 BackColor = p.Surface,
                 ForeColor = p.Text,
                 BorderStyle = BorderStyle.FixedSingle,
@@ -96,7 +107,7 @@ namespace WinFontSwap
 
             Controls.Add(title);
             Controls.Add(_hint);
-            Controls.Add(_search);
+            Controls.Add(searchHost);
             Controls.Add(_list);
             Controls.Add(_preview);
             Controls.Add(_ok);
