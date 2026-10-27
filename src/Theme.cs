@@ -52,7 +52,7 @@ namespace WinFontSwap
         public static string Pref = "system";
 
         /// <summary>窗口背景走 Mica/亚克力：背景用纯黑绘制，DWM 会把扩展框区域当玻璃处理。</summary>
-        public static bool Glass = true;
+        public static bool Glass = false;
 
         /// <summary>“透明”的背景色：玻璃模式下必须是纯黑，否则 DWM 当成不透明。</summary>
         /// <summary>色键：这块颜色会被抠成完全透明。用近黑而不是纯品红，抗锯齿边缘更自然。</summary>
@@ -84,7 +84,7 @@ namespace WinFontSwap
             Current = pref == "dark" ? Dark : (pref == "light" ? Light : (SystemPrefersDark() ? Dark : Light));
             if (root != null)
             {
-                if (!Glass) root.BackColor = Current.Bg;
+                root.BackColor = Current.Bg;
                 Restyle(root);
                 root.Invalidate(true);
             }

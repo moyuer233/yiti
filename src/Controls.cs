@@ -25,12 +25,17 @@ namespace WinFontSwap
         /// <summary>控件该用哪种底色擦除自己：卡片里用卡片色，直接挂在窗体上用窗体底色（透明模式下是色键）。</summary>
         public static Color Back(Control c)
         {
-            var card = c.Parent as CardPanel;
-            if (card != null) return card.Emphasis ? Theme.Current.SurfaceAlt : Theme.Current.Surface;
-            var form = c.Parent as Form;
-            if (form != null) return form.BackColor;   // 弹窗不透明，不能拿主窗的透明色键来擦
-            if (c.Parent != null && (c.Parent.Tag as string) == "surface") return Theme.Current.Surface;
-            return Theme.BackPaint;
+            var parent = c.Parent;
+            while (parent != null)
+            {
+                var card = parent as CardPanel;
+                if (card != null) return card.Emphasis ? Theme.Current.SurfaceAlt : Theme.Current.Surface;
+                var form = parent as Form;
+                if (form != null) return form.BackColor;   // 一路往上找窗体的真实底色
+                if ((parent.Tag as string) == "surface") return Theme.Current.Surface;
+                parent = parent.Parent;
+            }
+            return Theme.Current.Bg;
         }
 
         public static Color Mix(Color a, Color b, float t)
@@ -70,9 +75,8 @@ namespace WinFontSwap
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
-            // 卡片外圈要跟“父级实际画的底色”一致：主窗是纯色背景、弹窗是透明色键
-            var back = Parent != null ? Parent.BackColor : Theme.BackPaint;
-            e.Graphics.Clear(back);
+            // 卡片外圈跟窗体真实底色一致（主窗纯色、弹窗色键）
+            e.Graphics.Clear(Draw.Back(this));
         }
 
         protected override void OnPaint(PaintEventArgs e)

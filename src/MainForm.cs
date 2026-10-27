@@ -16,6 +16,7 @@ namespace WinFontSwap
 
         string _demo;
         internal static bool _openPicker;
+        internal static string ShotPath;
 
         Label _title, _subtitle;
         RoundedButton _pickBtn;
@@ -323,6 +324,25 @@ namespace WinFontSwap
             RefreshTargets();
             if (!string.IsNullOrEmpty(_demo)) PickByPath(_demo);
             if (_openPicker) { _openPicker = false; PickFont(); }
+            if (!string.IsNullOrEmpty(ShotPath))
+            {
+                var timer = new System.Windows.Forms.Timer { Interval = 700 };
+                timer.Tick += delegate
+                {
+                    timer.Stop();
+                    try
+                    {
+                        using (var bmp = new Bitmap(Width, Height))
+                        {
+                            DrawToBitmap(bmp, new Rectangle(0, 0, Width, Height));
+                            bmp.Save(ShotPath, System.Drawing.Imaging.ImageFormat.Png);
+                        }
+                    }
+                    catch { }
+                    Close();
+                };
+                timer.Start();
+            }
         }
 
         void UiLog(string m) { try { BeginInvoke(new Action(delegate { Log(m); })); } catch { } }

@@ -27,7 +27,13 @@ namespace WinFontSwap
                     if (args[i] == "--opaque") Theme.Glass = false;
             if (args != null)
                 for (int i = 0; i < args.Length; i++)
+                    if (args[i] == "--glass") Theme.Glass = true;
+            if (args != null)
+                for (int i = 0; i < args.Length; i++)
                     if (args[i] == "--pick") MainForm._openPicker = true;
+            if (args != null)
+                for (int i = 0; i < args.Length - 1; i++)
+                    if (args[i] == "--shot") MainForm.ShotPath = args[i + 1];
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
