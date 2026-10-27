@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Continue'
 $log = 'H:\1\WinFontSwap\_sign.log'
 function L($m) { Add-Content -Path $log -Value ((Get-Date -Format 'HH:mm:ss') + ' ' + $m) -Encoding UTF8 }
-Set-Content -Path $log -Value '=== sign start ===' -Encoding UTF8
+L '=== sign+policy ==='
 $subject = 'CN=moyuer233'
 taskkill /F /IM WinFontSwapWpf.exe 2>&1 | Out-Null
 taskkill /F /IM WinFontSwap.exe 2>&1 | Out-Null
@@ -22,14 +22,23 @@ try {
       L ('sign ' + (Split-Path $exe -Leaf) + ' -> ' + $sig.Status)
     }
   }
-} catch { L ('ERROR ' + $_.Exception.Message) }
+} catch { L ('sign ERROR ' + $_.Exception.Message) }
 
-# 关掉「来自 Internet 的文件」安全警告（仅对 exe/lnk 这类本机可执行文件降低提示）
 try {
-  $k = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Associations'
+  $k = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\AppHost'
   if (-not (Test-Path $k)) { New-Item -Path $k -Force | Out-Null }
-  New-ItemProperty -Path $k -Name 'LowRiskFileTypes' -Value '.exe;.lnk;' -PropertyType String -Force | Out-Null
-  L ('lowrisk = ' + (Get-ItemProperty $k -Name LowRiskFileTypes).LowRiskFileTypes)
+  New-ItemProperty -Path $k -Name 'EnableWebContentEvaluation' -Value 0 -PropertyType DWord -Force | Out-Null
+  L ('apphost eval = ' + (Get-ItemProperty $k -Name EnableWebContentEvaluation).EnableWebContentEvaluation)
+} catch { L ('apphost ERROR ' + $_.Exception.Message) }
+
+try {
+  $k2 = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Associations'
+  if (-not (Test-Path $k2)) { New-Item -Path $k2 -Force | Out-Null }
+  New-ItemProperty -Path $k2 -Name 'LowRiskFileTypes' -Value '.exe;.lnk;' -PropertyType String -Force | Out-Null
+  L ('lowrisk = ' + (Get-ItemProperty $k2 -Name LowRiskFileTypes).LowRiskFileTypes)
 } catch { L ('lowrisk ERROR ' + $_.Exception.Message) }
 
+foreach ($p in @('H:\1\WinFontSwap\bin\GlyphProbe.exe','H:\1\WinFontSwap\bin\MicaProbe2.exe')) {
+  if (Test-Path $p) { Remove-Item $p -Force -ErrorAction SilentlyContinue; L ('removed ' + (Split-Path $p -Leaf)) }
+}
 L 'done'

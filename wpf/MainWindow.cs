@@ -212,6 +212,9 @@ namespace WinFontSwap.Wpf
         Win32Fonts.Info[] _winInfo = new Win32Fonts.Info[6];
         string[] _winFace = new string[6];
         ToggleButton _advCache, _advUserFonts;
+        ToggleButton _advPerSlot;
+        readonly List<Button> _slotPickButtons = new List<Button>();
+        readonly List<Button> _winPickButtons = new List<Button>();
 
         public MainWindow()
         {
@@ -504,8 +507,10 @@ namespace WinFontSwap.Wpf
 
                 var b = T.Btn2("指定", false, 13);
                 b.Margin = new Thickness(0, 0, 12, 0);
+                b.Visibility = Visibility.Collapsed;   // 默认跟主行同一字体，需要时在「高级」里打开
                 b.Click += delegate { PickSlot(idx); };
                 right.Children.Add(b);
+                _slotPickButtons.Add(b);
 
                 var sw = T.Switch(_on[i]);
                 sw.Click += delegate { _on[idx] = sw.IsChecked == true; };
@@ -520,14 +525,14 @@ namespace WinFontSwap.Wpf
 
             TextBlock winDesc;
             var winBtns = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-            var winApply = T.Btn2("写入", true, 13);
-            winApply.Margin = new Thickness(0, 0, 8, 0);
-            winApply.Click += delegate { ApplyWin32(); };
+            var winFollow = T.Btn2("跟随当前字体", true, 13);
+            winFollow.Margin = new Thickness(0, 0, 8, 0);
+            winFollow.Click += delegate { FollowCurrentFont(); };
             var winRestore = T.Btn2("还原", false, 13);
             winRestore.Click += delegate { RestoreWin32(); };
-            winBtns.Children.Add(winApply);
+            winBtns.Children.Add(winFollow);
             winBtns.Children.Add(winRestore);
-            stack.Children.Add(T.Row("\uE713", "写入到系统", "标题栏、菜单、状态栏这些 Win32 元素", winBtns, out winDesc));
+            stack.Children.Add(T.Row("\uE713", "系统元素", "把标题栏、菜单、状态栏一次性设成当前字体", winBtns, out winDesc));
 
             for (int i = 0; i < 6; i++)
             {
@@ -548,8 +553,10 @@ namespace WinFontSwap.Wpf
                 _winSize[i] = size;
 
                 var b = T.Btn2("选择", false, 12);
+                b.Visibility = Visibility.Collapsed;
                 b.Click += delegate { PickWin32Face(idx); };
                 right.Children.Add(b);
+                _winPickButtons.Add(b);
 
                 TextBlock desc;
                 stack.Children.Add(T.Row("\uE8D2", Win32Fonts.Names[i], "读取中", right, out desc));
@@ -567,6 +574,30 @@ namespace WinFontSwap.Wpf
             var userSw = T.Switch(true);
             _advUserFonts = userSw;
             stack.Children.Add(T.Row("\uE74D", "写入时清用户级同名字体", "用户级字体优先级更高，会挡住替换", userSw, out advDesc2));
+
+            TextBlock advDescPer;
+            var perSw = T.Switch(false);
+            perSw.Click += delegate
+            {
+                bool on = perSw.IsChecked == true;
+                foreach (var b in _slotPickButtons) b.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+            };
+            _advPerSlot = perSw;
+            stack.Children.Add(T.Row("\uE8D3", "分别指定每个字重", "打开后每行出现「指定」，可给粗体/细体单独挑字体", perSw, out advDescPer));
+
+            TextBlock advDescWin;
+            var winPerSw = T.Switch(false);
+            winPerSw.Click += delegate
+            {
+                bool on = winPerSw.IsChecked == true;
+                foreach (var b in _winPickButtons) b.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+            };
+            stack.Children.Add(T.Row("\uE790", "逐项指定系统元素", "打开后每个元素出现「选择」，可单独换某个元素", winPerSw, out advDescWin));
+
+            TextBlock advDescGen;
+            var genBtn = T.Btn2("生成", false, 13);
+            genBtn.Click += delegate { RunApply(true); };
+            stack.Children.Add(T.Row("\uE8A5", "只生成不写入", "产物放到 stage 目录，不动系统字体（调试用）", genBtn, out advDescGen));
 
             TextBlock advDesc3;
             var rb = T.Btn2("恢复", false, 13);
@@ -587,13 +618,9 @@ namespace WinFontSwap.Wpf
             var apply = T.Btn2("应用", true, 13);
             apply.Margin = new Thickness(0, 0, 10, 0);
             apply.Click += delegate { RunApply(false); };
-            var gen = T.Btn2("仅生成", false, 13);
-            gen.Margin = new Thickness(0, 0, 10, 0);
-            gen.Click += delegate { RunApply(true); };
             var rollback = T.Btn2("回滚", false, 13);
             rollback.Click += delegate { RunRollback(); };
             bar.Children.Add(apply);
-            bar.Children.Add(gen);
             bar.Children.Add(rollback);
             bottom.Children.Add(bar);
             _status = T.Label("选好字体后点「应用」，重启即可生效。", 12, T.TextDim, false);
@@ -741,13 +768,10 @@ namespace WinFontSwap.Wpf
             stack.Children.Add(T.Row("\uE8A5", "预设名字", "保存时用这个名字", nameBox, out nameDesc));
 
             var bar = new StackPanel { Orientation = Orientation.Horizontal };
-            var saveBtn = T.Btn2("另存为", false, 13);
+            var saveBtn = T.Btn2("另存为", true, 13);
             saveBtn.Margin = new Thickness(0, 0, 8, 0);
-            var loadBtn = T.Btn2("加载", true, 13);
-            loadBtn.Margin = new Thickness(0, 0, 8, 0);
             var delBtn = T.Btn2("删除", false, 13);
             bar.Children.Add(saveBtn);
-            bar.Children.Add(loadBtn);
             bar.Children.Add(delBtn);
             inner.Children.Add(bar);
 
@@ -771,10 +795,8 @@ namespace WinFontSwap.Wpf
                 }
                 catch (Exception ex) { status.Text = "保存失败：" + ex.Message; }
             };
-            loadBtn.Click += delegate
+            var loadPreset = new Action<string>(delegate (string item)
             {
-                var item = list.SelectedItem as string;
-                if (item == null) { status.Text = "先选一个预设"; return; }
                 string fam; string[] faces; decimal[] sizes;
                 if (!Presets.Load(item, out fam, out faces, out sizes)) { status.Text = "读取失败"; return; }
                 var pool = FontLibrary.All;
@@ -788,6 +810,11 @@ namespace WinFontSwap.Wpf
                 }
                 UpdateSlotLabels();
                 status.Text = "已载入预设 " + item + "，点「应用」才生效";
+            });
+            list.SelectionChanged += delegate
+            {
+                var item = list.SelectedItem as string;
+                if (item != null) loadPreset(item);
             };
             delBtn.Click += delegate
             {
@@ -887,6 +914,18 @@ namespace WinFontSwap.Wpf
                 }
             }
             catch { }
+        }
+
+        void FollowCurrentFont()
+        {
+            var src = _slots[0];
+            if (src == null) { SetStatus("先选一个字体。", true); return; }
+            for (int i = 0; i < 6; i++)
+            {
+                _winFace[i] = src.Family;
+                _winCur[i].Text = src.Family + "   " + _winSize[i].Text + " pt";
+            }
+            ApplyWin32();
         }
 
         void ApplyWin32()

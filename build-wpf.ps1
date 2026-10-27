@@ -1,4 +1,7 @@
 $ErrorActionPreference = 'Stop'
+# Gate: every tracked .ps1 must stay ASCII-only
+& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path 'H:\1\WinFontSwap' 'check-ascii.ps1')
+if ($LASTEXITCODE -ne 0) { throw 'ASCII check failed' }
 $root = 'H:\1\WinFontSwap'
 $csc = 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 $gac = 'C:\Windows\Microsoft.NET\assembly'
