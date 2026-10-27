@@ -111,26 +111,8 @@ namespace WinFontSwap
         protected override void OnMouseLeave(EventArgs e) { _hover = false; Invalidate(); base.OnMouseLeave(e); }
         protected override void OnEnabledChanged(EventArgs e) { Invalidate(); base.OnEnabledChanged(e); }
 
-        void UpdateRegion()
-        {
-            // 用窗口 Region 裁成圆角：四角露出的是父级真实绘制结果，
-            // 不靠“猜父级底色”，因此不受 Mica / 透明窗口影响
-            if (Width <= 0 || Height <= 0) return;
-            using (var path = Draw.Rounded(new Rectangle(0, 0, Width, Height), Radius))
-                Region = new Region(path);
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            UpdateRegion();
-        }
-
-        protected override void OnResize(EventArgs e)
-        {
-            base.OnResize(e);
-            UpdateRegion();
-        }
+        /// <summary>四角外侧填什么颜色。不设则按父级推断；弹窗/不透明容器应显式给。</summary>
+        public Color? CornerColor;
 
         protected override void OnPaintBackground(PaintEventArgs e) { }
 
@@ -139,20 +121,23 @@ namespace WinFontSwap
             var p = Theme.Current;
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            var rect = new Rectangle(0, 0, Width - 1, Height - 1);
+            // 先用底色把整块擦干净，再画圆角；抗锯齿边缘才能平滑
+            g.Clear(CornerColor.HasValue ? CornerColor.Value : Draw.Back(this));
+            var fillRect = new Rectangle(0, 0, Width, Height);
+            var borderRect = new Rectangle(0, 0, Width - 1, Height - 1);
 
             Color fill = Primary ? p.Accent : (Parent is CardPanel ? p.SurfaceAlt : p.Surface);
             Color text = Primary ? p.AccentText : p.Text;
             if (!Enabled) { fill = p.SurfaceAlt; text = p.TextDim; }
             else if (_hover) { fill = Primary ? Draw.Mix(p.Accent, Color.White, 0.14f) : p.Hover; }
 
-            using (var path = Draw.Rounded(rect, Radius))
+            using (var path = Draw.Rounded(fillRect, Radius))
             {
                 using (var b = new SolidBrush(fill)) g.FillPath(b, path);
                 if (!Primary && Enabled)
-                    using (var pen = new Pen(p.Line)) g.DrawPath(pen, path);
+                    using (var pen = new Pen(p.Line)) g.DrawPath(pen, Draw.Rounded(borderRect, Radius));
             }
-            TextRenderer.DrawText(g, Text, Font, rect, text,
+            TextRenderer.DrawText(g, Text, Font, fillRect, text,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
         }
     }

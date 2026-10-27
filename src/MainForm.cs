@@ -97,6 +97,8 @@ namespace WinFontSwap
             {
                 int dark = 1;
                 DwmSetWindowAttribute(Handle, 20, ref dark, 4);   // 深色标题栏
+                int backdrop = 1;                                  // DWMSBT_NONE：不要 Mica/亚克力背景
+                DwmSetWindowAttribute(Handle, 38, ref backdrop, 4);
             }
             catch { }
         }

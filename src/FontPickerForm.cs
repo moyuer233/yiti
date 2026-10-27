@@ -92,8 +92,8 @@ namespace WinFontSwap
             _list.SelectedIndexChanged += delegate { UpdatePreview(); };
             _list.DoubleClick += delegate { Accept(); };
 
-            _ok = new RoundedButton { Text = "确定", Primary = true, Location = new Point(308, 556), Size = new Size(92, 34), Enabled = false };
-            _cancel = new RoundedButton { Text = "取消", Location = new Point(408, 556), Size = new Size(92, 34) };
+            _ok = new RoundedButton { Text = "确定", Primary = true, Location = new Point(308, 556), Size = new Size(92, 34), Enabled = false, CornerColor = p.Bg };
+            _cancel = new RoundedButton { Text = "取消", Location = new Point(408, 556), Size = new Size(92, 34), CornerColor = p.Bg };
             _ok.Click += delegate { Accept(); };
             _cancel.Click += delegate { DialogResult = DialogResult.Cancel; Close(); };
 
@@ -130,6 +130,8 @@ namespace WinFontSwap
             try
             {
                 if (Theme.Current == Theme.Dark) { int dark = 1; DwmSetWindowAttribute(Handle, 20, ref dark, 4); }
+                int backdrop = 1;   // DWMSBT_NONE：让弹窗保持纯色，否则四角底色永远对不上
+                DwmSetWindowAttribute(Handle, 38, ref backdrop, 4);
                 // 搜索框占位提示
                 SendMessage(_search.Handle, 0x1501, (IntPtr)1, "搜索字体名…");
             }
