@@ -527,11 +527,7 @@ namespace WinFontSwap.Wpf
             catch (Exception ex) { WpfProgram.Log("logo: " + ex.Message); }
             var appName = T.Label("易体", 15, T.Text, true);
             appName.VerticalAlignment = VerticalAlignment.Bottom;
-            var appVer = T.Label("V" + WpfProgram.Version, 11, T.TextFaint, false);
-            appVer.VerticalAlignment = VerticalAlignment.Bottom;
-            appVer.Margin = new Thickness(6, 0, 0, 1);
             brand.Children.Add(appName);
-            brand.Children.Add(appVer);
             rail.Children.Add(brand);
             _nav = new ListBox
             {
@@ -541,7 +537,7 @@ namespace WinFontSwap.Wpf
             };
             _nav.Items.Add(NavItem("\uE8D2", "字体替换"));
             _nav.Items.Add(NavItem("\uE713", "高级"));
-            _nav.Items.Add(NavItem("\uE8A5", "预设"));
+            _nav.Items.Add(NavItem("\uE946", "关于"));
             _nav.SelectionChanged += delegate { ShowPage(); };
             rail.Children.Add(_nav);
             railGrid.Children.Add(rail);
@@ -675,7 +671,7 @@ namespace WinFontSwap.Wpf
                 try { LoadWin32(); } catch { }
             }
             else if (i == 1) _content.Content = BuildAdvancedPage();
-            else _content.Content = BuildPresetPage();
+            else _content.Content = BuildAboutPage();
         }
 
         // ---------------- 页面 ----------------
@@ -892,124 +888,70 @@ namespace WinFontSwap.Wpf
             return scroll;
         }
 
-        UIElement BuildPresetPage()
+        /// <summary>关于页：应用名、版本、作者、用途与运行要求（版本号只在这里出现）。</summary>
+        UIElement BuildAboutPage()
         {
             var stack = new StackPanel();
-            stack.Children.Add(T.Label("预设", 28, T.Text, true));
-            var sub2 = T.Label("把当前这套设置存下来，下次一键载入。", 12, T.TextDim, false);
-            sub2.Margin = new Thickness(0, 6, 0, 0);
-            stack.Children.Add(sub2);
-            stack.Children.Add(new Border { Height = 16 });
+            stack.Children.Add(T.Label("关于", 28, T.Text, true));
 
-            var card = T.CardBox();
-            var inner = new StackPanel();
-            var list = new ListBox { Height = 220, FontSize = 13, Background = T.B(Color.FromRgb(0x26, 0x26, 0x2B)), BorderThickness = new Thickness(0), Foreground = T.Text, Margin = new Thickness(0, 0, 0, 10) };
-            inner.Children.Add(list);
-            foreach (var n0 in Presets.List()) list.Items.Add(n0);   // 打开页面就要列出已有预设
-
-            var nameBox = new TextBox
+            var head = new StackPanel { Margin = new Thickness(0, 18, 0, 6) };
+            var logo = new Border
             {
-                FontSize = 13,
-                Margin = new Thickness(0, 0, 0, 10),
-                Background = T.B(Color.FromRgb(0x26, 0x26, 0x2B)),
-                Foreground = T.Text,
-                BorderThickness = new Thickness(0),
-                Padding = new Thickness(8, 6, 8, 6)
+                Width = 64,
+                Height = 64,
+                CornerRadius = new CornerRadius(14),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Background = T.B(Color.FromRgb(0x2D, 0x2D, 0x32))
             };
-            nameBox.Height = 34;
-            nameBox.Width = 380;
-            nameBox.MinWidth = 380;
-            nameBox.TextWrapping = TextWrapping.NoWrap;
-            nameBox.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
-            var nameBar = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-            nameBar.Children.Add(nameBox);
-            var saveBtn = T.Btn2("另存为", true, 13);
-            saveBtn.Margin = new Thickness(10, 0, 0, 0);
-            nameBar.Children.Add(saveBtn);
-            TextBlock nameDesc;
-            stack.Children.Add(T.Row("\uE8A5", "预设名字", "保存时用这个名字", nameBar, out nameDesc));
+            try
+            {
+                var bmp = LoadAppIcon();
+                if (bmp != null) logo.Child = new Image { Source = bmp, Margin = new Thickness(6) };
+            }
+            catch { }
+            head.Children.Add(logo);
 
-            var bar = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 10, 0, 0) };
-            var delBtn = T.Btn2("删除", false, 13);
-            var applyBtn = T.Btn2("应用此预设", true, 13);
-            applyBtn.Margin = new Thickness(0, 0, 8, 0);
-            bar.Children.Add(applyBtn);
-            bar.Children.Add(delBtn);
-            inner.Children.Add(bar);
+            var nameRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 12, 0, 0) };
+            var big = T.Label("易体", 24, T.Text, true);
+            big.VerticalAlignment = VerticalAlignment.Center;
+            var ver = T.Label("V" + WpfProgram.Version, 13, T.TextDim, false);
+            ver.VerticalAlignment = VerticalAlignment.Center;
+            ver.Margin = new Thickness(10, 2, 0, 0);
+            nameRow.Children.Add(big);
+            nameRow.Children.Add(ver);
+            head.Children.Add(nameRow);
 
-            var status = T.Label("", 12, T.TextDim, false);
-            status.Margin = new Thickness(0, 8, 0, 0);
-            inner.Children.Add(status);
+            var tag = T.Label("把 Windows 系统字体换成你喜欢的字体。", 13, T.TextDim, false);
+            tag.Margin = new Thickness(0, 6, 0, 0);
+            head.Children.Add(tag);
+            stack.Children.Add(head);
 
-            saveBtn.Click += delegate
-            {
-                string nm = (nameBox.Text ?? "").Trim();
-                if (nm.Length == 0) { status.Text = "先起个名字"; return; }
-                var faces = new string[5];
-                var sizes = new decimal[5];
-                for (int i = 0; i < 5; i++) faces[i] = _slots[i] == null ? "" : _slots[i].Family;
-                try
-                {
-                    Presets.Save(nm, "", faces, sizes);
-                    list.Items.Clear();
-                    foreach (var n in Presets.List()) list.Items.Add(n);
-                    status.Text = "已保存预设 " + nm;
-                }
-                catch (Exception ex) { status.Text = "保存失败：" + ex.Message; }
-            };
-            string curPreset = null;
-            Action ApplyCurrentPreset = delegate
-            {
-                if (curPreset == null) { status.Text = "先选一个预设"; return; }
-                try
-                {
-                    RunApply(false);          // 一步到位：选中即应用，不再要求再点一次「应用」
-                    status.Text = "已应用预设 " + curPreset;
-                }
-                catch (Exception ex) { status.Text = "应用失败：" + ex.Message; }
-            };
-            applyBtn.Click += delegate { ApplyCurrentPreset(); };
-            var loadPreset = new Action<string>(delegate (string item)
-            {
-                string fam; string[] faces; decimal[] sizes;
-                if (!Presets.Load(item, out fam, out faces, out sizes)) { status.Text = "读取失败"; return; }
-                var pool = FontLibrary.All;
-                for (int i = 0; i < 5 && i < faces.Length; i++)
-                {
-                    if (string.IsNullOrEmpty(faces[i])) continue;
-                    foreach (var f in pool)
-                    {
-                        if (f.Family == faces[i]) { _slots[i] = f; break; }
-                    }
-                }
-                UpdateSlotLabels();
-                SyncWin32FromChoice();
-                curPreset = item;
-                status.Text = "已载入预设 " + item + "，正在应用…";
-                ApplyCurrentPreset();
-            });
-            list.SelectionChanged += delegate
-            {
-                var item = list.SelectedItem as string;
-                if (item != null) loadPreset(item);
-            };
-            delBtn.Click += delegate
-            {
-                var item = list.SelectedItem as string;
-                if (item == null) { status.Text = "先选一个预设"; return; }
-                try
-                {
-                    Presets.Delete(item);
-                    list.Items.Clear();
-                    foreach (var n in Presets.List()) list.Items.Add(n);
-                    status.Text = "已删除 " + item;
-                }
-                catch (Exception ex) { status.Text = "删除失败：" + ex.Message; }
-            };
+            TextBlock d1;
+            stack.Children.Add(T.Row("\uE946", "版本", "当前版本号", T.Label("V" + WpfProgram.Version, 13, T.Text, false), out d1));
 
-            card.Child = inner;
-            stack.Children.Add(card);
-            return stack;
+            TextBlock d2;
+            stack.Children.Add(T.Row("\uE8D2", "能换什么", "雅黑常规/粗体/细体、Segoe UI，以及标题栏等老式界面元素",
+                T.Label("", 13, T.Text, false), out d2));
+
+            TextBlock d3;
+            stack.Children.Add(T.Row("\uE7F8", "支持系统", "Windows 7 / 8 / 10 / 11（老系统没有的字体不会显示）",
+                T.Label("", 13, T.Text, false), out d3));
+
+            TextBlock d4;
+            stack.Children.Add(T.Row("\uE8A5", "作者", "moyuer233", T.Label("", 13, T.Text, false), out d4));
+
+            TextBlock d5;
+            stack.Children.Add(T.Row("\uE72C", "还原方式", "随时可用「全部回滚」或「默认值」取回系统原版字体",
+                T.Label("", 13, T.Text, false), out d5));
+
+            var foot = T.Label("替换前会自动备份原版字体，第一次应用后需要重启一次才会全局生效。", 12, T.TextFaint, false);
+            foot.Margin = new Thickness(2, 14, 0, 0);
+            foot.TextWrapping = TextWrapping.Wrap;
+            stack.Children.Add(foot);
+
+            var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = stack, Padding = new Thickness(0, 0, 6, 12) };
+            _pageScroll = scroll;
+            return scroll;
         }
 
         // ---------------- 行为 ----------------

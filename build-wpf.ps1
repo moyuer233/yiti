@@ -29,7 +29,7 @@ $a += ('/r:' + (Join-Path $gac 'GAC_MSIL\WindowsBase\v4.0_4.0.0.0__31bf3856ad364
 $a += ('/r:' + (Join-Path $gac 'GAC_MSIL\System.Xaml\v4.0_4.0.0.0__b77a5c561934e089\System.Xaml.dll'))
 $a += '/r:System.Drawing.dll'
 $a += '/r:System.Core.dll'
-foreach ($f in @('Sfnt.cs','Installer.cs','FontLibrary.cs','Presets.cs','Win32Fonts.cs')) {
+foreach ($f in @('Sfnt.cs','Installer.cs','FontLibrary.cs','Win32Fonts.cs')) {
   $a += (Join-Path $root ('src\' + $f))
 }
 foreach ($f in @('WpfApp.cs','MainWindow.cs','FontPickerDialog.cs','Styles.cs')) {
@@ -48,4 +48,5 @@ try {
 
 $fi = Get-Item $out
 'WPF OK  ' + $fi.FullName + '  ' + $fi.Length + ' bytes  ' + $signed
+
 
