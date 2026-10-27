@@ -6,26 +6,28 @@ namespace WinFontSwap
 {
     static class Program
     {
-        /// <summary>命令行把某个字体应用到三个目标（内部用，方便无人值守测试）。</summary>
-        static int ApplyCli(string fontPath)
+        /// <summary>命令行把字体应用到三个目标（常规 / 粗体 / 细体，路径少于 3 个时后面沿用第一个）。</summary>
+        static int ApplyCli(string[] fontPaths)
         {
             try
             {
-                var entries = FontLibrary.ReadFile(fontPath);
-                if (entries.Count == 0) { Console.WriteLine("读不出字体：" + fontPath); return 2; }
-                var e = entries[0];
-                var data = File.ReadAllBytes(fontPath);
                 var list = new System.Collections.Generic.List<FontSource>();
-                foreach (var target in Installer.TargetFiles)
+                for (int i = 0; i < Installer.TargetFiles.Length; i++)
+                {
+                    string fontPath = fontPaths[Math.Min(i, fontPaths.Length - 1)];
+                    var entries = FontLibrary.ReadFile(fontPath);
+                    if (entries.Count == 0) { Console.WriteLine("读不出字体：" + fontPath); return 2; }
+                    var e = entries[0];
                     list.Add(new FontSource
                     {
-                        TargetFile = target,
+                        TargetFile = Installer.TargetFiles[i],
                         SourcePath = fontPath,
                         FaceIndex = e.FaceIndex,
                         Family = e.Family,
                         Subfamily = e.Subfamily,
-                        Data = data
+                        Data = File.ReadAllBytes(fontPath)
                     });
+                }
                 var res = Installer.Apply(list, delegate (string m) { Console.WriteLine(m); }, false);
                 Console.WriteLine("queued=" + res.Queued);
                 Console.WriteLine("backup=" + res.BackupDir);
@@ -48,7 +50,12 @@ namespace WinFontSwap
                 if (args[0] == "--acltest") return SelfTest.AclTest();
                 if (args[0] == "--applytest") return SelfTest.ApplyTest();
                 if (args[0] == "--rendertest") return SelfTest.RenderTest();
-                if (args[0] == "--apply" && args.Length >= 2) return ApplyCli(args[1]);
+                if (args[0] == "--apply" && args.Length >= 2)
+                {
+                    var fonts = new string[args.Length - 1];
+                    Array.Copy(args, 1, fonts, 0, args.Length - 1);
+                    return ApplyCli(fonts);
+                }
             }
 
             string demo = null;
