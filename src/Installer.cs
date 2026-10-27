@@ -439,6 +439,48 @@ namespace WinFontSwap
             public string OutputDir;
         }
 
+        /// <summary>
+        /// 删掉 HKCU 里与本工具目标同名的字体注册。
+        /// DWrite（WinUI / Edge / 设置 / 开始菜单）优先使用用户级字体，不删这些条目，替换 C:\Windows\Fonts 完全无效。
+        /// </summary>
+        static int ClearUserFontShadows(string backupDir, Action<string> log)
+        {
+            const string sub = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts";
+            using (var key = Registry.CurrentUser.OpenSubKey(sub, true))
+            {
+                if (key == null) return 0;
+                var hit = new List<string>();
+                foreach (var n in key.GetValueNames())
+                {
+                    var lower = n.ToLowerInvariant();
+                    if (lower.Contains("yahei") || lower.Contains("雅黑") || lower.StartsWith("segoe ui"))
+                        hit.Add(n);
+                }
+                if (hit.Count == 0) return 0;
+
+                try
+                {
+                    var reg = Path.Combine(backupDir, "HKCU-Fonts.reg");
+                    var psi = new ProcessStartInfo("reg.exe",
+                        "export \"HKCU\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts\" \"" + reg + "\" /y");
+                    psi.CreateNoWindow = true;
+                    psi.UseShellExecute = false;
+                    var p = Process.Start(psi);
+                    if (p != null) p.WaitForExit(10000);
+                }
+                catch { }
+
+                int done = 0;
+                foreach (var n in hit)
+                {
+                    try { key.DeleteValue(n, false); done++; }
+                    catch { }
+                }
+                log("已移除 " + done + " 条用户级字体注册（DWrite 优先读用户级字体，不删它们界面不会跟随）");
+                return done;
+            }
+        }
+
         static string NewStamp()
         {
             return DateTime.Now.ToString("yyyyMMdd_HHmmss");
@@ -527,6 +569,8 @@ namespace WinFontSwap
 
             EnablePrivileges();
             Directory.CreateDirectory(result.BackupDir);
+            try { ClearUserFontShadows(result.BackupDir, log); }
+            catch (Exception ex) { log("清理用户级字体注册失败：" + ex.Message); }
 
             var state = ReadState();
             state["stamp"] = stamp;
