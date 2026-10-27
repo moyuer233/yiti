@@ -121,9 +121,9 @@ namespace WinFontSwap
             var p = Theme.Current;
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            // 先用底色把整块擦干净，再画圆角；抗锯齿边缘才能平滑
+            // 先用底色把整块擦干净，再画圆角；路径收到 W-1/H-1，四边抗锯齿才均匀
             g.Clear(CornerColor.HasValue ? CornerColor.Value : Draw.Back(this));
-            var fillRect = new Rectangle(0, 0, Width, Height);
+            var fillRect = new Rectangle(0, 0, Width - 1, Height - 1);
             var borderRect = new Rectangle(0, 0, Width - 1, Height - 1);
 
             Color fill = Primary ? p.Accent : (Parent is CardPanel ? p.SurfaceAlt : p.Surface);
