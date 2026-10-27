@@ -38,7 +38,7 @@ namespace WinFontSwap
             BackColor = p.Bg;
             Font = new Font("Segoe UI", 9.5f);
 
-            var title = new FlatLabel
+            var title = new Label
             {
                 Text = "系统已安装字体",
                 Font = new Font("Segoe UI", 12f, FontStyle.Bold),
@@ -72,7 +72,7 @@ namespace WinFontSwap
             _list.SelectedIndexChanged += delegate { UpdatePreview(); };
             _list.DoubleClick += delegate { Accept(); };
 
-            _hint = new FlatLabel
+            _hint = new Label
             {
                 Text = "选一个字体家族，粗体/细体会按字重自动匹配。",
                 ForeColor = p.TextDim,
@@ -152,15 +152,13 @@ namespace WinFontSwap
                 _fontCache[info.Name] = f;
             }
 
-            e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
-            var textRect = new RectangleF(e.Bounds.X + 10, e.Bounds.Y + 3, e.Bounds.Width - 120, 20);
-            using (var brush = new SolidBrush(selected ? p.Accent : p.Text))
-                e.Graphics.DrawString(info.Name, f, brush, textRect);
+            var textRect = new Rectangle(e.Bounds.X + 10, e.Bounds.Y + 3, e.Bounds.Width - 120, 20);
+            TextRenderer.DrawText(e.Graphics, info.Name, f, textRect, selected ? p.Accent : p.Text,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
-            var subRect = new RectangleF(e.Bounds.X + 10, e.Bounds.Y + 19, e.Bounds.Width - 20, 14);
-            using (var f2 = new Font("Segoe UI", 8f))
-            using (var brush2 = new SolidBrush(p.TextDim))
-                e.Graphics.DrawString(info.Entries.Count + " 个字重", f2, brush2, subRect);
+            var subRect = new Rectangle(e.Bounds.X + 10, e.Bounds.Y + 19, e.Bounds.Width - 20, 14);
+            TextRenderer.DrawText(e.Graphics, info.Entries.Count + " 个字重", new Font("Segoe UI", 8f), subRect, p.TextDim,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
         }
 
         void UpdatePreview()

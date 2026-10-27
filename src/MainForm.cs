@@ -19,11 +19,11 @@ namespace WinFontSwap
         Label _title, _subtitle;
         RoundedButton _pickBtn;
         Label _pickedLabel;
-        Label[] _slotLabels = new FlatLabel[3];
+        Label[] _slotLabels = new Label[3];
         RoundedButton[] _slotBtns = new RoundedButton[3];
         PreviewBox _preview;
         ToggleSwitch[] _toggles = new ToggleSwitch[3];
-        Label[] _targetMeta = new FlatLabel[3];
+        Label[] _targetMeta = new Label[3];
         RoundedButton _applyBtn, _genBtn, _rollbackBtn, _cancelBtn;
         Label _status;
 
@@ -42,7 +42,7 @@ namespace WinFontSwap
             MaximizeBox = false;
             ClientSize = new Size(W, H);
             StartPosition = FormStartPosition.CenterScreen;
-            TransparencyKey = Theme.KeyColor;
+            if (Theme.Glass) TransparencyKey = Theme.KeyColor;
             BackColor = Theme.BackPaint;
             Font = new Font("Segoe UI", 9.5f);
             AutoScaleMode = AutoScaleMode.None;
@@ -118,7 +118,7 @@ namespace WinFontSwap
 
         void BuildHeader()
         {
-            _title = new FlatLabel
+            _title = new Label
             {
                 Text = "字体替换",
                 Font = new Font("Segoe UI", 18f, FontStyle.Bold),
@@ -126,7 +126,7 @@ namespace WinFontSwap
                 Location = new Point(PadX, 16),
                 Size = new Size(500, 34)
             };
-            _subtitle = new FlatLabel
+            _subtitle = new Label
             {
                 Text = "选一个字体，粗体细体自动匹配；重启后设置、开始菜单一起变。",
                 Tag = "dim",
@@ -141,7 +141,7 @@ namespace WinFontSwap
 
         Label Header(string text, int x, int y)
         {
-            return new FlatLabel
+            return new Label
             {
                 Text = text,
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
@@ -159,7 +159,7 @@ namespace WinFontSwap
 
             _pickBtn = new RoundedButton { Text = "选择字体…", Location = new Point(16, 46), Size = new Size(120, 34) };
             _pickBtn.Click += delegate { PickFont(); };
-            _pickedLabel = new FlatLabel
+            _pickedLabel = new Label
             {
                 Text = "还没有选择",
                 Tag = "dim",
@@ -177,7 +177,7 @@ namespace WinFontSwap
             for (int i = 0; i < 3; i++)
             {
                 int y = 90 + i * 30;
-                var name = new FlatLabel
+                var name = new Label
                 {
                     Text = slotNames[i],
                     Tag = "dim",
@@ -187,7 +187,7 @@ namespace WinFontSwap
                     Size = new Size(52, 24),
                     TextAlign = ContentAlignment.MiddleLeft
                 };
-                var val = new FlatLabel
+                var val = new Label
                 {
                     Text = "未匹配",
                     Tag = "dim",
@@ -216,7 +216,7 @@ namespace WinFontSwap
                 _slotBtns[i] = btn;
             }
 
-            card.Controls.Add(new FlatLabel
+            card.Controls.Add(new Label
             {
                 Text = "斜体由系统合成，不用单独匹配；没匹配到的字重保留系统原样。",
                 Tag = "dim",
@@ -246,7 +246,7 @@ namespace WinFontSwap
             for (int i = 0; i < 3; i++)
             {
                 int y = 42 + i * 40;
-                var title = new FlatLabel
+                var title = new Label
                 {
                     Text = targetNames[i],
                     Font = new Font("Segoe UI", 9.5f),
@@ -254,7 +254,7 @@ namespace WinFontSwap
                     Location = new Point(16, y),
                     Size = new Size(260, 20)
                 };
-                var meta = new FlatLabel
+                var meta = new Label
                 {
                     Text = "检测中…",
                     Tag = "dim",
@@ -291,7 +291,7 @@ namespace WinFontSwap
             Controls.Add(_rollbackBtn);
             Controls.Add(_cancelBtn);
 
-            _status = new FlatLabel
+            _status = new Label
             {
                 Text = "",
                 Tag = "dim",

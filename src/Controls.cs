@@ -129,16 +129,8 @@ namespace WinFontSwap
                 if (!Primary && Enabled)
                     using (var pen = new Pen(p.Line)) g.DrawPath(pen, path);
             }
-            g.TextRenderingHint = TextRenderingHint.AntiAlias;
-            using (var sf = new StringFormat())
-            using (var brush = new SolidBrush(text))
-            {
-                sf.Alignment = StringAlignment.Center;
-                sf.LineAlignment = StringAlignment.Center;
-                sf.Trimming = StringTrimming.EllipsisCharacter;
-                sf.FormatFlags = StringFormatFlags.NoWrap;
-                g.DrawString(Text, Font, brush, new RectangleF(0, 0, Width, Height), sf);
-            }
+            TextRenderer.DrawText(g, Text, Font, rect, text,
+                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
         }
     }
 
@@ -322,14 +314,15 @@ namespace WinFontSwap
                 return;
             }
 
-            g.TextRenderingHint = TextRenderingHint.AntiAlias;
-            using (var f1 = new Font(Family, 15f))
-            using (var f2 = new Font(Family, 9.5f))
+            // 预览单独用「像素单位 + 网格对齐 + 整数坐标」渲染，避免样张发虚
+            g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
+            using (var f1 = new Font(Family, 24f, FontStyle.Regular, GraphicsUnit.Pixel))
+            using (var f2 = new Font(Family, 13f, FontStyle.Regular, GraphicsUnit.Pixel))
             using (var b1 = new SolidBrush(p.Text))
             using (var b2 = new SolidBrush(p.TextDim))
             {
-                g.DrawString("清晨的第一缕阳光，照在安静的街道上。", f1, b1, new RectangleF(18, 10, Width - 36, 34), sf);
-                g.DrawString("Microsoft YaHei UI  0123456789  AaBbCc", f2, b2, new RectangleF(18, 50, Width - 36, 24), sf);
+                g.DrawString("清晨的第一缕阳光，照在安静的街道上。", f1, b1, 18f, 6f);
+                g.DrawString("Microsoft YaHei UI  0123456789  AaBbCc", f2, b2, 18f, 42f);
             }
         }
     }
