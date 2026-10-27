@@ -905,6 +905,7 @@ namespace WinFontSwap.Wpf
             var inner = new StackPanel();
             var list = new ListBox { Height = 220, FontSize = 13, Background = T.B(Color.FromRgb(0x26, 0x26, 0x2B)), BorderThickness = new Thickness(0), Foreground = T.Text, Margin = new Thickness(0, 0, 0, 10) };
             inner.Children.Add(list);
+            foreach (var n0 in Presets.List()) list.Items.Add(n0);   // 打开页面就要列出已有预设
 
             var nameBox = new TextBox
             {
@@ -915,16 +916,24 @@ namespace WinFontSwap.Wpf
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(8, 6, 8, 6)
             };
-            nameBox.Height = 32;
-            nameBox.Width = 240;
-            TextBlock nameDesc;
-            stack.Children.Add(T.Row("\uE8A5", "预设名字", "保存时用这个名字", nameBox, out nameDesc));
-
-            var bar = new StackPanel { Orientation = Orientation.Horizontal };
+            nameBox.Height = 34;
+            nameBox.Width = 380;
+            nameBox.MinWidth = 380;
+            nameBox.TextWrapping = TextWrapping.NoWrap;
+            nameBox.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
+            var nameBar = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            nameBar.Children.Add(nameBox);
             var saveBtn = T.Btn2("另存为", true, 13);
-            saveBtn.Margin = new Thickness(0, 0, 8, 0);
+            saveBtn.Margin = new Thickness(10, 0, 0, 0);
+            nameBar.Children.Add(saveBtn);
+            TextBlock nameDesc;
+            stack.Children.Add(T.Row("\uE8A5", "预设名字", "保存时用这个名字", nameBar, out nameDesc));
+
+            var bar = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 10, 0, 0) };
             var delBtn = T.Btn2("删除", false, 13);
-            bar.Children.Add(saveBtn);
+            var applyBtn = T.Btn2("应用此预设", true, 13);
+            applyBtn.Margin = new Thickness(0, 0, 8, 0);
+            bar.Children.Add(applyBtn);
             bar.Children.Add(delBtn);
             inner.Children.Add(bar);
 
@@ -948,6 +957,18 @@ namespace WinFontSwap.Wpf
                 }
                 catch (Exception ex) { status.Text = "保存失败：" + ex.Message; }
             };
+            string curPreset = null;
+            Action ApplyCurrentPreset = delegate
+            {
+                if (curPreset == null) { status.Text = "先选一个预设"; return; }
+                try
+                {
+                    RunApply(false);          // 一步到位：选中即应用，不再要求再点一次「应用」
+                    status.Text = "已应用预设 " + curPreset;
+                }
+                catch (Exception ex) { status.Text = "应用失败：" + ex.Message; }
+            };
+            applyBtn.Click += delegate { ApplyCurrentPreset(); };
             var loadPreset = new Action<string>(delegate (string item)
             {
                 string fam; string[] faces; decimal[] sizes;
@@ -962,7 +983,10 @@ namespace WinFontSwap.Wpf
                     }
                 }
                 UpdateSlotLabels();
-                status.Text = "已载入预设 " + item + "，点「应用」才生效";
+                SyncWin32FromChoice();
+                curPreset = item;
+                status.Text = "已载入预设 " + item + "，正在应用…";
+                ApplyCurrentPreset();
             });
             list.SelectionChanged += delegate
             {
