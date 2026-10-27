@@ -42,8 +42,17 @@ namespace WinFontSwap
                             using (var dark = new SolidBrush(Color.FromArgb(60, 8, 10, 14)))
                                 g.FillRectangle(dark, 0, 0, sw, sh);
                         }
+                        // 放大回屏幕原始尺寸：之后各控件按 1:1 像素裁剪，边界才不会出现色块/接缝
+                        var full = new Bitmap(vs.Width, vs.Height);
+                        using (var g = Graphics.FromImage(full))
+                        {
+                            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                            g.DrawImage(result, new Rectangle(0, 0, vs.Width, vs.Height));
+                        }
+                        result.Dispose();
                         if (_bmp != null) _bmp.Dispose();
-                        _bmp = result;
+                        _bmp = full;
                         _bounds = vs;
                     }
                 }
@@ -61,15 +70,29 @@ namespace WinFontSwap
             if (cr.Width <= 0 || cr.Height <= 0) return;
 
             Point sp = c.PointToScreen(Point.Empty);
-            float k = (float)_bmp.Width / Math.Max(1, _bounds.Width);
-            int sx = (int)((sp.X - _bounds.Left) * k);
-            int sy = (int)((sp.Y - _bounds.Top) * k);
-            int sw = Math.Max(1, (int)(cr.Width * k));
-            int sh = Math.Max(1, (int)(cr.Height * k));
+            int sx = sp.X - _bounds.Left;
+            int sy = sp.Y - _bounds.Top;
+            int sw = Math.Max(1, cr.Width);
+            int sh = Math.Max(1, cr.Height);
 
-            g.InterpolationMode = InterpolationMode.HighQualityBilinear;
+            // 1:1 裁剪，不做任何缩放/插值：相邻控件的背景天然连续
+            g.InterpolationMode = InterpolationMode.NearestNeighbor;
             g.PixelOffsetMode = PixelOffsetMode.Half;
             g.DrawImage(_bmp, cr, new Rectangle(sx, sy, sw, sh), GraphicsUnit.Pixel);
+
+            // 如果控件在卡片里，要把卡片那层半透明白也补上，否则会出现一块和卡片不同色的方形底
+            var parent = c.Parent;
+            while (parent != null)
+            {
+                var card = parent as CardPanel;
+                if (card != null)
+                {
+                    using (var b = new SolidBrush(Color.FromArgb(card.Emphasis ? 26 : 18, 255, 255, 255)))
+                        g.FillRectangle(b, cr);
+                    break;
+                }
+                parent = parent.Parent;
+            }
         }
     }
 }
