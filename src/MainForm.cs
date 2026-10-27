@@ -65,7 +65,7 @@ namespace WinFontSwap
             ClientSize = new Size(W, H);
             StartPosition = FormStartPosition.CenterScreen;
             BackColor = Theme.Current.Bg;
-            if (Theme.Glass) Opacity = 0.94;   // 整体轻微透明：边缘抗锯齿不会被色键切出暗边
+            if (Theme.Glass) Opacity = 0.90;   // 整体轻微透明：边缘抗锯齿不会被色键切出暗边
             Font = new Font("Segoe UI", 9.5f);
             AutoScaleMode = AutoScaleMode.None;
             DoubleBuffered = true;
