@@ -944,6 +944,15 @@ namespace WinFontSwap.Wpf
             stack.Children.Add(T.Row("\uE72C", "还原方式", "随时可用「全部回滚」或「默认值」取回系统原版字体",
                 T.Label("", 13, T.Text, false), out d5));
 
+            TextBlock d6;
+            var repo = T.Label("github.com/moyuer233/yiti", 13, T.Accent, false);
+            repo.Cursor = Cursors.Hand;
+            repo.MouseLeftButtonUp += delegate
+            {
+                try { System.Diagnostics.Process.Start("https://github.com/moyuer233/yiti"); } catch { }
+            };
+            stack.Children.Add(T.Row("\uE774", "项目主页", "源码与问题反馈", repo, out d6));
+
             var foot = T.Label("替换前会自动备份原版字体，第一次应用后需要重启一次才会全局生效。", 12, T.TextFaint, false);
             foot.Margin = new Thickness(2, 14, 0, 0);
             foot.TextWrapping = TextWrapping.Wrap;
