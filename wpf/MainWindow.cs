@@ -155,6 +155,31 @@ namespace WinFontSwap.Wpf
         }
 
         /// <summary>区段标题（LF 的「歌词检索与保存」那种）。</summary>
+        /// <summary>分节标题 + 右侧小动作（与下方行卡片同一套栅格）。</summary>
+        public static UIElement SectionHeader(string text, bool first, params UIElement[] actions)
+        {
+            var g = new Grid();
+            g.Margin = new Thickness(2, first ? 0 : 14, 0, 10);
+            g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            var tb = Label(text, 13, TextFaint, false);
+            tb.VerticalAlignment = VerticalAlignment.Center;
+            g.Children.Add(tb);
+            if (actions != null && actions.Length > 0)
+            {
+                var sp = new StackPanel { Orientation = Orientation.Horizontal };
+                for (int i = 0; i < actions.Length; i++)
+                {
+                    var el = actions[i] as FrameworkElement;
+                    if (el != null && i < actions.Length - 1) el.Margin = new Thickness(0, 0, 8, 0);
+                    sp.Children.Add(actions[i]);
+                }
+                Grid.SetColumn(sp, 1);
+                g.Children.Add(sp);
+            }
+            return g;
+        }
+
         public static TextBlock SectionTitle(string text, bool first)
         {
             var tb = Label(text, 13, TextFaint, false);
@@ -195,6 +220,7 @@ namespace WinFontSwap.Wpf
         const double RailW = 218;
 
         ContentControl _content;
+        ScrollViewer _pageScroll;
         ListBox _nav;
         TextBlock _status;
         Image _bg;
@@ -253,6 +279,14 @@ namespace WinFontSwap.Wpf
                 try { ReloadFonts(); } catch (Exception ex) { WpfProgram.Log("ReloadFonts: " + ex.Message); }
                 try { RefreshTargets(); } catch (Exception ex) { WpfProgram.Log("RefreshTargets: " + ex.Message); }
                 try { LoadWin32(); } catch (Exception ex) { WpfProgram.Log("LoadWin32: " + ex.Message); }
+                foreach (var a in Environment.GetCommandLineArgs())
+                {
+                    if (a.StartsWith("--scroll:") && _pageScroll != null)
+                    {
+                        double off;
+                        if (double.TryParse(a.Substring(9), out off)) _pageScroll.ScrollToVerticalOffset(off);
+                    }
+                }
             };
         }
 
@@ -518,18 +552,11 @@ namespace WinFontSwap.Wpf
                 _srcText[i] = src;
             }
 
-            stack.Children.Add(T.SectionTitle("系统元素", false));
-
-            TextBlock winDesc;
-            var winBtns = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-            var winFollow = T.Btn2("跟随当前字体", true, 13);
-            winFollow.Margin = new Thickness(0, 0, 8, 0);
+            var winFollow = T.Btn2("跟随当前字体", true, 12);
             winFollow.Click += delegate { FollowCurrentFont(); };
-            var winRestore = T.Btn2("还原", false, 13);
+            var winRestore = T.Btn2("还原", false, 12);
             winRestore.Click += delegate { RestoreWin32(); };
-            winBtns.Children.Add(winFollow);
-            winBtns.Children.Add(winRestore);
-            stack.Children.Add(T.Row("\uE713", "系统元素", "把标题栏、菜单、状态栏一次性设成当前字体", winBtns, out winDesc));
+            stack.Children.Add(T.SectionHeader("系统元素", false, winFollow, winRestore));
 
             TextBlock fbDesc;
             var fbBtn = T.Btn2("指向当前字体", false, 13);
@@ -545,8 +572,9 @@ namespace WinFontSwap.Wpf
                 {
                     Text = "9",
                     FontSize = 12,
-                    Width = 52,
+                    Width = 66,
                     Height = 30,
+                    Padding = new Thickness(4, 4, 4, 4),
                     Margin = new Thickness(0, 0, 8, 0),
                     VerticalContentAlignment = VerticalAlignment.Center,
                     HorizontalContentAlignment = HorizontalAlignment.Center
@@ -598,6 +626,7 @@ namespace WinFontSwap.Wpf
             stack.Children.Add(T.Row("\uE777", "只还原用户级注册", "导入最近一次的 HKCU 字体注册备份", rb, out advDesc3));
 
             scroll.Content = stack;
+            _pageScroll = scroll;
             Grid.SetRow(scroll, 0);
             root.Children.Add(scroll);
 
