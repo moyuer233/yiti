@@ -121,6 +121,27 @@ namespace WinFontSwap
                 if (args[0] == "--acltest") return SelfTest.AclTest();
                 if (args[0] == "--applytest") return SelfTest.ApplyTest();
                 if (args[0] == "--rendertest") return SelfTest.RenderTest();
+                if (args[0] == "--generate" && args.Length >= 2)
+                {
+                    var list = new System.Collections.Generic.List<FontSource>();
+                    var entries = FontLibrary.ReadFile(args[1]);
+                    if (entries.Count == 0) { Console.WriteLine("读不出字体"); return 2; }
+                    for (int i = 0; i < Installer.TargetFiles.Length; i++)
+                    {
+                        list.Add(new FontSource
+                        {
+                            TargetFile = Installer.TargetFiles[i],
+                            SourcePath = args[1],
+                            FaceIndex = entries[0].FaceIndex,
+                            Family = entries[0].Family,
+                            Subfamily = entries[0].Subfamily,
+                            Data = File.ReadAllBytes(args[1])
+                        });
+                    }
+                    var res = Installer.Apply(list, delegate (string m) { Console.WriteLine(m); }, true);
+                    Console.WriteLine("out=" + res.OutputDir);
+                    return 0;
+                }
                 if (args[0] == "--seguivars" && args.Length >= 3) return SegUIVarsCli(args[1], args[2]);
                 if (args[0] == "--gen" && args.Length >= 6)
                 {

@@ -50,10 +50,19 @@ namespace WinFontSwap
 
         public const string SessionManagerKey = @"SYSTEM\CurrentControlSet\Control\Session Manager";
 
-        public static readonly string[] TargetFiles = { "msyh.ttc", "msyhbd.ttc", "msyhl.ttc", "SegUIVar.ttf" };
+        public static readonly string[] TargetFiles = { "msyh.ttc", "msyhbd.ttc", "msyhl.ttc", "SegUIVar.ttf", "segoeui.ttf" };
 
-        /// <summary>单 face 目标（英文数字），生成时保留可变轴。</summary>
-        public static bool IsSingleFace(string file) { return file == "SegUIVar.ttf"; }
+        /// <summary>单 face 目标（静态 Segoe UI）。</summary>
+        public static bool IsSingleFace(string file) { return file == "segoeui.ttf"; }
+
+        /// <summary>多 face 且要保留可变轴的目标（Segoe UI Variable：Variable/Text/Display/Small）。</summary>
+        public static bool IsVariableTtc(string file) { return file == "SegUIVar.ttf"; }
+
+        /// <summary>目标文件属于哪个界面槽位（0 常规 / 1 粗体 / 2 细体 / 3 英文数字）。</summary>
+        public static int SlotOf(int targetIndex)
+        {
+            return targetIndex >= 3 ? 3 : targetIndex;
+        }
 
         public static string LabelOf(string file)
         {
@@ -63,6 +72,7 @@ namespace WinFontSwap
                 case "msyhbd.ttc": return "粗体";
                 case "msyhl.ttc": return "细体";
                 case "SegUIVar.ttf": return "英文数字";
+                case "segoeui.ttf": return "英文数字";
                 default: return file;
             }
         }
@@ -70,16 +80,35 @@ namespace WinFontSwap
         /// <summary>目标文件里要写进去的两个 face 的名字（微软雅黑 + 微软雅黑 UI）。</summary>
         public static NameSpec[] SpecsFor(string file)
         {
+            // WinUI 请求的是 Segoe UI Variable Text/Display/Small 这些子族名，四个族名必须写进同一个文件
             if (file == "SegUIVar.ttf")
+            {
+                string[] names = { "Segoe UI Variable", "Segoe UI Variable Text", "Segoe UI Variable Display", "Segoe UI Variable Small" };
+                var uiSpecs = new List<NameSpec>(names.Length);
+                foreach (var n in names)
+                {
+                    uiSpecs.Add(new NameSpec
+                    {
+                        Family = n,
+                        FamilyTypo = n,
+                        Subfamily = "Regular",
+                        SubfamilyTypo = "Regular",
+                        FullName = n,
+                        PostScript = n.Replace(" ", "")
+                    });
+                }
+                return uiSpecs.ToArray();
+            }
+            if (file == "segoeui.ttf")
             {
                 return new[] { new NameSpec
                 {
-                    Family = "Segoe UI Variable",
-                    FamilyTypo = "Segoe UI Variable",
+                    Family = "Segoe UI",
+                    FamilyTypo = "Segoe UI",
                     Subfamily = "Regular",
                     SubfamilyTypo = "Regular",
-                    FullName = "Segoe UI Variable",
-                    PostScript = "SegoeUIVariable-Regular"
+                    FullName = "Segoe UI",
+                    PostScript = "SegoeUI"
                 } };
             }
             bool ui = false;
@@ -481,6 +510,33 @@ namespace WinFontSwap
             }
         }
 
+        /// <summary>清字体缓存，让 DWrite/WinUI 重启后按新文件重建（失败只记日志，不阻断）。</summary>
+        static void ClearFontCaches(Action<string> log)
+        {
+            try
+            {
+                var psi = new ProcessStartInfo("sc.exe", "stop FontCache") { CreateNoWindow = true, UseShellExecute = false };
+                var p = Process.Start(psi);
+                if (p != null) p.WaitForExit(8000);
+                System.Threading.Thread.Sleep(800);
+
+                var fnt = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "System32", "FNTCACHE.DAT");
+                try { if (File.Exists(fnt)) File.Delete(fnt); } catch { }
+
+                var userCache = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "FontCache");
+                try { if (Directory.Exists(userCache)) Directory.Delete(userCache, true); } catch { }
+
+                var psi2 = new ProcessStartInfo("sc.exe", "start FontCache") { CreateNoWindow = true, UseShellExecute = false };
+                var p2 = Process.Start(psi2);
+                if (p2 != null) p2.WaitForExit(8000);
+                log("已清字体缓存（重启后由系统重建）");
+            }
+            catch (Exception ex)
+            {
+                log("清字体缓存失败（不影响替换）：" + ex.Message);
+            }
+        }
+
         static string NewStamp()
         {
             return DateTime.Now.ToString("yyyyMMdd_HHmmss");
@@ -495,13 +551,19 @@ namespace WinFontSwap
                 var specs = SpecsFor(src.TargetFile);
                 log("生成 " + src.TargetFile + "（源：" + Path.GetFileName(src.SourcePath) + "）");
                 byte[] data;
-                if (IsSingleFace(src.TargetFile))
+                if (IsVariableTtc(src.TargetFile))
                 {
                     if (Sfnt.IsVariable(src.Data, src.FaceIndex))
-                        log("  可变字体：保留字重轴（粗细仍然生效）");
+                        log("  可变字体：保留字重轴，并写入 " + specs.Length + " 个族名（Variable/Text/Display/Small）");
                     else
                         log("  注意：源不是可变字体，英文数字的字重会变单一");
-                    data = Sfnt.BuildSingle(src.Data, src.FaceIndex, specs[0], true);
+                    data = Sfnt.BuildCollection(src.Data, src.FaceIndex, specs, true);
+                }
+                else if (IsSingleFace(src.TargetFile))
+                {
+                    if (Sfnt.IsVariable(src.Data, src.FaceIndex))
+                        log("  可变字体：取默认字重做成静态字体");
+                    data = Sfnt.BuildSingle(src.Data, src.FaceIndex, specs[0], false);
                 }
                 else
                 {
@@ -608,6 +670,7 @@ namespace WinFontSwap
             if (applied.Count == 0) throw new InvalidOperationException("没有可替换的目标");
 
             AddQueuePairs(pairs);
+            ClearFontCaches(log);
             state["applied"] = string.Join(";", applied.ToArray());
             state["aclPending"] = "1";
             state["date"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm");

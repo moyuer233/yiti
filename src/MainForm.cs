@@ -992,15 +992,25 @@ namespace WinFontSwap
             try
             {
                 var infos = Installer.Inspect();
-                for (int i = 0; i < infos.Count && i < _targetMeta.Length; i++)
+                // 一个槽位可能对应多个目标文件（英文数字 = SegUIVar + segoeui），合并成一段状态
+                var perSlot = new int[_targetMeta.Length];
+                for (int i = 0; i < infos.Count; i++) perSlot[Installer.SlotOf(i)]++;
+                for (int slot = 0; slot < _targetMeta.Length; slot++)
                 {
-                    var info = infos[i];
                     var parts = new List<string>();
-                    parts.Add(info.Exists ? ("系统 " + (info.Version ?? "?")) : "缺失");
-                    if (info.Exists) parts.Add(Installer.HumanSize(info.Size));
-                    if (info.Applied) parts.Add("已替换");
-                    if (info.Queued) parts.Add("等待重启");
-                    _targetMeta[i].Text = string.Join("  ·  ", parts.ToArray());
+                    for (int i = 0; i < infos.Count; i++)
+                    {
+                        if (Installer.SlotOf(i) != slot) continue;
+                        var info = infos[i];
+                        var one = new List<string>();
+                        if (perSlot[slot] > 1) one.Add(info.FileName);
+                        one.Add(info.Exists ? ("系统 " + (info.Version ?? "?")) : "缺失");
+                        if (info.Exists) one.Add(Installer.HumanSize(info.Size));
+                        if (info.Applied) one.Add("已替换");
+                        if (info.Queued) one.Add("等待重启");
+                        parts.Add(string.Join(" ", one.ToArray()));
+                    }
+                    _targetMeta[slot].Text = parts.Count == 0 ? "—" : string.Join("   |   ", parts.ToArray());
                 }
                 bool queued = false;
                 foreach (var info in infos) if (info.Queued) queued = true;
@@ -1018,8 +1028,9 @@ namespace WinFontSwap
             var list = new List<FontSource>();
             for (int i = 0; i < Installer.TargetFiles.Length; i++)
             {
-                if (_slots[i] == null || !_toggles[i].On) continue;
-                var e = _slots[i];
+                int slot = Installer.SlotOf(i);
+                if (_slots[slot] == null || !_toggles[slot].On) continue;
+                var e = _slots[slot];
                 list.Add(new FontSource
                 {
                     TargetFile = Installer.TargetFiles[i],
