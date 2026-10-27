@@ -892,10 +892,10 @@ namespace WinFontSwap.Wpf
             {
                 if (_srcText[i] == null) continue;
                 var e = _slots[i];
-                _srcText[i].Text = e == null ? "未选择" : e.FileName + "   " + e.Family + " " + (e.Subfamily ?? "");
+                _srcText[i].Text = e == null ? "未选择" : e.Family + " " + (e.Subfamily ?? "");
             }
             if (_pickDesc != null && _slots[0] != null)
-                _pickDesc.Text = _slots[0].FileName + "   " + _slots[0].Family + " " + (_slots[0].Subfamily ?? "");
+                _pickDesc.Text = _slots[0].Family + " " + (_slots[0].Subfamily ?? "");
         }
 
         void RefreshTargets()
