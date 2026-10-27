@@ -10,6 +10,9 @@ namespace WinFontSwap.Wpf
     {
         // 默认不写日志：本机安全软件只允许这个 exe 往自身目录写，
         // 所以日志只能落在 dist 里 —— 用 --log 才写，保证 dist 只有发布产物。
+        /// <summary>应用版本号：只改这里，窗口标题自动跟着变。</summary>
+        public const string Version = "0.1.0";
+
         public static bool LogEnabled;
 
         static readonly string LogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wpf.log");

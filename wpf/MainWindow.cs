@@ -263,7 +263,7 @@ namespace WinFontSwap.Wpf
         public MainWindow()
         {
             for (int i = 0; i < _winOn.Length; i++) _winOn[i] = true;
-            Title = "易体";
+            Title = "易体 V" + WpfProgram.Version;
             Width = 1080;
             Height = 720;
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
@@ -432,7 +432,17 @@ namespace WinFontSwap.Wpf
 
             // ---- 左栏（LF：深色、胶囊选中） ----
             var railGrid = new Grid { Background = new SolidColorBrush(Color.FromArgb(0x40, 0x10, 0x10, 0x14)) };
-            var rail = new StackPanel { Margin = new Thickness(12, 44, 12, 12) };
+            var rail = new StackPanel { Margin = new Thickness(12, 14, 12, 12) };
+            // 应用名 + 版本（窗口没有系统标题栏，名字与版本显示在这里）
+            var brand = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(6, 0, 0, 22) };
+            var appName = T.Label("易体", 15, T.Text, true);
+            appName.VerticalAlignment = VerticalAlignment.Bottom;
+            var appVer = T.Label("V" + WpfProgram.Version, 11, T.TextFaint, false);
+            appVer.VerticalAlignment = VerticalAlignment.Bottom;
+            appVer.Margin = new Thickness(6, 0, 0, 1);
+            brand.Children.Add(appName);
+            brand.Children.Add(appVer);
+            rail.Children.Add(brand);
             _nav = new ListBox
             {
                 BorderThickness = new Thickness(0),
