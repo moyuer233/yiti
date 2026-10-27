@@ -62,6 +62,10 @@ namespace WinFontSwap.Wpf
             root.Children.Add(bar);
 
             Content = root;
+            foreach (var a in Environment.GetCommandLineArgs())
+            {
+                if (a.StartsWith("--q:")) _search.Text = a.Substring(4);
+            }
             Loaded += delegate { Load(); };
         }
 
@@ -106,9 +110,9 @@ namespace WinFontSwap.Wpf
 
             var sample = new TextBlock
             {
-                Text = "Aa",
-                FontSize = 17,
-                Width = 40,
+                Text = "Aa 汉字",
+                FontSize = 16,
+                Width = 92,
                 Foreground = T.Text,
                 VerticalAlignment = VerticalAlignment.Center
             };
