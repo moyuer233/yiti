@@ -25,6 +25,6 @@ foreach ($f in @('WpfApp.cs','MainWindow.cs','FontPickerDialog.cs','Styles.cs'))
 }
 
 & $csc $a
-if ($LASTEXITCODE -ne 0) { throw ('WPF 编译失败：' + $LASTEXITCODE) }
+if ($LASTEXITCODE -ne 0) { throw ('WPF compile failed: ' + $LASTEXITCODE) }
 $fi = Get-Item $out
-'WPF OK  ' + $fi.Length + ' bytes  ' + $fi.LastWriteTime
+'WPF OK  ' + $fi.Length + ' bytes'

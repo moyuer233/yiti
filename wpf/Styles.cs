@@ -79,9 +79,15 @@ namespace WinFontSwap.Wpf
     <Setter Property='Template'>
       <Setter.Value>
         <ControlTemplate TargetType='TextBox'>
-          <Border Background='{TemplateBinding Background}' CornerRadius='4'>
+          <Border x:Name='ring' Background='{TemplateBinding Background}' CornerRadius='4' BorderThickness='1' BorderBrush='#22FFFFFF'>
             <ScrollViewer x:Name='PART_ContentHost' Margin='{TemplateBinding Padding}'/>
           </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property='IsKeyboardFocused' Value='True'>
+              <Setter TargetName='ring' Property='BorderBrush' Value='#4CC2FF'/>
+              <Setter TargetName='ring' Property='Background' Value='#2E2E34'/>
+            </Trigger>
+          </ControlTemplate.Triggers>
         </ControlTemplate>
       </Setter.Value>
     </Setter>

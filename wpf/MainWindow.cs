@@ -24,7 +24,7 @@ namespace WinFontSwap.Wpf
         public static readonly Brush RailHover = B(Color.FromArgb(0x0D, 255, 255, 255));
         public static readonly Brush Text = B(Color.FromRgb(0xFF, 0xFF, 0xFF));
         public static readonly Brush TextDim = B(Color.FromArgb(0x99, 0xFF, 0xFF, 0xFF));
-        public static readonly Brush TextFaint = B(Color.FromArgb(0x69, 0xFF, 0xFF, 0xFF));
+        public static readonly Brush TextFaint = B(Color.FromArgb(0x80, 0xFF, 0xFF, 0xFF));
         public static readonly Brush Accent = B(Color.FromRgb(0x4C, 0xC2, 0xFF));   // Win11 强调色
         public static readonly Brush Btn = B(Color.FromArgb(0x14, 255, 255, 255));
         public static readonly Brush BtnHover = B(Color.FromArgb(0x24, 255, 255, 255));
@@ -43,6 +43,7 @@ namespace WinFontSwap.Wpf
         {
             var b = new Button { Content = text, FontSize = size, Foreground = primary ? B(Color.FromRgb(0x10, 0x10, 0x12)) : Text, Cursor = Cursors.Hand };
             b.Padding = new Thickness(14, 6, 14, 6);
+            b.MinHeight = 32;
             b.BorderThickness = new Thickness(0);
             var normal = primary ? Accent : Btn;
             b.Background = normal;
@@ -119,7 +120,7 @@ namespace WinFontSwap.Wpf
                 Background = Card,
                 CornerRadius = new CornerRadius(8),
                 Padding = new Thickness(16, 12, 16, 12),
-                Margin = new Thickness(0, 0, 0, 10)
+                Margin = new Thickness(0, 0, 0, 12)
             };
             var g = new Grid();
             g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
@@ -461,7 +462,7 @@ namespace WinFontSwap.Wpf
             {
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                Padding = new Thickness(0, 0, 6, 0)
+                Padding = new Thickness(0, 0, 6, 12)
             };
             var stack = new StackPanel();
             stack.Children.Add(T.Label("字体替换", 28, T.Text, true));
@@ -519,49 +520,32 @@ namespace WinFontSwap.Wpf
             winBtns.Children.Add(winRestore);
             stack.Children.Add(T.Row("\uE713", "写入到系统", "标题栏、菜单、状态栏这些 Win32 元素", winBtns, out winDesc));
 
-            var winCard = T.CardBox();
-            var winInner = new StackPanel();
-
             for (int i = 0; i < 6; i++)
             {
-                var row = new Grid { Margin = new Thickness(0, 8, 0, 0) };
-                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(110) });
-                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(52) });
-                row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-                row.Children.Add(T.Label(Win32Fonts.Names[i], 13, T.Text, false));
-                var cur = T.Label("读取中", 12, T.TextDim, false);
-                Grid.SetColumn(cur, 1);
-                row.Children.Add(cur);
-                _winCur[i] = cur;
+                int idx = i;
+                var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
 
                 var size = new TextBox
                 {
                     Text = "9",
                     FontSize = 12,
-                    Width = 44,
+                    Width = 52,
+                    Height = 30,
                     Margin = new Thickness(0, 0, 8, 0),
                     VerticalContentAlignment = VerticalAlignment.Center,
-                    Foreground = T.Text,
-                    Background = T.B(Color.FromArgb(0x1A, 255, 255, 255)),
-                    BorderThickness = new Thickness(0),
-                    Padding = new Thickness(6, 3, 6, 3)
+                    HorizontalContentAlignment = HorizontalAlignment.Center
                 };
-                Grid.SetColumn(size, 2);
-                row.Children.Add(size);
+                right.Children.Add(size);
                 _winSize[i] = size;
 
-                int idx = i;
                 var b = T.Btn2("选择", false, 12);
                 b.Click += delegate { PickWin32Face(idx); };
-                Grid.SetColumn(b, 3);
-                row.Children.Add(b);
+                right.Children.Add(b);
 
-                winInner.Children.Add(row);
+                TextBlock desc;
+                stack.Children.Add(T.Row("\uE8D2", Win32Fonts.Names[i], "读取中", right, out desc));
+                _winCur[i] = desc;
             }
-            winCard.Child = winInner;
-            stack.Children.Add(winCard);
 
             stack.Children.Add(T.SectionTitle("高级", false));
 
@@ -589,7 +573,7 @@ namespace WinFontSwap.Wpf
             root.Children.Add(scroll);
 
             // 底部固定操作区
-            var bottom = new StackPanel { Margin = new Thickness(0, 12, 0, 0) };
+            var bottom = new StackPanel { Margin = new Thickness(0, 14, 0, 0) };
             var bar = new StackPanel { Orientation = Orientation.Horizontal };
             var apply = T.Btn2("应用", true, 13);
             apply.Margin = new Thickness(0, 0, 10, 0);
