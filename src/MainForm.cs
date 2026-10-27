@@ -22,14 +22,13 @@ namespace WinFontSwap
         System.Windows.Forms.Timer _bgTimer;
 
         Panel _header, _page;
-        Panel[] _pages = new Panel[4];
+        Panel[] _pages = new Panel[3];
         NavRail _rail;
         Label _title, _subtitle;
         RoundedButton _pickBtn;
         Label _pickedLabel;
         Label[] _slotLabels = new Label[4];
         RoundedButton[] _slotBtns = new RoundedButton[4];
-        PreviewBox _preview;
         ToggleSwitch[] _toggles = new ToggleSwitch[4];
         Label[] _targetMeta = new Label[4];
         RoundedButton _applyBtn, _genBtn, _rollbackBtn, _cancelBtn;
@@ -77,10 +76,7 @@ namespace WinFontSwap
             BuildHeader();
             BuildShell();
             BuildFontCard();
-            BuildPreviewCard();
-            BuildTargetCard();
             BuildActions();
-            BuildWin32Page();
             BuildFontLinkPage();
             BuildPresetPage();
 
@@ -180,7 +176,6 @@ namespace WinFontSwap
             _rail.Location = new Point(0, 84);
             _rail.Size = new Size(RailW, H - 84);
             _rail.Add("字体替换");
-            _rail.Add("系统元素");
             _rail.Add("中文回退");
             _rail.Add("预设");
             _rail.Selected += delegate { ShowPage(_rail.SelectedIndex); };
@@ -190,7 +185,7 @@ namespace WinFontSwap
             _page.Size = new Size(W - RailW, H - 84);
 
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 3; i++)
             {
                 var pg = new GlassPanel();
                 pg.Location = new Point(0, 0);
@@ -210,37 +205,40 @@ namespace WinFontSwap
         {
             if (index < 0 || index >= _pages.Length) return;
             for (int i = 0; i < _pages.Length; i++) _pages[i].Visible = i == index;
-            if (index == 1) LoadWin32();
-            if (index == 2) LoadFontLinkKeys();
-            if (index == 3) RefreshPresets();
+            if (index == 1) LoadFontLinkKeys();
+            if (index == 2) RefreshPresets();
         }
 
-        void BuildWin32Page()
+        void BuildWin32Section(CardPanel card)
         {
-            var card = new CardPanel { Location = new Point(PadX, 10), Size = new Size(InnerW, 344) };
-            card.Controls.Add(Header("界面元素字体", 16, 12));
             card.Controls.Add(new Label
             {
-                Text = "改的是 Win32 窗口的标题栏、菜单等（HKCU\\Control Panel\\Desktop\\WindowMetrics）。注销或重启资源管理器后生效。",
-                Tag = "dim",
-                Font = new Font("Segoe UI", 8.5f),
+                Text = "系统元素",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
                 AutoSize = false,
-                Location = new Point(16, 38),
-                Size = new Size(InnerW - 32, 20)
+                Location = new Point(16, 248),
+                Size = new Size(200, 22)
             });
+
+            var apply = new RoundedButton { Text = "写入", Primary = true, Font = new Font("Segoe UI", 8.5f), Location = new Point(InnerW - 28 - 106, 246), Size = new Size(50, 24) };
+            apply.Click += delegate { ApplyWin32(); };
+            var restore = new RoundedButton { Text = "还原", Font = new Font("Segoe UI", 8.5f), Location = new Point(InnerW - 28 - 50, 246), Size = new Size(50, 24) };
+            restore.Click += delegate { RestoreWin32(); };
+            card.Controls.Add(apply);
+            card.Controls.Add(restore);
 
             for (int i = 0; i < 6; i++)
             {
-                int y = 68 + i * 42;
-                var name = new Label
+                int y = 278 + i * 26;
+                card.Controls.Add(new Label
                 {
                     Text = Win32Fonts.Names[i],
-                    Font = new Font("Segoe UI", 9.5f),
+                    Font = new Font("Segoe UI", 9f),
                     AutoSize = false,
                     Location = new Point(16, y),
-                    Size = new Size(90, 28),
+                    Size = new Size(90, 24),
                     TextAlign = ContentAlignment.MiddleLeft
-                };
+                });
                 var cur = new Label
                 {
                     Text = "读取中…",
@@ -249,14 +247,14 @@ namespace WinFontSwap
                     AutoSize = false,
                     AutoEllipsis = true,
                     Location = new Point(110, y),
-                    Size = new Size(InnerW - 300, 28),
+                    Size = new Size(InnerW - 28 - 52 - 6 - 56 - 110 - 12, 24),
                     TextAlign = ContentAlignment.MiddleLeft
                 };
                 var size = new NumericUpDown
                 {
                     Minimum = 6, Maximum = 32, Value = 9,
-                    Location = new Point(InnerW - 170, y + 2),
-                    Size = new Size(56, 24),
+                    Location = new Point(InnerW - 28 - 52 - 6 - 56, y + 1),
+                    Size = new Size(56, 22),
                     BorderStyle = BorderStyle.FixedSingle,
                     BackColor = Theme.Current.Surface,
                     ForeColor = Theme.Current.Text,
@@ -267,37 +265,27 @@ namespace WinFontSwap
                 {
                     Text = "选择",
                     Font = new Font("Segoe UI", 8.5f),
-                    Location = new Point(InnerW - 104, y),
-                    Size = new Size(72, 28)
+                    Location = new Point(InnerW - 28 - 52, y),
+                    Size = new Size(52, 24)
                 };
                 btn.Click += delegate { PickWin32Face(idx); };
-
-                card.Controls.Add(name);
                 card.Controls.Add(cur);
                 card.Controls.Add(size);
                 card.Controls.Add(btn);
                 _winCurrent[i] = cur;
                 _winSize[i] = size;
             }
-            _pages[1].Controls.Add(card);
-
-            var apply = new RoundedButton { Text = "应用到系统", Primary = true, Location = new Point(PadX, 366), Size = new Size(120, 34) };
-            apply.Click += delegate { ApplyWin32(); };
-            var restore = new RoundedButton { Text = "还原系统默认", Location = new Point(PadX + 132, 366), Size = new Size(120, 34) };
-            restore.Click += delegate { RestoreWin32(); };
-            _pages[1].Controls.Add(apply);
-            _pages[1].Controls.Add(restore);
 
             _winStatus = new Label
             {
                 Text = "",
                 Tag = "dim",
-                Font = new Font("Segoe UI", 9f),
+                Font = new Font("Segoe UI", 8.5f),
                 AutoSize = false,
-                Location = new Point(PadX, 408),
-                Size = new Size(InnerW, 22)
+                Location = new Point(16, 442),
+                Size = new Size(InnerW - 32, 18)
             };
-            _pages[1].Controls.Add(_winStatus);
+            card.Controls.Add(_winStatus);
         }
 
         void BuildFontLinkPage()
@@ -352,7 +340,7 @@ namespace WinFontSwap
             card.Controls.Add(reload);
             card.Controls.Add(clear);
 
-            _pages[2].Controls.Add(card);
+            _pages[1].Controls.Add(card);
 
             _linkStatus = new Label
             {
@@ -363,7 +351,7 @@ namespace WinFontSwap
                 Location = new Point(PadX, 492),
                 Size = new Size(InnerW, 22)
             };
-            _pages[2].Controls.Add(_linkStatus);
+            _pages[1].Controls.Add(_linkStatus);
         }
 
         void LoadFontLinkKeys()
@@ -472,7 +460,7 @@ namespace WinFontSwap
             card.Controls.Add(load);
             card.Controls.Add(del);
 
-            _pages[3].Controls.Add(card);
+            _pages[2].Controls.Add(card);
 
             _presetStatus = new Label
             {
@@ -483,7 +471,7 @@ namespace WinFontSwap
                 Location = new Point(PadX, 322),
                 Size = new Size(InnerW, 22)
             };
-            _pages[3].Controls.Add(_presetStatus);
+            _pages[2].Controls.Add(_presetStatus);
         }
 
         void RefreshPresets()
@@ -626,7 +614,7 @@ namespace WinFontSwap
 
         void BuildFontCard()
         {
-            var card = new CardPanel { Location = new Point(PadX, 10), Size = new Size(InnerW, 208) };
+            var card = new CardPanel { Location = new Point(PadX, 10), Size = new Size(InnerW, 468) };
             _pages[0].Controls.Add(card);
             card.Controls.Add(Header("字体", 16, 14));
 
@@ -649,7 +637,7 @@ namespace WinFontSwap
             string[] slotNames = { "常规", "粗体", "细体", "英文数字" };
             for (int i = 0; i < slotNames.Length; i++)
             {
-                int y = 82 + i * 24;
+                int y = 86 + i * 34;
                 var name = new Label
                 {
                     Text = slotNames[i],
@@ -657,7 +645,7 @@ namespace WinFontSwap
                     Font = new Font("Segoe UI", 9f),
                     AutoSize = false,
                     Location = new Point(16, y),
-                    Size = new Size(68, 24),
+                    Size = new Size(64, 30),
                     TextAlign = ContentAlignment.MiddleLeft
                 };
                 var val = new Label
@@ -668,64 +656,8 @@ namespace WinFontSwap
                     AutoSize = false,
                     AutoEllipsis = true,
                     Location = new Point(84, y),
-                    Size = new Size(InnerW - 28 - 84 - 72, 24),
+                    Size = new Size(172, 30),
                     TextAlign = ContentAlignment.MiddleLeft
-                };
-                var btn = new RoundedButton
-                {
-                    Text = "指定",
-                    Font = new Font("Segoe UI", 8.5f),
-                    Height = 26,
-                    Tag = i,
-                    Location = new Point(InnerW - 28 - 58, y - 1),
-                    Size = new Size(58, 26)
-                };
-                btn.Click += delegate (object s, EventArgs e) { PickForSlot((int)((RoundedButton)s).Tag); };
-
-                card.Controls.Add(name);
-                card.Controls.Add(val);
-                card.Controls.Add(btn);
-                _slotLabels[i] = val;
-                _slotBtns[i] = btn;
-            }
-
-            card.Controls.Add(new Label
-            {
-                Text = "斜体由系统合成，不用单独匹配；没匹配到的字重保留系统原样。",
-                Tag = "dim",
-                Font = new Font("Segoe UI", 8.5f),
-                AutoSize = false,
-                Location = new Point(16, 182),
-                Size = new Size(InnerW - 32, 18)
-            });
-        }
-
-        void BuildPreviewCard()
-        {
-            var card = new CardPanel { Location = new Point(PadX, 224), Size = new Size(InnerW, 118) };
-            _pages[0].Controls.Add(card);
-            card.Controls.Add(Header("预览", 16, 10));
-            _preview = new PreviewBox { Location = new Point(16, 38), Size = new Size(InnerW - 32, 68) };
-            card.Controls.Add(_preview);
-        }
-
-        void BuildTargetCard()
-        {
-            var card = new CardPanel { Location = new Point(PadX, 350), Size = new Size(InnerW, 192) };
-            _pages[0].Controls.Add(card);
-            card.Controls.Add(Header("替换目标", 16, 12));
-
-            string[] targetNames = { "微软雅黑", "微软雅黑 粗体", "微软雅黑 细体", "Segoe UI Variable（英文数字）" };
-            for (int i = 0; i < targetNames.Length; i++)
-            {
-                int y = 30 + i * 38;
-                var title = new Label
-                {
-                    Text = targetNames[i],
-                    Font = new Font("Segoe UI", 9.5f),
-                    AutoSize = false,
-                    Location = new Point(16, y),
-                    Size = new Size(260, 20)
                 };
                 var meta = new Label
                 {
@@ -734,24 +666,52 @@ namespace WinFontSwap
                     Font = new Font("Segoe UI", 8.5f),
                     AutoSize = false,
                     AutoEllipsis = true,
-                    Location = new Point(16, y + 19),
-                    Size = new Size(InnerW - 28 - 60, 18)
+                    Location = new Point(260, y),
+                    Size = new Size(InnerW - 28 - 44 - 6 - 52 - 8 - 260, 30),
+                    TextAlign = ContentAlignment.MiddleLeft
                 };
-                var tog = new ToggleSwitch { Location = new Point(InnerW - 28 - 44, y + 4), Enabled = false };
+                var btn = new RoundedButton
+                {
+                    Text = "指定",
+                    Font = new Font("Segoe UI", 8.5f),
+                    Height = 26,
+                    Tag = i,
+                    Location = new Point(InnerW - 28 - 44 - 6 - 52, y + 2),
+                    Size = new Size(52, 26)
+                };
+                btn.Click += delegate (object s, EventArgs e) { PickForSlot((int)((RoundedButton)s).Tag); };
+                var tog = new ToggleSwitch { Location = new Point(InnerW - 28 - 44, y + 2), Enabled = false };
 
-                card.Controls.Add(title);
+                card.Controls.Add(name);
+                card.Controls.Add(val);
                 card.Controls.Add(meta);
+                card.Controls.Add(btn);
                 card.Controls.Add(tog);
+                _slotLabels[i] = val;
+                _slotBtns[i] = btn;
                 _targetMeta[i] = meta;
                 _toggles[i] = tog;
             }
+
+            card.Controls.Add(new Label
+            {
+                Text = "斜体由系统合成，不用单独匹配；没匹配到的字重保留系统原样。",
+                Tag = "dim",
+                Font = new Font("Segoe UI", 8.5f),
+                AutoSize = false,
+                Location = new Point(16, 224),
+                Size = new Size(InnerW - 32, 18)
+            });
+
+            BuildWin32Section(card);
         }
+
 
         void BuildActions()
         {
-            _applyBtn = new RoundedButton { Text = "应用", Primary = true, Location = new Point(PadX, 550), Size = new Size(96, 34) };
-            _genBtn = new RoundedButton { Text = "仅生成", Location = new Point(PadX + 108, 550), Size = new Size(90, 34) };
-            _rollbackBtn = new RoundedButton { Text = "回滚", Location = new Point(PadX + 210, 550), Size = new Size(80, 34) };
+            _applyBtn = new RoundedButton { Text = "应用", Primary = true, Location = new Point(PadX, 486), Size = new Size(96, 34) };
+            _genBtn = new RoundedButton { Text = "仅生成", Location = new Point(PadX + 108, 486), Size = new Size(90, 34) };
+            _rollbackBtn = new RoundedButton { Text = "回滚", Location = new Point(PadX + 210, 486), Size = new Size(80, 34) };
             _cancelBtn = new RoundedButton { Text = "取消排队", Visible = false, Location = new Point(PadX + 302, 532), Size = new Size(96, 34) };
 
             _applyBtn.Click += async delegate (object s, EventArgs e) { await RunApply(false); };
@@ -770,13 +730,38 @@ namespace WinFontSwap
                 Tag = "dim",
                 Font = new Font("Segoe UI", 9f),
                 AutoSize = false,
-                Location = new Point(PadX, 590),
+                Location = new Point(PadX, 526),
                 Size = new Size(InnerW, 22)
             };
             _pages[0].Controls.Add(_status);
         }
 
         // ---------------- 行为 ----------------
+
+        /// <summary>移动/缩放窗口后重拍背后的桌面：拍之前把窗口彻底藏起来，避免拍到旧底板。</summary>
+        DateTime _lastRecapture = DateTime.MinValue;
+
+        void RecaptureBackdropForced()
+        {
+            try
+            {
+                Backdrop.HideFromCapture(Handle);
+                Application.DoEvents();
+                Backdrop.Capture();
+                Backdrop.ShowInCapture(Handle);
+                Invalidate(true);
+            }
+            catch { }
+        }
+
+        void RecaptureBackdrop()
+        {
+            if (Captureable) return;
+            // 拖动时事件很密，节流到 120ms 一次
+            if ((DateTime.Now - _lastRecapture).TotalMilliseconds < 120) return;
+            _lastRecapture = DateTime.Now;
+            RecaptureBackdropForced();
+        }
 
         async void OnShown(object sender, EventArgs e)
         {
@@ -788,17 +773,17 @@ namespace WinFontSwap
                 Backdrop.Capture();
                 Opacity = 1;
 
+                // 移动/缩放窗口时立刻重拍背后的桌面，背景才会跟着窗口走
+                LocationChanged += delegate { RecaptureBackdrop(); };
+                ResizeEnd += delegate { RecaptureBackdrop(); };
+
                 if (!Captureable && _bgTimer == null)
                 {
                     _bgTimer = new System.Windows.Forms.Timer { Interval = 500 };
                     _bgTimer.Tick += delegate
                     {
-                        // 截屏那一瞬把自己排除掉，避免拍到自己（包括上一帧的模糊底）
-                        Backdrop.HideFromCapture(Handle);
-                        Application.DoEvents();
-                        Backdrop.Capture();
-                        Backdrop.ShowInCapture(Handle);
-                        Invalidate(true);
+                        // 拍之前先把窗口藏起来，避免把自己（或上一帧底板）拍进去
+                        RecaptureBackdropForced();
                     };
                     _bgTimer.Start();
                 }
@@ -819,6 +804,7 @@ namespace WinFontSwap
             RecolorInputs();
             if (StartPage >= 0 && _rail != null) _rail.Select(StartPage);
             if (!string.IsNullOrEmpty(_demo)) PickByPath(_demo);
+            LoadWin32();
             if (_openPicker) { _openPicker = false; PickFont(); }
             if (!string.IsNullOrEmpty(ShotPath))
             {
@@ -988,17 +974,17 @@ namespace WinFontSwap
 
         void UpdatePreview()
         {
+            // 预览控件已移除（用户要求删掉），这里只保留字体集合的加载校验
             if (_pfc != null) { _pfc.Dispose(); _pfc = null; }
+            if (_picked == null) return;
             try
             {
                 var pfc = new PrivateFontCollection();
                 pfc.AddFontFile(_picked.Path);
                 if (pfc.Families.Length == 0) throw new InvalidDataException("无法加载");
                 _pfc = pfc;
-                _preview.Family = pfc.Families[0];
             }
-            catch { _preview.Family = null; }
-            _preview.Invalidate();
+            catch { }
         }
 
         void RefreshTargets()
