@@ -260,10 +260,40 @@ namespace WinFontSwap.Wpf
         bool _advCacheOn = true, _advUserFontsOn = true;
 
 
+        /// <summary>从 exe 内嵌资源读应用图标（csc /resource: 的 LogicalName 是 app.ico，用清单资源名更可靠）。</summary>
+        internal static BitmapSource LoadAppIcon()
+        {
+            try
+            {
+                var asm = System.Reflection.Assembly.GetExecutingAssembly();
+                string name = null;
+                foreach (var n in asm.GetManifestResourceNames())
+                {
+                    if (n.EndsWith("app.ico", StringComparison.OrdinalIgnoreCase)) { name = n; break; }
+                }
+                if (name == null)
+                {
+                    WpfProgram.Log("icon: resources=[" + string.Join(",", asm.GetManifestResourceNames()) + "]");
+                    return null;
+                }
+                using (var s = asm.GetManifestResourceStream(name))
+                {
+                    if (s == null) return null;
+                    var dec = new IconBitmapDecoder(s, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+                    BitmapFrame best = null;
+                    foreach (var f in dec.Frames) if (best == null || f.PixelWidth > best.PixelWidth) best = f;
+                    return best;
+                }
+            }
+            catch (Exception ex) { WpfProgram.Log("icon: " + ex.Message); return null; }
+        }
+
         public MainWindow()
         {
             for (int i = 0; i < _winOn.Length; i++) _winOn[i] = true;
             Title = "易体 V" + WpfProgram.Version;
+            var appIcon = LoadAppIcon();
+            if (appIcon != null) Icon = appIcon;
             Width = 1080;
             Height = 720;
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
@@ -435,6 +465,21 @@ namespace WinFontSwap.Wpf
             var rail = new StackPanel { Margin = new Thickness(12, 14, 12, 12) };
             // 应用名 + 版本（窗口没有系统标题栏，名字与版本显示在这里）
             var brand = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(6, 0, 0, 22) };
+            try
+            {
+                var logo = new Image
+                {
+                    Source = LoadAppIcon(),
+                    Width = 20,
+                    Height = 20,
+                    Margin = new Thickness(0, 0, 8, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    SnapsToDevicePixels = true
+                };
+                RenderOptions.SetBitmapScalingMode(logo, BitmapScalingMode.HighQuality);
+                brand.Children.Add(logo);
+            }
+            catch (Exception ex) { WpfProgram.Log("logo: " + ex.Message); }
             var appName = T.Label("易体", 15, T.Text, true);
             appName.VerticalAlignment = VerticalAlignment.Bottom;
             var appVer = T.Label("V" + WpfProgram.Version, 11, T.TextFaint, false);

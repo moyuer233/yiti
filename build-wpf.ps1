@@ -18,6 +18,11 @@ $a += '/nologo'
 $a += '/target:winexe'
 $a += ('/out:' + $out)
 $a += ('/win32manifest:' + (Join-Path $root 'wpf\app.manifest'))
+$ico = Join-Path $root 'icons\app.ico'
+if (Test-Path $ico) {
+  $a += ('/win32icon:' + $ico)
+  $a += ('/resource:' + $ico + ',app.ico')
+}
 $a += ('/r:' + (Join-Path $gac 'GAC_MSIL\PresentationFramework\v4.0_4.0.0.0__31bf3856ad364e35\PresentationFramework.dll'))
 $a += ('/r:' + (Join-Path $gac 'GAC_64\PresentationCore\v4.0_4.0.0.0__31bf3856ad364e35\PresentationCore.dll'))
 $a += ('/r:' + (Join-Path $gac 'GAC_MSIL\WindowsBase\v4.0_4.0.0.0__31bf3856ad364e35\WindowsBase.dll'))
