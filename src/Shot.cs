@@ -62,6 +62,21 @@ namespace WinFontSwap
 
         public static bool Ready { get { return _bmp != null; } }
 
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        static extern bool SetWindowDisplayAffinity(IntPtr hwnd, uint affinity);
+
+        /// <summary>让本窗口「对截屏隐身」：这样我们可以随时截桌面，而不会把自己的窗口拍进去。</summary>
+        public static void HideFromCapture(IntPtr hwnd)
+        {
+            try { SetWindowDisplayAffinity(hwnd, 0x00000011 /*WDA_EXCLUDEFROMCAPTURE*/); } catch { }
+        }
+
+        /// <summary>恢复可被截屏（不然用户自己也截不到这个窗口）。</summary>
+        public static void ShowInCapture(IntPtr hwnd)
+        {
+            try { SetWindowDisplayAffinity(hwnd, 0); } catch { }
+        }
+
         /// <summary>按控件的屏幕位置，从模糊背景里取一块画进它的客户区。</summary>
         public static void Paint(Graphics g, Control c)
         {

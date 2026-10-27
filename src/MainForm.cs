@@ -18,6 +18,8 @@ namespace WinFontSwap
         internal static bool _openPicker;
         internal static string ShotPath;
         internal static int StartPage = -1;
+        internal static bool Captureable;   // 调试用：设了就不做「截屏隐身」，方便我截图验收
+        System.Windows.Forms.Timer _bgTimer;
 
         Panel _header, _page;
         Panel[] _pages = new Panel[4];
@@ -785,6 +787,21 @@ namespace WinFontSwap
                 Application.DoEvents();
                 Backdrop.Capture();
                 Opacity = 1;
+
+                if (!Captureable && _bgTimer == null)
+                {
+                    _bgTimer = new System.Windows.Forms.Timer { Interval = 500 };
+                    _bgTimer.Tick += delegate
+                    {
+                        // 截屏那一瞬把自己排除掉，避免拍到自己（包括上一帧的模糊底）
+                        Backdrop.HideFromCapture(Handle);
+                        Application.DoEvents();
+                        Backdrop.Capture();
+                        Backdrop.ShowInCapture(Handle);
+                        Invalidate(true);
+                    };
+                    _bgTimer.Start();
+                }
             }
             catch { Opacity = 1; }
 

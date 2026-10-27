@@ -112,7 +112,7 @@ namespace WinFontSwap
     internal sealed class RoundedButton : Button
     {
         public bool Primary;
-        public int Radius = 6;
+        public int Radius = 8;
         bool _hover;
 
         public RoundedButton()
@@ -147,16 +147,15 @@ namespace WinFontSwap
             var fillRect = new Rectangle(0, 0, Width - 1, Height - 1);
             var borderRect = new Rectangle(0, 0, Width - 1, Height - 1);
 
-            Color fill = Primary ? p.Accent : (Parent is CardPanel ? p.SurfaceAlt : p.Surface);
+            // 参照 LF：次级按钮只有极淡的底面（白 ~6%），不描边
+            Color fill = Primary ? p.Accent : Color.FromArgb(16, 255, 255, 255);
             Color text = Primary ? p.AccentText : p.Text;
-            if (!Enabled) { fill = p.SurfaceAlt; text = p.TextDim; }
-            else if (_hover) { fill = Primary ? Draw.Mix(p.Accent, Color.White, 0.14f) : p.Hover; }
+            if (!Enabled) { fill = Color.FromArgb(8, 255, 255, 255); text = Color.FromArgb(110, 255, 255, 255); }
+            else if (_hover) { fill = Primary ? Draw.Mix(p.Accent, Color.White, 0.12f) : Color.FromArgb(28, 255, 255, 255); }
 
             using (var path = Draw.Rounded(fillRect, Radius))
             {
                 using (var b = new SolidBrush(fill)) g.FillPath(b, path);
-                if (!Primary && Enabled)
-                    using (var pen = new Pen(p.Line)) g.DrawPath(pen, Draw.Rounded(borderRect, Radius));
             }
             TextRenderer.DrawText(g, Text, Font, fillRect, text,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
