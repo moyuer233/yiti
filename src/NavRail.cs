@@ -80,7 +80,7 @@ namespace WinFontSwap
             var p = Theme.Current;
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.Clear(p.Bg);
+            Backdrop.Paint(g, this);
 
             for (int i = 0; i < _items.Count; i++)
             {

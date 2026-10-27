@@ -65,7 +65,7 @@ namespace WinFontSwap
             ClientSize = new Size(W, H);
             StartPosition = FormStartPosition.CenterScreen;
             BackColor = Theme.Current.Bg;
-            if (Theme.Glass) Opacity = 0.90;   // 整体轻微透明：边缘抗锯齿不会被色键切出暗边
+            // 背景用「截屏模糊」模拟亚克力，窗口本身不透明
             Font = new Font("Segoe UI", 9.5f);
             AutoScaleMode = AutoScaleMode.None;
             DoubleBuffered = true;
@@ -130,7 +130,7 @@ namespace WinFontSwap
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
-            e.Graphics.Clear(Theme.Current.Bg);   // 主窗用整体透明度，不再用色键
+            Backdrop.Paint(e.Graphics, this);
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -141,7 +141,7 @@ namespace WinFontSwap
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            using (var b = new SolidBrush(Theme.Current.Bg)) e.Graphics.FillRectangle(b, ClientRectangle);
+            // 背景由 Backdrop 画
         }
 
         void BuildHeader()
@@ -167,10 +167,10 @@ namespace WinFontSwap
 
         void BuildShell()
         {
-            _header = new Panel();
+            _header = new GlassPanel();
             _header.Location = new Point(0, 0);
             _header.Size = new Size(W, 84);
-            _header.BackColor = Theme.Current.Bg;
+
             _header.Controls.Add(_title);
             _header.Controls.Add(_subtitle);
 
@@ -183,17 +183,17 @@ namespace WinFontSwap
             _rail.Add("预设");
             _rail.Selected += delegate { ShowPage(_rail.SelectedIndex); };
 
-            _page = new Panel();
+            _page = new GlassPanel();
             _page.Location = new Point(RailW, 84);
             _page.Size = new Size(W - RailW, H - 84);
-            _page.BackColor = Theme.Current.Bg;
+
 
             for (int i = 0; i < 4; i++)
             {
-                var pg = new Panel();
+                var pg = new GlassPanel();
                 pg.Location = new Point(0, 0);
                 pg.Size = _page.Size;
-                pg.BackColor = Theme.Current.Bg;
+
                 pg.Visible = i == 0;
                 _pages[i] = pg;
                 _page.Controls.Add(pg);
@@ -778,8 +778,18 @@ namespace WinFontSwap
 
         async void OnShown(object sender, EventArgs e)
         {
+            // 先把窗口隐形，截一张「背后的桌面」做模糊底板，再恢复显示
+            try
+            {
+                Opacity = 0;
+                Application.DoEvents();
+                Backdrop.Capture();
+                Opacity = 1;
+            }
+            catch { Opacity = 1; }
+
             Theme.Apply("system", this);
-            BackColor = Theme.BackPaint;
+            BackColor = Theme.Current.Bg;
             _title.ForeColor = Theme.Current.Text;
             Log("程序已以管理员身份运行");
             RefreshTargets();

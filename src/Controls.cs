@@ -59,6 +59,21 @@ namespace WinFontSwap
         }
     }
 
+    /// <summary>透明容器：背景按屏幕位置取模糊桌面。</summary>
+    internal sealed class GlassPanel : Panel
+    {
+        public GlassPanel()
+        {
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer |
+                     ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
+        }
+
+        protected override void OnPaintBackground(PaintEventArgs e)
+        {
+            Backdrop.Paint(e.Graphics, this);
+        }
+    }
+
     /// <summary>圆角卡片。</summary>
     internal sealed class CardPanel : Panel
     {
@@ -76,7 +91,7 @@ namespace WinFontSwap
         protected override void OnPaintBackground(PaintEventArgs e)
         {
             // 卡片外圈跟窗体真实底色一致（主窗纯色、弹窗色键）
-            e.Graphics.Clear(Draw.Back(this));
+            Backdrop.Paint(e.Graphics, this);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -87,8 +102,8 @@ namespace WinFontSwap
             var rect = new Rectangle(0, 0, Width - 1, Height - 1);
             using (var path = Draw.Rounded(rect, Radius))
             {
-                using (var b = new SolidBrush(Emphasis ? p.SurfaceAlt : p.Surface)) g.FillPath(b, path);
-                using (var pen = new Pen(p.Line)) g.DrawPath(pen, path);
+                using (var b = new SolidBrush(Color.FromArgb(Emphasis ? 26 : 18, 255, 255, 255))) g.FillPath(b, path);
+                using (var pen = new Pen(Color.FromArgb(20, 255, 255, 255))) g.DrawPath(pen, path);
             }
         }
     }
@@ -128,7 +143,7 @@ namespace WinFontSwap
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             // 先用底色把整块擦干净，再画圆角；路径收到 W-1/H-1，四边抗锯齿才均匀
-            g.Clear(CornerColor.HasValue ? CornerColor.Value : Draw.Back(this));
+            Backdrop.Paint(g, this);
             var fillRect = new Rectangle(0, 0, Width - 1, Height - 1);
             var borderRect = new Rectangle(0, 0, Width - 1, Height - 1);
 
@@ -177,7 +192,7 @@ namespace WinFontSwap
             var p = Theme.Current;
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.Clear(Draw.Back(this));
+            Backdrop.Paint(g, this);
 
             int h = 20, w = 40, top = (Height - h) / 2, left = (Width - w) / 2;
             var track = new Rectangle(left, top, w, h);
@@ -277,7 +292,7 @@ namespace WinFontSwap
         {
             var p = Theme.Current;
             var g = e.Graphics;
-            g.Clear(Draw.Back(this));
+            Backdrop.Paint(g, this);
             if (_hover)
             {
                 using (var b = new SolidBrush(Close ? Color.FromArgb(0xC4, 0x2B, 0x1C) : p.Hover))
@@ -310,7 +325,8 @@ namespace WinFontSwap
             var p = Theme.Current;
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.Clear(p.SurfaceAlt);
+            Backdrop.Paint(g, this);
+            using (var b0 = new SolidBrush(Color.FromArgb(60, 0, 0, 0))) g.FillRectangle(b0, ClientRectangle);
 
             var rect = new Rectangle(0, 0, Width - 1, Height - 1);
             using (var path = Draw.Rounded(rect, 8))
