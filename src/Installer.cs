@@ -52,6 +52,35 @@ namespace WinFontSwap
 
         public static readonly string[] TargetFiles = { "msyh.ttc", "msyhbd.ttc", "msyhl.ttc", "SegUIVar.ttf", "segoeui.ttf" };
 
+        /// <summary>本机真实存在的目标文件（Win7 没有 msyhl.ttc / SegUIVar.ttf，界面上不该给它们留位置）。</summary>
+        public static string[] PresentTargets()
+        {
+            var list = new List<string>();
+            foreach (var f in TargetFiles)
+            {
+                try { if (File.Exists(Path.Combine(FontsDir, f))) list.Add(f); } catch { }
+            }
+            return list.ToArray();
+        }
+
+        /// <summary>系统是否支持 Mica/亚克力背景（Win11 22000+）。</summary>
+        public static bool SupportsBackdrop()
+        {
+            try { return Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= 22000; }
+            catch { return false; }
+        }
+
+        /// <summary>字体缓存服务名：Win10+ 是 FontCache，Win7/8 是 FontCache3.0.0.0。</summary>
+        public static string FontCacheServiceName()
+        {
+            try
+            {
+                if (Environment.OSVersion.Version.Major >= 10) return "FontCache";
+                return "FontCache3.0.0.0";
+            }
+            catch { return "FontCache"; }
+        }
+
         /// <summary>单 face 目标（静态 Segoe UI）。</summary>
         public static bool IsSingleFace(string file) { return file == "segoeui.ttf"; }
 
@@ -675,7 +704,7 @@ namespace WinFontSwap
         {
             try
             {
-                var psi = new ProcessStartInfo("sc.exe", "stop FontCache") { CreateNoWindow = true, UseShellExecute = false };
+                var psi = new ProcessStartInfo("sc.exe", "stop " + FontCacheServiceName()) { CreateNoWindow = true, UseShellExecute = false };
                 var p = Process.Start(psi);
                 if (p != null) p.WaitForExit(8000);
                 System.Threading.Thread.Sleep(800);

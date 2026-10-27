@@ -403,6 +403,27 @@ namespace WinFontSwap.Wpf
 
         void DarkTitle()
         {
+            // Win7/10 没有 DWMWA_SYSTEMBACKDROP_TYPE，别硬套；直接用纯灰底
+            bool backdrop = Installer.SupportsBackdrop();
+            foreach (var a in Environment.GetCommandLineArgs()) if (a == "--flat") backdrop = false;   // 自测：强制走灰底分支
+            if (!backdrop)
+            {
+                Background = new SolidColorBrush(Color.FromRgb(0x24, 0x24, 0x28));
+                WpfProgram.Log("background: flat grey (no backdrop support on this OS)");
+                try
+                {
+                    var h0 = new WindowInteropHelper(this).Handle;
+                    int dark = 1;
+                    DwmSetWindowAttribute(h0, 20, ref dark, sizeof(int));
+                }
+                catch { }
+                return;
+            }
+            DarkTitleForWin11();
+        }
+
+        void DarkTitleForWin11()
+        {
             try
             {
                 var hwnd = new WindowInteropHelper(this).Handle;
@@ -667,8 +688,10 @@ namespace WinFontSwap.Wpf
 
             string[] names = { "常规", "粗体", "细体", "英文数字", "Segoe UI" };
             string[] glyphs = { "\uE8D2", "\uE8DD", "\uE8D3", "\uE8D2", "\uE8D2" };
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 5 && i < Installer.TargetFiles.Length; i++)
             {
+                // Win7 等系统没有 msyhl.ttc / SegUIVar.ttf：不存在就不画这一行
+                if (!File.Exists(Path.Combine(Installer.FontsDir, Installer.TargetFiles[i]))) continue;
                 int idx = i;
                 var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
                 var st = T.Label("当前状态：", 11, T.TextFaint, false);
