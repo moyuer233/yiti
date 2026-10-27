@@ -92,6 +92,33 @@ namespace WinFontSwap
             catch { return false; }
         }
 
+        /// <summary>对某张表的内容做 SHA256（用于按字形指认来源字体）。</summary>
+        public static string TableHash(byte[] file, int faceOff, string tag)
+        {
+            try
+            {
+                int numTables = U16(file, faceOff + 4);
+                for (int i = 0; i < numTables; i++)
+                {
+                    int rec = faceOff + 12 + i * 16;
+                    var t = Encoding.ASCII.GetString(file, rec, 4);
+                    if (t != tag) continue;
+                    uint off = U32(file, rec + 8);
+                    uint len = U32(file, rec + 12);
+                    if (off + len > file.Length) return null;
+                    using (var sha = System.Security.Cryptography.SHA256.Create())
+                    {
+                        var hash = sha.ComputeHash(file, (int)off, (int)len);
+                        var sb = new StringBuilder(hash.Length * 2);
+                        foreach (var b in hash) sb.Append(b.ToString("x2"));
+                        return sb.ToString();
+                    }
+                }
+            }
+            catch { }
+            return null;
+        }
+
         /// <summary>按 nameID 取字符串（用于指纹比对：版权/版本/商标这些我们不改写的字段）。</summary>
         public static string[] NameStrings(byte[] file, int faceOff, int[] ids)
         {

@@ -178,6 +178,25 @@ namespace WinFontSwap
         }
 
         static readonly Dictionary<string, string> _srcCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        static readonly Dictionary<string, string> _glyfCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>取某个字体 face 的 glyf 表哈希：我们只改名字不动字形，所以它能精确指认来源字体。</summary>
+        static string GlyfHash(string path, int faceIndex)
+        {
+            var key = path + "#" + faceIndex;
+            string cached;
+            if (_glyfCache.TryGetValue(key, out cached)) return cached;
+            string hash = null;
+            try
+            {
+                var data = File.ReadAllBytes(path);
+                var faces = Sfnt.FaceOffsets(data);
+                if (faceIndex < faces.Length) hash = Sfnt.TableHash(data, faces[faceIndex], "glyf");
+            }
+            catch { }
+            _glyfCache[key] = hash;
+            return hash;
+        }
 
         /// <summary>
         /// 反查“这个系统字体文件现在装的是哪款字体”：我们只改写 family/subfamily 那几个 nameID，
@@ -232,6 +251,37 @@ namespace WinFontSwap
                 if (matched == 1) result = matchedFamily;
             }
             catch { }
+            // 再用字形表哈希兜底（版权字段可能缺失，但字形一定在）
+            if (string.IsNullOrEmpty(result))
+            {
+                try
+                {
+                    var target = Path.Combine(FontsDir, fileName);
+                    if (File.Exists(target))
+                    {
+                        var mineHash = GlyfHash(target, 0);
+                        if (!string.IsNullOrEmpty(mineHash))
+                        {
+                            foreach (var f in FontLibrary.All)
+                            {
+                                var candName = Path.GetFileName(f.Path);
+                                if (string.Equals(candName, fileName, StringComparison.OrdinalIgnoreCase)) continue;
+                                bool isTarget = false;
+                                foreach (var t in TargetFiles) if (string.Equals(candName, t, StringComparison.OrdinalIgnoreCase)) { isTarget = true; break; }
+                                if (isTarget) continue;
+                                if (GlyfHash(f.Path, f.FaceIndex) == mineHash)
+                                {
+                                    result = f.Family;
+                                    if (!string.IsNullOrEmpty(f.Subfamily) && f.Subfamily != "Regular" && f.Family.IndexOf(f.Subfamily, StringComparison.OrdinalIgnoreCase) < 0)
+                                        result = f.Family + " " + f.Subfamily;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
             _srcCache[fileName] = result;
             return result;
         }

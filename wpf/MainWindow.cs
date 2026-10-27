@@ -894,12 +894,7 @@ namespace WinFontSwap.Wpf
                             {
                                 var det = Installer.DetectSourceFamily(info.FileName);
                                 if (!string.IsNullOrEmpty(det)) fam = det;
-                                else
-                                {
-                                    // 旧版本装的没记录，只能靠版权字段判断是哪家的字体
-                                    var vendor = Installer.DetectSourceVendor(info.FileName);
-                                    if (!string.IsNullOrEmpty(vendor)) fam = vendor;   // 旧安装没有来源记录，只能给出厂商
-                                }
+
                             }
                         }
                         if (string.IsNullOrEmpty(fam)) fam = "未识别";
