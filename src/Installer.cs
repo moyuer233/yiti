@@ -63,6 +63,13 @@ namespace WinFontSwap
             return list.ToArray();
         }
 
+        /// <summary>Win10 1809+ 才有「按用户安装字体」，更老的系统没有用户级字体可清。</summary>
+        public static bool SupportsUserFonts()
+        {
+            try { return Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= 17763; }
+            catch { return false; }
+        }
+
         /// <summary>系统是否支持 Mica/亚克力背景（Win11 22000+）。</summary>
         public static bool SupportsBackdrop()
         {

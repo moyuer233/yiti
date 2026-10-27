@@ -828,11 +828,15 @@ namespace WinFontSwap.Wpf
             _advCache = cacheSw;
             stack.Children.Add(T.Row("\uE72C", "写入时清字体缓存", "重启后由系统重建", cacheSw, out advDesc1));
 
-            TextBlock advDesc2;
-            var userSw = T.Switch(_advUserFontsOn);
-            userSw.Click += delegate { _advUserFontsOn = userSw.IsChecked == true; };
-            _advUserFonts = userSw;
-            stack.Children.Add(T.Row("\uE74D", "写入时清用户级同名字体", "会挡住替换", userSw, out advDesc2));
+            // 老系统没有「按用户安装字体」，这一项没有作用，直接不显示
+            if (Installer.SupportsUserFonts())
+            {
+                TextBlock advDesc2;
+                var userSw = T.Switch(_advUserFontsOn);
+                userSw.Click += delegate { _advUserFontsOn = userSw.IsChecked == true; };
+                _advUserFonts = userSw;
+                stack.Children.Add(T.Row("\uE74D", "写入时清用户级同名字体", "会挡住替换", userSw, out advDesc2));
+            }
 
             TextBlock advDescGen;
             var genBtn = T.Btn2("生成", false, 13);
