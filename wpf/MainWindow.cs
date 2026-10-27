@@ -230,8 +230,6 @@ namespace WinFontSwap.Wpf
                 UseAeroCaptionButtons = true
             });
 
-            try { Resources = (ResourceDictionary)System.Windows.Markup.XamlReader.Parse(Styles.Xaml); } catch { }
-
             BuildUi();
             foreach (var a in Environment.GetCommandLineArgs())
             {
@@ -242,7 +240,17 @@ namespace WinFontSwap.Wpf
                 }
             }
             SourceInitialized += delegate { DarkTitle(); };
-            Loaded += delegate { DarkTitle(); ReloadFonts(); RefreshTargets(); LoadWin32(); };
+            foreach (var a in Environment.GetCommandLineArgs())
+            {
+                if (a == "--picker") Loaded += delegate { Dispatcher.BeginInvoke(new Action(delegate { PickFont(); })); };
+            }
+            Loaded += delegate
+            {
+                try { DarkTitle(); } catch (Exception ex) { WpfProgram.Log("DarkTitle: " + ex.Message); }
+                try { ReloadFonts(); } catch (Exception ex) { WpfProgram.Log("ReloadFonts: " + ex.Message); }
+                try { RefreshTargets(); } catch (Exception ex) { WpfProgram.Log("RefreshTargets: " + ex.Message); }
+                try { LoadWin32(); } catch (Exception ex) { WpfProgram.Log("LoadWin32: " + ex.Message); }
+            };
         }
 
         bool _micaOk;

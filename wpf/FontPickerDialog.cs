@@ -69,7 +69,9 @@ namespace WinFontSwap.Wpf
             try
             {
                 _pool = FontLibrary.All;
+                WpfProgram.Log("picker pool=" + (_pool == null ? -1 : _pool.Count));
                 Filter();
+                WpfProgram.Log("picker items=" + _list.Items.Count);
             }
             catch (Exception ex)
             {
