@@ -453,6 +453,14 @@ namespace WinFontSwap.Wpf
                             }
                         }
                     }
+                    else if (a == "--confirmdemo")
+                    {
+                        Dispatcher.BeginInvoke(new Action(delegate
+                        {
+                            var dlg = new ConfirmDialog(L.T("默认值"), L.T("是否切换为默认预设？"), "是", "否") { Owner = this };
+                            dlg.ShowDialog();
+                        }));
+                    }
                     else if (a == "--reset")
                     {
                         ResetToDefaults();
@@ -1326,8 +1334,9 @@ namespace WinFontSwap.Wpf
         bool Confirm(string question, string title)
         {
             foreach (var a in Environment.GetCommandLineArgs()) if (a == "--yes") return true;   // 自测用：跳过确认
-
-            return MessageBox.Show(this, question, title, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes;
+            var dlg = new ConfirmDialog(title, question, "是", "否") { Owner = this };
+            dlg.ShowDialog();
+            return dlg.Result;
         }
 
         void ResetToDefaults()

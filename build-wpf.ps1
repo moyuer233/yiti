@@ -32,7 +32,7 @@ $a += '/r:System.Core.dll'
 foreach ($f in @('AssemblyInfo.cs','Sfnt.cs','Installer.cs','FontLibrary.cs','Win32Fonts.cs')) {
   $a += (Join-Path $root ('src\' + $f))
 }
-foreach ($f in @('WpfApp.cs','Lang.cs','MainWindow.cs','FontPickerDialog.cs','Styles.cs')) {
+foreach ($f in @('WpfApp.cs','Lang.cs','MainWindow.cs','ConfirmDialog.cs','FontPickerDialog.cs','Styles.cs')) {
   $a += (Join-Path $root ('wpf\' + $f))
 }
 
