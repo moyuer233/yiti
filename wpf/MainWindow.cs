@@ -280,6 +280,7 @@ namespace WinFontSwap.Wpf
         ToggleButton _advCache, _advUserFonts;
         bool _advCacheOn = true, _advUserFontsOn = true;
         bool _fakeOld;
+        FontEntry _picked;   // 用户在字体列表里实际点选的那一款（源字体行显示它，不是按字重匹配后的常规体）
         TextBlock _brandName;
 
 
@@ -1043,6 +1044,7 @@ namespace WinFontSwap.Wpf
             var regular = FontLibrary.Match(pool, 400) ?? picked;
             var bold = FontLibrary.Match(pool, 700) ?? regular;
             var light = FontLibrary.Match(pool, 300) ?? regular;
+            _picked = picked;
             _slots[0] = regular;
             _slots[1] = bold;
             _slots[2] = light;
@@ -1050,6 +1052,10 @@ namespace WinFontSwap.Wpf
             _slots[4] = regular;
             UpdateSlotLabels();
             SyncWin32FromChoice();
+            // 说清“你点的是哪个、被分到哪一行”
+            SetStatus(L.T("已按字重匹配：常规 ") + (regular.Subfamily ?? "")
+                + L.T("，粗体 ") + (bold.Subfamily ?? "")
+                + L.T("，细体 ") + (light.Subfamily ?? ""), false);
         }
 
         void PickSlot(int slot)
@@ -1072,7 +1078,8 @@ namespace WinFontSwap.Wpf
             if (_pickDesc != null)
             {
                 // 复位成「未选择」时这里也要清掉，否则顶部源字体那行会一直留着旧字体名
-                _pickDesc.Text = _slots[0] == null ? L.T("未选择") : _slots[0].Family + " " + (_slots[0].Subfamily ?? "");
+                var srcEntry = _picked ?? _slots[0];
+            _pickDesc.Text = srcEntry == null ? L.T("未选择") : srcEntry.Family + " " + (srcEntry.Subfamily ?? "");
             }
         }
 
