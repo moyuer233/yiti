@@ -119,3 +119,6 @@ about.r1=A font with incomplete coverage or missing weights can leave boxes or b
 about.r2=Office / WPS layout, export and printing can change
 about.r3=Feature updates reset the system fonts; apply again afterwards
 about.r4=Create a restore point before the first run
+# Confirmations
+把源字体和系统元素都恢复成 Windows 默认？\n这只改界面，点「应用」才会写入。=Reset the source fonts and shell elements to the Windows defaults?\nThis only changes the UI; press Apply to write it.
+现在把字体写入系统？\n会先备份原版，重启后生效。=Write the fonts into the system now?\nThe originals are backed up first; a reboot applies it.

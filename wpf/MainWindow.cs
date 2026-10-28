@@ -1231,6 +1231,8 @@ namespace WinFontSwap.Wpf
         {
             var list = CollectSources();
             if (list.Count == 0) { SetStatus(L.T("先选一个字体。"), true); return; }
+            // 应用会改系统字体文件并要重启，必须先确认
+            if (!generateOnly && !Confirm(L.T("现在把字体写入系统？\n会先备份原版，重启后生效。"), L.T("应用"))) return;
             SetStatus(generateOnly ? L.T("正在生成…") : L.T("正在生成并写入…"), false);
             try
             {
@@ -1305,8 +1307,16 @@ namespace WinFontSwap.Wpf
             SetStatus(L.En ? "Language switched to English" : "已切换为中文", false);
         }
 
+        bool Confirm(string question, string title)
+        {
+            foreach (var a in Environment.GetCommandLineArgs()) if (a == "--yes") return true;   // 自测用：跳过确认
+
+            return MessageBox.Show(this, question, title, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes;
+        }
+
         void ResetToDefaults()
         {
+            if (!Confirm(L.T("把源字体和系统元素都恢复成 Windows 默认？\n这只改界面，点「应用」才会写入。"), L.T("默认值"))) return;
             for (int i = 0; i < _slots.Length; i++) _slots[i] = null;
             int filled = LoadDefaultSources();
             for (int i = 0; i < _on.Length; i++)
@@ -1321,7 +1331,15 @@ namespace WinFontSwap.Wpf
             }
             UpdateSlotLabels();
             SyncWin32FromChoice();
-            try { LoadWin32(); } catch { }
+            // 系统元素的“默认值”＝ Windows 自己的默认：微软雅黑 UI 9pt（不是我们备份里的历史值）
+            for (int i = 0; i < Win32Fonts.Names.Length; i++)
+            {
+                const string defFace = "Microsoft YaHei UI";
+                const int defPt = 9;
+                _winFace[i] = defFace;
+                if (_winSize[i] != null) _winSize[i].Text = defPt.ToString();
+                if (_winCur[i] != null) _winCur[i].Text = defFace + "   " + defPt + " pt";
+            }
             SetStatus(filled > 0 ? L.T("已切到默认字体，点「应用」写回") : L.T("没有可用备份，只能选字体"), filled == 0);
         }
 
