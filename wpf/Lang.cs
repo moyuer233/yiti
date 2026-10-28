@@ -71,7 +71,6 @@ namespace WinFontSwap.Wpf
             { "待重启", "reboot pending" },
             { "读系统字体状态失败：", "Failed to read the font state: " },
             { "系统元素已写入 ", "Shell elements written: " },
-            { " 项，注销后生效。", " item(s); sign out to apply." },
             { "写入失败：", "Write failed: " },
             { "系统元素已还原", "Shell elements restored" },
             { "还原失败：", "Restore failed: " },
