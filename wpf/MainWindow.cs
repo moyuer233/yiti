@@ -1218,7 +1218,7 @@ namespace WinFontSwap.Wpf
                         src != null && src.Italic);
                     done++;
                 }
-                SetStatus(L.T("系统元素已写入 ") + done + L.T(" 项，注销后生效。"), false);
+                SetStatus(L.T("系统元素已写入 ") + done + L.T(" 项"), false);
             }
             catch (Exception ex) { SetStatus(L.T("写入失败：") + ex.Message, true); }
         }
@@ -1294,7 +1294,10 @@ namespace WinFontSwap.Wpf
             {
                 if (!hasShell) { SetStatus(L.T("先选一个字体。"), true); return; }
                 if (generateOnly) { SetStatus(L.T("生成字体文件需要先选一个字体。"), true); return; }
-                ApplyWin32();          // 内部会写状态栏：系统元素已写入 N 项，注销后生效
+                if (!Confirm(L.T("是否确定重启？"), L.T("应用"))) return;
+                ApplyWin32();          // 写 WindowMetrics，状态栏报 N 项
+                SetStatus(L.T("已写入，10 秒后重启（shutdown /a 可取消）"), false);
+                RebootSoon();
                 return;
             }
 
