@@ -1320,8 +1320,10 @@ namespace WinFontSwap.Wpf
             {
                 if (!hasShell) { SetStatus(L.T("先选一个字体。"), true); return; }
                 if (generateOnly) { SetStatus(L.T("生成字体文件需要先选一个字体。"), true); return; }
+                // 系统元素靠重启资源管理器生效，先确认（会短暂关掉桌面和已打开的资源管理器窗口）
+                if (!Confirm(L.T("是否确定重启资源管理器？"), L.T("应用"))) return;
                 ApplyWin32();          // 写 WindowMetrics，状态栏报 N 项
-                RefreshShell();        // 系统元素不需要重启电脑：广播设置变更 + 重启资源管理器
+                RefreshShell();        // 广播设置变更 + 重启资源管理器
                 return;
             }
 
