@@ -36,6 +36,10 @@ foreach ($f in @('WpfApp.cs','Lang.cs','MainWindow.cs','FontPickerDialog.cs','St
   $a += (Join-Path $root ('wpf\' + $f))
 }
 
+# UI strings: lang\zh.txt and lang\en.txt are embedded into the exe as resources.
+$langSrc = Join-Path $root 'lang'
+if (Test-Path (Join-Path $langSrc 'zh.txt')) { $a += ('/resource:' + (Join-Path $langSrc 'zh.txt') + ',lang.zh.txt') }
+if (Test-Path (Join-Path $langSrc 'en.txt')) { $a += ('/resource:' + (Join-Path $langSrc 'en.txt') + ',lang.en.txt') }
 & $csc $a
 if ($LASTEXITCODE -ne 0) { throw ('WPF compile failed: ' + $LASTEXITCODE) }
 

@@ -1263,6 +1263,7 @@ namespace WinFontSwap.Wpf
             if (L.En == en) return;
             L.En = en;
             L.Save();
+            L.LoadFile();
             Title = L.T("易体") + " V" + WpfProgram.Version;
             if (_brandName != null) _brandName.Text = L.T("易体");
             if (_nav != null)
