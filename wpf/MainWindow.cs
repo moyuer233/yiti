@@ -765,7 +765,7 @@ namespace WinFontSwap.Wpf
             var weightSw = T.Switch(_advAutoWeightOn);
             weightSw.Click += delegate { _advAutoWeightOn = weightSw.IsChecked == true; };
             _advAutoWeight = weightSw;
-            stack.Children.Add(T.Row("\uE8DD", L.T("自动匹配字重"), L.T("按 400 / 700 / 300 配对常规、粗体、细体；关掉则五档都用你选的那一款"), weightSw, out weightDesc));
+            stack.Children.Add(T.Row("\uE8DD", L.T("自动匹配字重"), L.T("按 400 / 700 / 300 配对常规、粗体、细体"), weightSw, out weightDesc));
 
             string[] names = { L.T("常规"), L.T("粗体"), L.T("细体"), L.T("英文数字"), "Segoe UI" };
             string[] glyphs = { "\uE8D2", "\uE8DD", "\uE8D3", "\uE8D2", "\uE8D2" };
@@ -1241,6 +1241,28 @@ namespace WinFontSwap.Wpf
             _winCur[i].Text = dlg.Picked.Family + "   " + pt.ToString("0") + " pt";
         }
 
+        /// <summary>有没有需要写入的系统元素（开关开 且 有字体名）。</summary>
+        bool AnyShellSelected()
+        {
+            for (int i = 0; i < Win32Fonts.Names.Length; i++)
+            {
+                // 只在“用户确实动过”时才算：行开关开着，且与系统当前值不同
+                if (!_winOn[i]) continue;
+                var cur = _winInfo[i];
+                bool faceChanged = cur == null || !string.Equals(_winFace[i], cur.Face, StringComparison.OrdinalIgnoreCase);
+                bool sizeChanged = true;
+                if (_winSize[i] != null && cur != null)
+                {
+                    double pt;
+                    double.TryParse(_winSize[i].Text, out pt);
+                    if (pt <= 0) pt = 9;
+                    sizeChanged = Math.Abs(pt - Math.Round(Math.Abs(cur.HeightPx) * 72.0 / 96.0)) > 0.4;
+                }
+                if (!string.IsNullOrEmpty(_winFace[i]) && (faceChanged || sizeChanged)) return true;
+            }
+            return false;
+        }
+
         List<FontSource> CollectSources()
         {
             var list = new List<FontSource>();
@@ -1264,8 +1286,19 @@ namespace WinFontSwap.Wpf
         void RunApply(bool generateOnly)
         {
             var list = CollectSources();
-            if (list.Count == 0) { SetStatus(L.T("先选一个字体。"), true); return; }
-            // 应用会改系统字体文件，必须重启才生效 —— 直接问「是否确定重启」
+            bool hasFonts = list.Count > 0;
+            bool hasShell = AnyShellSelected();
+
+            // 只改了系统元素：直接写注册表，不要求先选字体，也不问重启
+            if (!hasFonts)
+            {
+                if (!hasShell) { SetStatus(L.T("先选一个字体。"), true); return; }
+                if (generateOnly) { SetStatus(L.T("生成字体文件需要先选一个字体。"), true); return; }
+                ApplyWin32();          // 内部会写状态栏：系统元素已写入 N 项，注销后生效
+                return;
+            }
+
+            // 有字体要写：必须重启才生效 —— 直接问「是否确定重启」
             if (!generateOnly && !Confirm(L.T("是否确定重启？"), L.T("应用"))) return;
             SetStatus(generateOnly ? L.T("正在生成…") : L.T("正在生成并写入…"), false);
             try

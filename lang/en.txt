@@ -129,5 +129,6 @@ about.r4=Create a restore point before the first run
 重启失败：=Reboot failed: 
 # Auto weight matching switch
 自动匹配字重=Auto weight matching
-按 400 / 700 / 300 配对常规、粗体、细体；关掉则五档都用你选的那一款=Match regular/bold/light at 400 / 700 / 300; turn it off to use the same face for all five slots
+按 400 / 700 / 300 配对常规、粗体、细体=Match regular/bold/light at 400 / 700 / 300
+生成字体文件需要先选一个字体。=Pick a font first to generate the font files.
 已关闭自动匹配：五档都用 =Auto matching off: all five slots use 
