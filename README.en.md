@@ -52,6 +52,26 @@ How it works: read the font you picked, rewrite only its internal names to `Micr
 The **shell elements** rows write `HKCU\Control Panel\Desktop\WindowMetrics`, which is the legacy Win32 UI font setting.
 
 **What it cannot change**: apps that ship their own fonts (Office, Electron apps, games), web pages that specify a font, and text rendering parameters (ClearType and friends).
+### Why the internal names have to change
+
+Windows **does not pick fonts by file name — it reads the `name` table inside the font**. A font carries more than 20 name records, each with an ID:
+
+| ID | Meaning | What the system does with it |
+|---|---|---|
+| 1 | Family | the "Microsoft YaHei" string itself; GDI LOGFONT and WinUI theme resources point at it |
+| 2 | Subfamily | Regular / Bold / Light |
+| 4 | Full name | "Microsoft YaHei Bold" |
+| 6 | PostScript name | Adobe apps identify fonts by it |
+| 16 / 17 | Typographic family / subfamily | modern DirectWrite prefers these |
+| 3 / 18 / 21 / 22 | Unique ID / WWS names | font cache and font menus |
+
+Yiti rewrites exactly those ten fields (each record exists once per platform encoding), and **leaves `glyf` outlines, `hmtx` metrics, `cmap` mappings and `GSUB/GPOS` shaping completely untouched**. So after the swap:
+
+- the UI still says "Microsoft YaHei", but every stroke comes from your font;
+- the system resolves fonts by name, finds this renamed file, and Settings, the Start menu and the taskbar follow;
+- copyright / version / trademark / designer (IDs 0, 5, 7, 9) are **deliberately left intact** — original authorship stays visible, and the app can still tell which font is actually installed.
+
+**Why `usWeightClass` in OS/2 is not rewritten**: the source files are already chosen by weight (a 700 face goes into the bold slot), so the weight metadata is correct by construction; forcing it would fight the application's own weight matching.
 ## How it differs from noMeiryoUI
 
 [noMeiryoUI](https://github.com/Tatsu-syo/noMeiryoUI) changes the UI font *setting* (registry `HKCU\Control Panel`), so its own README lists four things it cannot do: the taskbar, preinstalled apps (Settings, Paint), applications that ignore the system font, and the title bar font on Windows 11.
