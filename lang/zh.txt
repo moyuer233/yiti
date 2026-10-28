@@ -1,4 +1,4 @@
-﻿# 左边是代码里用的原文（不要改），右边是界面实际显示的文字（随便改）
+# 左边是代码里用的原文（不要改），右边是界面实际显示的文字（随便改）
 # 格式：原文=显示文本   # 开头是注释，空行忽略，\\n 表示换行
 未选择=未选择
 回滚失败：=回滚失败：
@@ -91,3 +91,31 @@ Windows 7 / 8 / 10 / 11（老系统没有的字体不会显示）=Windows 7 / 8 
 图标=图标
 已切换为中文=已切换为中文
 重启后生效。=重启后生效。
+# 关于页（按 README 分节）
+sec.features=主要功能
+about.f1=换掉系统字体：设置、开始菜单、任务栏、标题栏一起变
+about.f2=字重自动匹配：选一个字体，常规/粗体/细体按 400/700/300 自动配对
+about.f3=界面元素：小标题栏、菜单、消息框、状态栏、图标
+about.f4=自动备份与回滚，原版还能从 Windows 组件存储取回
+about.f5=按系统自动裁剪：老系统没有的字体显示为灰色并说明原因
+sec.diff=和 noMeiryoUI 有什么不同
+about.diff=noMeiryoUI 改的是界面字体设置，管不到任务栏、预装应用和 Win11 标题栏；易体替换的是字体文件本身，这些地方一起变。
+sec.systems=支持的系统
+about.sys1=Windows 7：雅黑常规/粗体 + Segoe UI（没有细体和英数可变字体）
+about.sys2=Windows 10 1809+：五个文件都能换
+about.sys3=Windows 11 22000+：五个文件都能换，界面用云母背景
+sec.files=换的是哪些文件
+about.file1=msyh.ttc 微软雅黑 常规
+about.file2=msyhbd.ttc 微软雅黑 粗体
+about.file3=msyhl.ttc 微软雅黑 细体（Win8 起才有）
+about.file4=SegUIVar.ttf Segoe UI Variable（英数、任务栏）
+about.file5=segoeui.ttf Segoe UI（经典英文界面）
+sec.how=原理
+about.how1=生成：读你的字体，把内部的族名改成 Microsoft YaHei / Segoe UI，字形数据一个字节不动
+about.how2=替换：备份原版 → 改文件权限 → 把新文件排进重启改名队列
+about.how3=生效：重启时系统换掉字体文件，并重建字体缓存
+sec.risks=风险
+about.r1=字体汉字不全或缺字重时，界面可能缺字或糊字
+about.r2=会影响 Office / WPS 的排版、导出与打印
+about.r3=系统大版本更新会重置字体，需要重新应用一次
+about.r4=动手前建议自己建一个还原点

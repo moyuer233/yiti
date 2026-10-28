@@ -363,6 +363,50 @@ namespace WinFontSwap.Wpf
                             _nav.SelectedIndex = 0;
                         }));
                     }
+                    else if (a.StartsWith("--shotlong:"))
+                    {
+                        // 整页长截图：把可滚内容按完整高度渲染（关于页这类一屏放不下的页面用）
+                        var path = a.Substring(11);
+                        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1200) };
+                        timer.Tick += delegate
+                        {
+                            timer.Stop();
+                            try
+                            {
+                                FrameworkElement target = null;
+                                if (_pageScroll != null && _pageScroll.Content is FrameworkElement)
+                                    target = (FrameworkElement)_pageScroll.Content;
+                                else
+                                    target = (FrameworkElement)Content;
+                                target.UpdateLayout();
+                                double w = target.ActualWidth;
+                                if (_pageScroll != null && _pageScroll.ViewportWidth > 8) w = _pageScroll.ViewportWidth - 12;
+                                if (w <= 0) w = Math.Max(1, ActualWidth - 260);
+                                target.Measure(new Size(w, double.PositiveInfinity));
+                                var fullW = Math.Max(w, target.DesiredSize.Width);
+                                target.Arrange(new Rect(0, 0, fullW, target.DesiredSize.Height));
+                                target.UpdateLayout();
+                                var hh = (int)Math.Ceiling(target.DesiredSize.Height);
+                                var ww = (int)Math.Ceiling(fullW);
+                                if (hh <= 0 || ww <= 0) return;
+                                const int pad = 16;
+                                var rtb = new RenderTargetBitmap(ww + pad * 2, hh + pad * 2, 96, 96, PixelFormats.Pbgra32);
+                                var dv = new DrawingVisual();
+                                using (var dc = dv.RenderOpen())
+                                {
+                                    dc.DrawRectangle(new SolidColorBrush(Color.FromRgb(0x20, 0x20, 0x24)), null, new Rect(0, 0, ww + pad * 2, hh + pad * 2));
+                                    dc.DrawRectangle(new VisualBrush(target), null, new Rect(pad, pad, ww, hh));
+                                }
+                                rtb.Render(dv);
+                                var enc = new PngBitmapEncoder();
+                                enc.Frames.Add(BitmapFrame.Create(rtb));
+                                using (var fs = System.IO.File.Create(path)) enc.Save(fs);
+                            }
+                            catch (Exception ex) { WpfProgram.Log("shotlong: " + ex.Message); }
+                            Close();
+                        };
+                        timer.Start();
+                    }
                     else if (a.StartsWith("--shot:"))
                     {
                         // 自绘截图：程序自己把界面渲染成 PNG（不需要外部截图，也不受提权窗口隔离影响）
@@ -896,55 +940,45 @@ namespace WinFontSwap.Wpf
             var stack = new StackPanel();
             stack.Children.Add(T.Label(L.T("关于"), 28, T.Text, true));
 
-            var head = new StackPanel { Margin = new Thickness(0, 18, 0, 6) };
+            // 头部完全对齐 README 顶部：居中图标 200、居中标题、居中斜体标语
+            var head = new StackPanel { Margin = new Thickness(0, 26, 0, 10), HorizontalAlignment = HorizontalAlignment.Center };
             var logo = new Border
             {
-                Width = 64,
-                Height = 64,
-                CornerRadius = new CornerRadius(14),
-                HorizontalAlignment = HorizontalAlignment.Left,
-                Background = T.B(Color.FromRgb(0x2D, 0x2D, 0x32))
+                Width = 200,
+                Height = 200,
+                CornerRadius = new CornerRadius(0),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Background = Brushes.Transparent
             };
             try
             {
                 var bmp = LoadAppIcon();
-                if (bmp != null) logo.Child = new Image { Source = bmp, Margin = new Thickness(6) };
+                if (bmp != null) logo.Child = new Image { Source = bmp };
             }
             catch { }
             head.Children.Add(logo);
 
-            var nameRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 12, 0, 0) };
-            var big = T.Label(L.T("易体"), 24, T.Text, true);
+            var nameRow = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 12, 0, 0) };
+            var big = T.Label(L.T("易体"), 26, T.Text, true);
             big.VerticalAlignment = VerticalAlignment.Center;
-            var ver = T.Label("V" + WpfProgram.Version, 13, T.TextDim, false);
+            var ver = T.Label("V" + WpfProgram.Version, 11, T.TextFaint, false);
             ver.VerticalAlignment = VerticalAlignment.Center;
-            ver.Margin = new Thickness(10, 2, 0, 0);
+            ver.Margin = new Thickness(8, 0, 0, 4);
             nameRow.Children.Add(big);
             nameRow.Children.Add(ver);
             head.Children.Add(nameRow);
 
-            var tag = T.Label(L.T("把 Windows 系统字体换成你喜欢的字体。"), 13, T.TextDim, false);
-            tag.Margin = new Thickness(0, 6, 0, 0);
+            var tag = T.Label("✨ " + L.T("把 Windows 系统字体换成你喜欢的字体。") + " ✨", 14, T.TextDim, false);
+            tag.FontStyle = FontStyles.Italic;
+            tag.HorizontalAlignment = HorizontalAlignment.Center;
+            tag.Margin = new Thickness(0, 10, 0, 0);
             head.Children.Add(tag);
             stack.Children.Add(head);
 
-            TextBlock d1;
-            stack.Children.Add(T.Row("\uE946", L.T("版本"), L.T("当前版本号"), T.Label("V" + WpfProgram.Version, 13, T.Text, false), out d1));
-
-            TextBlock d2;
-            stack.Children.Add(T.Row("\uE8D2", L.T("能换什么"), L.T("雅黑常规/粗体/细体、Segoe UI，以及标题栏等老式界面元素"),
-                T.Label("", 13, T.Text, false), out d2));
-
-            TextBlock d3;
-            stack.Children.Add(T.Row("\uE7F8", L.T("支持系统"), L.T("Windows 7 / 8 / 10 / 11（老系统没有的字体不会显示）"),
-                T.Label("", 13, T.Text, false), out d3));
 
             TextBlock d4;
             stack.Children.Add(T.Row("\uE8A5", L.T("作者"), "moyuer233", T.Label("", 13, T.Text, false), out d4));
 
-            TextBlock d5;
-            stack.Children.Add(T.Row("\uE72C", L.T("还原方式"), L.T("随时可用「全部回滚」或「默认值」取回系统原版字体"),
-                T.Label("", 13, T.Text, false), out d5));
 
             TextBlock dl;
             var langBar = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
@@ -966,10 +1000,6 @@ namespace WinFontSwap.Wpf
             };
             stack.Children.Add(T.Row("\uE774", L.T("项目主页"), L.T("源码与问题反馈"), repo, out d6));
 
-            var foot = T.Label(L.T("替换前会自动备份原版字体，第一次应用后需要重启一次才会全局生效。"), 12, T.TextFaint, false);
-            foot.Margin = new Thickness(2, 14, 0, 0);
-            foot.TextWrapping = TextWrapping.Wrap;
-            stack.Children.Add(foot);
 
             var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = stack, Padding = new Thickness(0, 0, 6, 12) };
             _pageScroll = scroll;
