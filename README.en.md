@@ -72,6 +72,22 @@ Yiti rewrites exactly those ten fields (each record exists once per platform enc
 - copyright / version / trademark / designer (IDs 0, 5, 7, 9) are **deliberately left intact** — original authorship stays visible, and the app can still tell which font is actually installed.
 
 **Why `usWeightClass` in OS/2 is not rewritten**: the source files are already chosen by weight (a 700 face goes into the bold slot), so the weight metadata is correct by construction; forcing it would fight the application's own weight matching.
+## Why renaming a font file does not work
+
+This is the reason the tool exists. The three naive approaches all fail:
+
+| Approach | What happens |
+|---|---|
+| Install a new font (different family name) | System components never use it: the WinUI theme hardcodes `Microsoft YaHei UI` and GDI's LOGFONT hardcodes `Microsoft YaHei`; nothing looks up your family name |
+| Rename the new font file to `msyh.ttc` and overwrite | The file name matches, but **the internal family name is still the original one** (e.g. HarmonyOS Sans), so Windows registers it under that name ⇒ `Microsoft YaHei` cannot be resolved and the UI falls back or shows missing glyphs; wrong face count/order inside a TTC also breaks bold and light |
+| Replace only `msyh.ttc` | Bold `msyhbd.ttc` and light `msyhl.ttc` stay YaHei, so the UI is only half swapped; the Windows 11 taskbar and Settings header use `SegUIVar.ttf`, which stays untouched; legacy menus and message boxes live in the registry and do not change either |
+
+Four things are required, and skipping any of them leaves you with "Settings changed but the taskbar did not":
+
+1. **Rewrite the internal names** (`name` table) so the system believes this is Microsoft YaHei;
+2. **Replace all five files** — the three YaHei files plus the two Segoe UI files;
+3. **Write the registry** `HKCU\Control Panel\Desktop\WindowMetrics` for legacy shell elements (menu, message box, status bar, icon);
+4. **Clear the font cache and swap at boot** — the files are locked while Windows runs, and a stale cache keeps serving the old glyphs.
 ## How it differs from noMeiryoUI
 
 [noMeiryoUI](https://github.com/Tatsu-syo/noMeiryoUI) changes the UI font *setting* (registry `HKCU\Control Panel`), so its own README lists four things it cannot do: the taskbar, preinstalled apps (Settings, Paint), applications that ignore the system font, and the title bar font on Windows 11.
