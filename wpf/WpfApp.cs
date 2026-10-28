@@ -28,6 +28,7 @@ namespace WinFontSwap.Wpf
         static void Main(string[] args)
         {
             foreach (var a in args) { if (a == "--log") LogEnabled = true; }
+            L.Load();   // 上次选过的界面语言
             if (LogEnabled) { try { File.WriteAllText(LogPath, "=== start ===\r\n"); } catch { } }
 
             var app = new Application();
