@@ -148,10 +148,12 @@ namespace WinFontSwap.Wpf
             g.Children.Add(ic);
 
             var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-            text.Children.Add(Label(title, 14, Text, false));
+            // 没有副标题时标题放大一档，避免整行只剩一颗小字
+            bool noDesc = string.IsNullOrEmpty(desc);
+            text.Children.Add(Label(title, noDesc ? 16 : 14, Text, false));
             var d = Label(desc, 12, TextDim, false);
             d.Margin = new Thickness(0, 2, 0, 0);
-            text.Children.Add(d);
+            if (!noDesc) text.Children.Add(d);
             Grid.SetColumn(text, 1);
             g.Children.Add(text);
 
