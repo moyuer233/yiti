@@ -1334,7 +1334,7 @@ namespace WinFontSwap.Wpf
                 bool userFonts = _advUserFonts != null && _advUserFonts.IsChecked == true;
                 var res = Installer.Apply(list, delegate (string m) { }, generateOnly, cache, userFonts);
                 if (!generateOnly) { try { FollowCurrentFont(); } catch { } }
-                SetStatus(generateOnly ? (L.T("已生成到 ") + res.OutputDir) : L.T("已写入，10 秒后重启（shutdown /a 可取消）"), false);
+                SetStatus(generateOnly ? (L.T("已生成到 ") + res.OutputDir) : L.T("已写入，正在重启…"), false);
                 RefreshTargets();
                 if (!generateOnly) RebootSoon();
             }
@@ -1427,12 +1427,12 @@ namespace WinFontSwap.Wpf
             catch (Exception ex) { SetStatus(L.T("写入成功，但重启资源管理器失败：") + ex.Message, true); }
         }
 
-        /// <summary>10 秒后重启；用户可执行 shutdown /a 取消。</summary>
+        /// <summary>确认后立即重启（不给取消窗口）。</summary>
         void RebootSoon()
         {
             try
             {
-                var psi = new System.Diagnostics.ProcessStartInfo("shutdown.exe", "/r /t 10 /c \"YiTi: applying fonts\"")
+                var psi = new System.Diagnostics.ProcessStartInfo("shutdown.exe", "/r /t 0 /c \"YiTi: applying fonts\"")
                 {
                     CreateNoWindow = true,
                     UseShellExecute = false
