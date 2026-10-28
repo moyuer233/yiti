@@ -961,9 +961,9 @@ namespace WinFontSwap.Wpf
             var nameRow = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 12, 0, 0) };
             var big = T.Label(L.T("易体"), 26, T.Text, true);
             big.VerticalAlignment = VerticalAlignment.Center;
-            var ver = T.Label("V" + WpfProgram.Version, 11, T.TextFaint, false);
-            ver.VerticalAlignment = VerticalAlignment.Center;
-            ver.Margin = new Thickness(8, 0, 0, 4);
+            var ver = T.Label("V" + WpfProgram.Version, 15, T.TextDim, false);
+            ver.VerticalAlignment = VerticalAlignment.Center;   // 和名称同一行基线居中
+            ver.Margin = new Thickness(10, 2, 0, 0);
             nameRow.Children.Add(big);
             nameRow.Children.Add(ver);
             head.Children.Add(nameRow);
