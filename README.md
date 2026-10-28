@@ -71,6 +71,47 @@ Windows **找字体不看文件名，看字体内部的 `name` 表**（OpenType 
 - 版权 / 版本 / 商标 / 设计师（0、5、7、9）**故意不改**：既保留原作者信息，也正好让程序能反查「当前装的到底是什么字体」。
 
 **为什么不改 OS/2 里的字重值（usWeightClass）**：选源文件时就按字重挑（粗体槽放 700 的源），字重标记天生就是对的；硬改反倒会和应用程序自己挑字重的逻辑打架。
+## 原理（详细）
+
+整个过程分「生成 → 替换 → 重启生效 → 可回滚」四段。
+
+### 一、生成：把你的字体做成“同名替身”
+
+1. 读源字体（TTC 的话按 face 索引取一个），解析表目录，只保留 TrueType 轮廓（`glyf`），CFF/OTF 直接拒绝。
+2. 重建 `name` 表：把 1(族名)、2(样式)、3/4(完整名)、6(PostScript)、16/17(排版族名/样式)、18/21/22(WWS) 换成微软的名字，其他记录（版权 0、版本 5、商标 7、设计师 9…）原样保留。
+3. 按目标打包：
+
+| 目标文件 | 写进去的族名（face 数） |
+|---|---|
+| `msyh.ttc` | `Microsoft YaHei` + `Microsoft YaHei UI`，都是 Regular（2 个 face 的 TTC） |
+| `msyhbd.ttc` | 同上两个族名，Subfamily = **Bold**，PostScript 名带 `-Bold` |
+| `msyhl.ttc` | `Microsoft YaHei Light` + `Microsoft YaHei UI Light`（排版族名仍是 YaHei，排版样式 Light） |
+| `SegUIVar.ttf` | `Segoe UI Variable` / `… Text` / `… Display` / `… Small` 四个族名写进同一个文件，**保留字重轴**（可变字体） |
+| `segoeui.ttf` | `Segoe UI`（单 face） |
+
+4. 重算表校验和与 `head` 的 checkSumAdjustment，拼回 TTC 目录（face 偏移按文件重排）。
+5. 两道自检：① 结构校验（`Verify`：表目录、name 记录、face 数对不对）；② **真的加载一次**（GDI+ `PrivateFontCollection.AddFontFile`），系统加载不了就直接报错，不写进系统。
+
+为什么要多 face：WinUI 组件请求的是 `Microsoft YaHei UI`，经典 GDI 请求 `Microsoft YaHei`，任务栏请求 `Segoe UI Variable Text/Display/Small` —— 一个文件名里塞不下这些族，必须做成多 face 的 TTC。
+
+### 二、替换：备份 → 权限 → 排队改名
+
+1. 备份原文件到 `C:\ProgramData\WinFontSwap\backup\<时间戳>\orig\`，同时把 SHA-256 写进 `state.ini`。
+2. 取文件所有权、给 SYSTEM 完全控制，并**继承原字体的 DACL**（保留 UWP 需要的 `ALL APPLICATION PACKAGES` 读权限），否则改完系统应用读不到字体。
+3. 新文件先落到暂存目录，然后往注册表 `PendingFileRenameOperations` 里排两对操作：
+   - `暂存新文件 → C:\Windows\Fonts\msyh.ttc`
+   - `C:\Windows\Fonts\msyh.ttc → 备份路径`
+   字体文件被系统占用（映射在字体服务里），**只能重启时由会话管理器替换**。
+4. 清字体缓存：停 `FontCache`（Win7 叫 `FontCache3.0.0.0`）、删 `FNTCACHE.DAT` 与用户 `FontCache` 目录，否则重启后仍用旧字形。
+5. 记下 `applied` 清单与每个文件的新 SHA，供状态显示与回滚判断。
+
+### 三、界面元素（可选）
+
+`HKCU\Control Panel\Desktop\WindowMetrics` 里 5 个值（`SmCaptionFont`、`MenuFont`、`MessageFont`、`StatusFont`、`IconFont`）是 92 字节的 `LOGFONTW`：偏移 0 是高度（负值＝字符高），偏移 `0x5C` 是 32 个宽字符的字体面名。程序直接改这两段，再回读校验。
+
+### 四、回滚
+
+读 `state.ini` 里的 SHA 判断当前文件是不是我们写进去的；是则把备份里的原版排进同一套重启改名队列，并把 `WindowMetrics` 恢复成备份值。原版丢失时，从 `C:\Windows\WinSxS` 里按包名（`microsoftyahei` 等）取组件存储中的原版。
 ## 为什么「把字体文件改个名」没用
 
 这是这个工具存在的理由。常见的三种“简单替换”都会失败：

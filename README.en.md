@@ -72,6 +72,47 @@ Yiti rewrites exactly those ten fields (each record exists once per platform enc
 - copyright / version / trademark / designer (IDs 0, 5, 7, 9) are **deliberately left intact** — original authorship stays visible, and the app can still tell which font is actually installed.
 
 **Why `usWeightClass` in OS/2 is not rewritten**: the source files are already chosen by weight (a 700 face goes into the bold slot), so the weight metadata is correct by construction; forcing it would fight the application's own weight matching.
+## How it works (in detail)
+
+Four stages: build → replace → reboot → rollback.
+
+### 1. Build a look-alike font
+
+1. Read the source font (one face of a TTC), parse its table directory, keep TrueType outlines (`glyf`); CFF/OTF sources are rejected.
+2. Rebuild the `name` table: IDs 1 (family), 2 (subfamily), 3/4 (full name), 6 (PostScript), 16/17 (typographic family/subfamily), 18/21/22 (WWS) become Microsoft's names; every other record (copyright 0, version 5, trademark 7, designer 9, …) is copied unchanged.
+3. Package per target:
+
+| Target file | Family names written (number of faces) |
+|---|---|
+| `msyh.ttc` | `Microsoft YaHei` + `Microsoft YaHei UI`, both Regular (2-face TTC) |
+| `msyhbd.ttc` | same two families, Subfamily = **Bold**, PostScript names end with `-Bold` |
+| `msyhl.ttc` | `Microsoft YaHei Light` + `Microsoft YaHei UI Light` (typographic family stays YaHei, typographic style Light) |
+| `SegUIVar.ttf` | `Segoe UI Variable` / `… Text` / `… Display` / `… Small` in one file, **weight axis kept** |
+| `segoeui.ttf` | `Segoe UI` (single face) |
+
+4. Recompute table checksums and the `head` checkSumAdjustment, then lay out the TTC directory (face offsets rebased to file positions).
+5. Two self-checks: (a) structural validation of the table directory, name records and face count; (b) **actually loading it** through GDI+ `PrivateFontCollection.AddFontFile` — if Windows cannot load it, the app aborts instead of writing it to the system.
+
+Multiple faces are mandatory: WinUI asks for `Microsoft YaHei UI`, classic GDI asks for `Microsoft YaHei`, and the taskbar asks for `Segoe UI Variable Text/Display/Small` — those families do not fit into a single-face file.
+
+### 2. Replace: backup → permissions → pending rename
+
+1. Copy the originals to `C:\ProgramData\WinFontSwap\backup\<stamp>\orig\` and record their SHA-256 in `state.ini`.
+2. Take ownership, grant SYSTEM full control, and **inherit the original DACL** (keeping the `ALL APPLICATION PACKAGES` read ACE that UWP needs) — without it packaged apps cannot read the font.
+3. Write the new files to a staging directory, then queue two renames per file in `PendingFileRenameOperations`:
+   - `staged file → C:\Windows\Fonts\msyh.ttc`
+   - `C:\Windows\Fonts\msyh.ttc → backup path`
+   The font files are mapped by the font service, so **only the session manager can swap them at boot**.
+4. Clear the font cache: stop `FontCache` (`FontCache3.0.0.0` on Windows 7), delete `FNTCACHE.DAT` and the per-user `FontCache` directory, otherwise the old glyphs survive the reboot.
+5. Record the applied list and new hashes for status display and rollback decisions.
+
+### 3. Shell elements (optional)
+
+Five values under `HKCU\Control Panel\Desktop\WindowMetrics` (`SmCaptionFont`, `MenuFont`, `MessageFont`, `StatusFont`, `IconFont`) are 92-byte `LOGFONTW` blobs: offset 0 holds the height (negative = character height) and offset `0x5C` holds a 32-wide-character face name. The app rewrites those fields and reads them back to verify.
+
+### 4. Rollback
+
+Compare the SHA in `state.ini` against the current files; if they are ours, queue the originals from the backup through the same boot-time rename list and restore `WindowMetrics` from the backup. If the backup is gone, take the originals from `C:\Windows\WinSxS` by package name (`microsoftyahei` and friends).
 ## Why renaming a font file does not work
 
 This is the reason the tool exists. The three naive approaches all fail:
