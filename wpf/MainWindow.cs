@@ -1244,7 +1244,18 @@ namespace WinFontSwap.Wpf
                         src != null && src.Italic);
                     done++;
                 }
-                SetStatus(L.T("系统元素已写入 ") + done + L.T(" 项"), false);
+                // 关键：只写注册表要重新登录才生效；这里调 SystemParametersInfo 立即应用（和 noMeiryoUI 一致）
+                var faces = new string[Win32Fonts.Keys.Length];
+                var pts = new double[Win32Fonts.Keys.Length];
+                for (int i = 0; i < Win32Fonts.Keys.Length; i++)
+                {
+                    faces[i] = _winFace[i];
+                    double p;
+                    double.TryParse(_winSize[i].Text, out p);
+                    pts[i] = p > 0 ? p : 9;
+                }
+                int live = ShellMetrics.Apply(faces, pts, _winOn);
+                SetStatus(L.T("系统元素已生效：") + live + L.T(" 项"), false);
             }
             catch (Exception ex) { SetStatus(L.T("写入失败：") + ex.Message, true); }
         }
@@ -1320,10 +1331,7 @@ namespace WinFontSwap.Wpf
             {
                 if (!hasShell) { SetStatus(L.T("先选一个字体。"), true); return; }
                 if (generateOnly) { SetStatus(L.T("生成字体文件需要先选一个字体。"), true); return; }
-                // 系统元素靠重启资源管理器生效，先确认（会短暂关掉桌面和已打开的资源管理器窗口）
-                if (!Confirm(L.T("是否确定重启资源管理器？"), L.T("应用"))) return;
-                ApplyWin32();          // 写 WindowMetrics，状态栏报 N 项
-                RefreshShell();        // 广播设置变更 + 重启资源管理器
+                ApplyWin32();          // 写注册表 + SystemParametersInfo 立即生效（不需要重启）
                 return;
             }
 
