@@ -1232,7 +1232,7 @@ namespace WinFontSwap.Wpf
             var list = CollectSources();
             if (list.Count == 0) { SetStatus(L.T("先选一个字体。"), true); return; }
             // 应用会改系统字体文件，必须重启才生效 —— 直接问「是否确定重启」
-            if (!generateOnly && !Confirm(L.T("是否确定重启？\n应用后字体在重启时才替换。"), L.T("应用"))) return;
+            if (!generateOnly && !Confirm(L.T("是否确定重启？"), L.T("应用"))) return;
             SetStatus(generateOnly ? L.T("正在生成…") : L.T("正在生成并写入…"), false);
             try
             {
@@ -1332,7 +1332,7 @@ namespace WinFontSwap.Wpf
 
         void ResetToDefaults()
         {
-            if (!Confirm(L.T("是否切换为默认预设？\n只改界面，点「应用」才会写入。"), L.T("默认值"))) return;
+            if (!Confirm(L.T("是否切换为默认预设？"), L.T("默认值"))) return;
             for (int i = 0; i < _slots.Length; i++) _slots[i] = null;
             int filled = LoadDefaultSources();
             for (int i = 0; i < _on.Length; i++)
