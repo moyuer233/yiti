@@ -760,6 +760,13 @@ namespace WinFontSwap.Wpf
             stack.Children.Add(T.Row("\uE8D2", L.T("源字体"), L.T("未选择"), pickBtn, out pickDesc));
             _pickDesc = pickDesc;
 
+            // 自动匹配字重：放在源字体正下方，和它的行为直接相关
+            TextBlock weightDesc;
+            var weightSw = T.Switch(_advAutoWeightOn);
+            weightSw.Click += delegate { _advAutoWeightOn = weightSw.IsChecked == true; };
+            _advAutoWeight = weightSw;
+            stack.Children.Add(T.Row("\uE8DD", L.T("自动匹配字重"), L.T("按 400 / 700 / 300 配对常规、粗体、细体；关掉则五档都用你选的那一款"), weightSw, out weightDesc));
+
             string[] names = { L.T("常规"), L.T("粗体"), L.T("细体"), L.T("英文数字"), "Segoe UI" };
             string[] glyphs = { "\uE8D2", "\uE8DD", "\uE8D3", "\uE8D2", "\uE8D2" };
             for (int i = 0; i < 5 && i < Installer.TargetFiles.Length; i++)
@@ -907,11 +914,6 @@ namespace WinFontSwap.Wpf
             stack.Children.Add(T.Label(L.T("高级"), 28, T.Text, true));
             stack.Children.Add(new Border { Height = 16 });
 
-            TextBlock advDescWeight;
-            var weightSw = T.Switch(_advAutoWeightOn);
-            weightSw.Click += delegate { _advAutoWeightOn = weightSw.IsChecked == true; };
-            _advAutoWeight = weightSw;
-            stack.Children.Add(T.Row("\uE8D2", L.T("自动匹配字重"), L.T("按 400 / 700 / 300 配对常规、粗体、细体；关掉则五档都用你选的那一款"), weightSw, out advDescWeight));
 
             TextBlock advDesc1;
             var cacheSw = T.Switch(_advCacheOn);
