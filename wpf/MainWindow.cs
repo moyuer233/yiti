@@ -1331,7 +1331,10 @@ namespace WinFontSwap.Wpf
             {
                 if (!hasShell) { SetStatus(L.T("先选一个字体。"), true); return; }
                 if (generateOnly) { SetStatus(L.T("生成字体文件需要先选一个字体。"), true); return; }
-                ApplyWin32();          // 写注册表 + SystemParametersInfo 立即生效（不需要重启）
+                // 已打开的窗口不会自己换字体，重启资源管理器让外壳重新读一遍（电脑不用重启）
+                if (!Confirm(L.T("是否确定重启资源管理器？"), L.T("应用"))) return;
+                ApplyWin32();          // 写注册表 + SystemParametersInfo 立即生效
+                RestartExplorer();     // 让已打开的窗口/菜单重新读字体
                 return;
             }
 
@@ -1433,6 +1436,21 @@ namespace WinFontSwap.Wpf
                 System.Threading.Thread.Sleep(400);
                 System.Diagnostics.Process.Start("explorer.exe");
                 SetStatus(L.T("系统元素已生效（已重启资源管理器）"), false);
+            }
+            catch (Exception ex) { SetStatus(L.T("写入成功，但重启资源管理器失败：") + ex.Message, true); }
+        }
+
+        /// <summary>重启资源管理器（外壳 UI 会重新读系统字体；电脑本身不用重启）。</summary>
+        void RestartExplorer()
+        {
+            try
+            {
+                var kill = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("taskkill.exe", "/f /im explorer.exe")
+                { CreateNoWindow = true, UseShellExecute = false });
+                if (kill != null) kill.WaitForExit(5000);
+                System.Threading.Thread.Sleep(500);
+                System.Diagnostics.Process.Start("explorer.exe");
+                SetStatus(L.T("系统元素已生效") + L.T("（已重启资源管理器）"), false);
             }
             catch (Exception ex) { SetStatus(L.T("写入成功，但重启资源管理器失败：") + ex.Message, true); }
         }

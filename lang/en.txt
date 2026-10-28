@@ -140,3 +140,5 @@ about.r4=Create a restore point before the first run
 系统元素已生效（已重启资源管理器）=Shell elements applied (Explorer restarted)
 写入成功，但重启资源管理器失败：=Written, but restarting Explorer failed: 
 是否确定重启资源管理器？=Restart Explorer now?
+系统元素已生效=Shell elements applied
+（已重启资源管理器）= (Explorer restarted)
