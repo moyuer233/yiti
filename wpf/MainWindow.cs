@@ -968,7 +968,7 @@ namespace WinFontSwap.Wpf
             nameRow.Children.Add(ver);
             head.Children.Add(nameRow);
 
-            var tag = T.Label("✨ " + L.T("把 Windows 系统字体换成你喜欢的字体。") + " ✨", 14, T.TextDim, false);
+            var tag = T.Label(L.T("把 Windows 系统字体换成你喜欢的字体。"), 14, T.TextDim, false);
             tag.FontStyle = FontStyles.Italic;
             tag.HorizontalAlignment = HorizontalAlignment.Center;
             tag.Margin = new Thickness(0, 10, 0, 0);
