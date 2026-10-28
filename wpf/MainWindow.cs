@@ -283,6 +283,7 @@ namespace WinFontSwap.Wpf
         bool _fakeOld;
         FontEntry _picked;   // 用户在字体列表里实际点选的那一款（源字体行显示它，不是按字重匹配后的常规体）
         TextBlock _brandName;
+        TextBlock _shellAllDesc;
 
 
         /// <summary>从 exe 内嵌资源读应用图标（csc /resource: 的 LogicalName 是 app.ico，用清单资源名更可靠）。</summary>
@@ -820,6 +821,12 @@ namespace WinFontSwap.Wpf
 
             stack.Children.Add(T.SectionHeader(L.T("系统元素"), false));
 
+            // 一键把 5 个元素设成同一款字体（和「源字体」同样的行样式）
+            var shellPick = T.Btn2(L.T("选择字体…"), false, 13);
+            shellPick.Click += delegate { PickShellFontForAll(); };
+            TextBlock shellDesc;
+            stack.Children.Add(T.Row("\uE8D2", L.T("全部系统元素"), L.T("统一指定这 5 项的字体"), shellPick, out shellDesc));
+            _shellAllDesc = shellDesc;
 
             for (int i = 0; i < Win32Fonts.Names.Length; i++)
             {
@@ -1198,6 +1205,25 @@ namespace WinFontSwap.Wpf
             ApplyWin32();
         }
 
+        /// <summary>一键：把 5 个系统元素都设成选中的字体（字号保持不变）。</summary>
+        void PickShellFontForAll()
+        {
+            var dlg = new FontPickerDialog();
+            dlg.Owner = this;
+            if (dlg.ShowDialog() != true) return;
+            var face = dlg.Picked.Family;
+            for (int i = 0; i < Win32Fonts.Names.Length; i++)
+            {
+                _winFace[i] = face;
+                double pt;
+                double.TryParse(_winSize[i].Text, out pt);
+                if (pt <= 0) pt = 9;
+                if (_winCur[i] != null) _winCur[i].Text = face + "   " + pt.ToString("0") + " pt";
+            }
+            if (_shellAllDesc != null) _shellAllDesc.Text = face;
+            SetStatus(L.T("这 5 项都已设为 ") + face, false);
+        }
+
         void ApplyWin32()
         {
             try
@@ -1294,10 +1320,8 @@ namespace WinFontSwap.Wpf
             {
                 if (!hasShell) { SetStatus(L.T("先选一个字体。"), true); return; }
                 if (generateOnly) { SetStatus(L.T("生成字体文件需要先选一个字体。"), true); return; }
-                if (!Confirm(L.T("是否确定重启？"), L.T("应用"))) return;
                 ApplyWin32();          // 写 WindowMetrics，状态栏报 N 项
-                SetStatus(L.T("已写入，10 秒后重启（shutdown /a 可取消）"), false);
-                RebootSoon();
+                RefreshShell();        // 系统元素不需要重启电脑：广播设置变更 + 重启资源管理器
                 return;
             }
 
@@ -1376,6 +1400,31 @@ namespace WinFontSwap.Wpf
             }
             ShowPage();
             SetStatus(L.En ? "Language switched to English" : "已切换为中文", false);
+        }
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint msg, IntPtr wParam, string lParam, uint flags, uint timeout, out IntPtr result);
+
+        /// <summary>系统元素只写注册表即可生效：广播 WM_SETTINGCHANGE 并重启资源管理器（不重启电脑）。</summary>
+        void RefreshShell()
+        {
+            try
+            {
+                IntPtr res;
+                SendMessageTimeout(new IntPtr(0xffff), 0x001A, IntPtr.Zero, "WindowMetrics", 0x0002, 1000, out res);
+                SendMessageTimeout(new IntPtr(0xffff), 0x001A, IntPtr.Zero, "ImmersiveColorSet", 0x0002, 1000, out res);
+            }
+            catch { }
+            try
+            {
+                var kill = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("taskkill.exe", "/f /im explorer.exe")
+                { CreateNoWindow = true, UseShellExecute = false });
+                if (kill != null) kill.WaitForExit(5000);
+                System.Threading.Thread.Sleep(400);
+                System.Diagnostics.Process.Start("explorer.exe");
+                SetStatus(L.T("系统元素已生效（已重启资源管理器）"), false);
+            }
+            catch (Exception ex) { SetStatus(L.T("写入成功，但重启资源管理器失败：") + ex.Message, true); }
         }
 
         /// <summary>10 秒后重启；用户可执行 shutdown /a 取消。</summary>

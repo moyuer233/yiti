@@ -132,3 +132,10 @@ about.r4=Create a restore point before the first run
 按 400 / 700 / 300 配对常规、粗体、细体=Match regular/bold/light at 400 / 700 / 300
 生成字体文件需要先选一个字体。=Pick a font first to generate the font files.
 已关闭自动匹配：五档都用 =Auto matching off: all five slots use 
+# Set all shell elements at once
+全部系统元素=All shell elements
+统一指定这 5 项的字体=Use one font for all five
+这 5 项都已设为 =All five are now 
+# How shell element changes take effect
+系统元素已生效（已重启资源管理器）=Shell elements applied (Explorer restarted)
+写入成功，但重启资源管理器失败：=Written, but restarting Explorer failed: 
