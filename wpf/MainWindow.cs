@@ -857,7 +857,7 @@ namespace WinFontSwap.Wpf
             var apply = T.Btn2(L.T("应用"), true, 13);
             apply.Margin = new Thickness(0, 0, 10, 0);
             apply.Click += delegate { RunApply(false); };
-            var rollback = T.Btn2(L.T("全部回滚"), false, 13);
+            var rollback = T.Btn2(L.T("还原"), false, 13);
             rollback.Margin = new Thickness(0, 0, 10, 0);
             rollback.Click += delegate { RunRollbackAll(); };
             var defaults = T.Btn2(L.T("默认值"), false, 13);
@@ -1231,8 +1231,8 @@ namespace WinFontSwap.Wpf
         {
             var list = CollectSources();
             if (list.Count == 0) { SetStatus(L.T("先选一个字体。"), true); return; }
-            // 应用会改系统字体文件并要重启，必须先确认
-            if (!generateOnly && !Confirm(L.T("现在把字体写入系统？\n会先备份原版，重启后生效。"), L.T("应用"))) return;
+            // 应用会改系统字体文件，必须重启才生效 —— 直接问「是否确定重启」
+            if (!generateOnly && !Confirm(L.T("是否确定重启？\n应用后字体在重启时才替换。"), L.T("应用"))) return;
             SetStatus(generateOnly ? L.T("正在生成…") : L.T("正在生成并写入…"), false);
             try
             {
@@ -1240,8 +1240,9 @@ namespace WinFontSwap.Wpf
                 bool userFonts = _advUserFonts != null && _advUserFonts.IsChecked == true;
                 var res = Installer.Apply(list, delegate (string m) { }, generateOnly, cache, userFonts);
                 if (!generateOnly) { try { FollowCurrentFont(); } catch { } }
-                SetStatus(generateOnly ? (L.T("已生成到 ") + res.OutputDir) : L.T("已写入，重启后生效。"), false);
+                SetStatus(generateOnly ? (L.T("已生成到 ") + res.OutputDir) : L.T("已写入，10 秒后重启（shutdown /a 可取消）"), false);
                 RefreshTargets();
+                if (!generateOnly) RebootSoon();
             }
             catch (Exception ex) { SetStatus(L.T("失败：") + ex.Message, true); }
         }
@@ -1307,6 +1308,21 @@ namespace WinFontSwap.Wpf
             SetStatus(L.En ? "Language switched to English" : "已切换为中文", false);
         }
 
+        /// <summary>10 秒后重启；用户可执行 shutdown /a 取消。</summary>
+        void RebootSoon()
+        {
+            try
+            {
+                var psi = new System.Diagnostics.ProcessStartInfo("shutdown.exe", "/r /t 10 /c \"YiTi: applying fonts\"")
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                };
+                System.Diagnostics.Process.Start(psi);
+            }
+            catch (Exception ex) { SetStatus(L.T("重启失败：") + ex.Message, true); }
+        }
+
         bool Confirm(string question, string title)
         {
             foreach (var a in Environment.GetCommandLineArgs()) if (a == "--yes") return true;   // 自测用：跳过确认
@@ -1316,7 +1332,7 @@ namespace WinFontSwap.Wpf
 
         void ResetToDefaults()
         {
-            if (!Confirm(L.T("把源字体和系统元素都恢复成 Windows 默认？\n这只改界面，点「应用」才会写入。"), L.T("默认值"))) return;
+            if (!Confirm(L.T("是否切换为默认预设？\n只改界面，点「应用」才会写入。"), L.T("默认值"))) return;
             for (int i = 0; i < _slots.Length; i++) _slots[i] = null;
             int filled = LoadDefaultSources();
             for (int i = 0; i < _on.Length; i++)
@@ -1347,8 +1363,7 @@ namespace WinFontSwap.Wpf
         {
             try
             {
-                if (MessageBox.Show(this, L.T("把字体文件、用户级字体注册都还原到替换前？\r\n重启后生效。"), L.T("全部回滚"),
-                        MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+                if (!Confirm(L.T("是否还原？"), L.T("还原"))) return;
                 string log1 = "";
                 if (Installer.LatestBackup() != null) Installer.Rollback(delegate (string m) { log1 += m + "; "; });
                 else log1 = L.T("没有字体备份; ");
