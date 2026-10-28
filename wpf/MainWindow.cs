@@ -277,8 +277,9 @@ namespace WinFontSwap.Wpf
         string[] _winFace = new string[Win32Fonts.Names.Length];
         bool[] _winOn = new bool[Win32Fonts.Names.Length];
         ToggleButton[] _winTog = new ToggleButton[Win32Fonts.Names.Length];
-        ToggleButton _advCache, _advUserFonts;
+        ToggleButton _advCache, _advUserFonts, _advAutoWeight;
         bool _advCacheOn = true, _advUserFontsOn = true;
+        bool _advAutoWeightOn = true;   // 自动按字重配对常规/粗体/细体
         bool _fakeOld;
         FontEntry _picked;   // 用户在字体列表里实际点选的那一款（源字体行显示它，不是按字重匹配后的常规体）
         TextBlock _brandName;
@@ -906,6 +907,12 @@ namespace WinFontSwap.Wpf
             stack.Children.Add(T.Label(L.T("高级"), 28, T.Text, true));
             stack.Children.Add(new Border { Height = 16 });
 
+            TextBlock advDescWeight;
+            var weightSw = T.Switch(_advAutoWeightOn);
+            weightSw.Click += delegate { _advAutoWeightOn = weightSw.IsChecked == true; };
+            _advAutoWeight = weightSw;
+            stack.Children.Add(T.Row("\uE8D2", L.T("自动匹配字重"), L.T("按 400 / 700 / 300 配对常规、粗体、细体；关掉则五档都用你选的那一款"), weightSw, out advDescWeight));
+
             TextBlock advDesc1;
             var cacheSw = T.Switch(_advCacheOn);
             cacheSw.Click += delegate { _advCacheOn = cacheSw.IsChecked == true; };
@@ -1040,6 +1047,16 @@ namespace WinFontSwap.Wpf
         void ApplyPicked(FontEntry picked)
         {
             if (picked == null) return;
+            if (!_advAutoWeightOn)
+            {
+                // 关掉自动匹配：五档全部用你点的那一款
+                _picked = picked;
+                for (int i = 0; i < _slots.Length; i++) _slots[i] = picked;
+                UpdateSlotLabels();
+                SyncWin32FromChoice();
+                SetStatus(L.T("已关闭自动匹配：五档都用 ") + picked.Family + " " + (picked.Subfamily ?? ""), false);
+                return;
+            }
             var pool = FontLibrary.CandidatesForBase(picked);
             var regular = FontLibrary.Match(pool, 400) ?? picked;
             var bold = FontLibrary.Match(pool, 700) ?? regular;
