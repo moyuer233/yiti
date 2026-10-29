@@ -280,6 +280,7 @@ namespace WinFontSwap.Wpf
         ToggleButton _advCache, _advUserFonts, _advAutoWeight;
         bool _advCacheOn = true, _advUserFontsOn = true;
         bool _advAutoWeightOn = true;   // 自动按字重配对常规/粗体/细体
+        bool _advLogOn;                 // 输出日志：默认关闭
         bool _fakeOld;
         FontEntry _picked;   // 用户在字体列表里实际点选的那一款（源字体行显示它，不是按字重匹配后的常规体）
         TextBlock _brandName;
@@ -378,6 +379,7 @@ namespace WinFontSwap.Wpf
                 try { LoadWin32(); } catch (Exception ex) { WpfProgram.Log("LoadWin32: " + ex.Message); }
                 foreach (var a in Environment.GetCommandLineArgs())
                 {
+                    WpfProgram.Log("arg: " + a);
                     // 自测：切一圈页再回来，验证状态不会停在「读取中」
                     if (a == "--cycle" && _nav != null)
                     {
@@ -475,6 +477,11 @@ namespace WinFontSwap.Wpf
                                 break;
                             }
                         }
+                    }
+                    else if (a == "--logdiag")
+                    {
+                        // 自测：直接生成一份日志再退出
+                        WriteDiagnosticsLog();
                     }
                     else if (a == "--confirmdemo")
                     {
@@ -999,6 +1006,22 @@ namespace WinFontSwap.Wpf
             };
             stack.Children.Add(T.Row("\uE777", L.T("只还原用户级注册"), L.T("导入最近一次的注册表备份"), rb, out advDesc3));
 
+            TextBlock advDescLog;
+            var logBar = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            var logBtn = T.Btn2(L.T("生成"), false, 13);
+            logBtn.IsEnabled = _advLogOn;              // 默认关闭
+            logBtn.Margin = new Thickness(0, 0, 10, 0);
+            logBtn.Click += delegate { WriteDiagnosticsLog(); };
+            logBar.Children.Add(logBtn);
+            var logSw = T.Switch(_advLogOn);
+            logSw.Click += delegate
+            {
+                _advLogOn = logSw.IsChecked == true;
+                logBtn.IsEnabled = _advLogOn;
+            };
+            logBar.Children.Add(logSw);
+            stack.Children.Add(T.Row("\uE8A5", L.T("输出日志"), L.T("在软件目录下生成 yy-mm-dd-ss.log"), logBar, out advDescLog));
+
             var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = stack, Padding = new Thickness(0, 0, 6, 12) };
             _pageScroll = scroll;
             return scroll;
@@ -1010,14 +1033,14 @@ namespace WinFontSwap.Wpf
             var stack = new StackPanel();
             stack.Children.Add(T.Label(L.T("关于"), 28, T.Text, true));
 
-            // 头部完全对齐 README 顶部：居中图标 200、居中标题、居中斜体标语
-            var head = new StackPanel { Margin = new Thickness(0, 26, 0, 10), HorizontalAlignment = HorizontalAlignment.Center };
+            // 和其它页统一：左对齐的头部（图标 + 名称 + 版本），下面是同样的卡片行
+            var head = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 22, 0, 18) };
             var logo = new Border
             {
-                Width = 200,
-                Height = 200,
-                CornerRadius = new CornerRadius(0),
-                HorizontalAlignment = HorizontalAlignment.Center,
+                Width = 72,
+                Height = 72,
+                CornerRadius = new CornerRadius(12),
+                VerticalAlignment = VerticalAlignment.Center,
                 Background = Brushes.Transparent
             };
             try
@@ -1028,16 +1051,17 @@ namespace WinFontSwap.Wpf
             catch { }
             head.Children.Add(logo);
 
-            var nameRow = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 12, 0, 0) };
-            var big = T.Label(L.T("易体"), 26, T.Text, true);
+            var nameCol = new StackPanel { Margin = new Thickness(14, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+            var nameRow = new StackPanel { Orientation = Orientation.Horizontal };
+            var big = T.Label(L.T("易体"), 22, T.Text, true);
             big.VerticalAlignment = VerticalAlignment.Center;
-            var ver = T.Label("V" + WpfProgram.Version, 15, T.TextDim, false);
-            ver.VerticalAlignment = VerticalAlignment.Center;   // 和名称同一行基线居中
-            ver.Margin = new Thickness(10, 2, 0, 0);
+            var ver = T.Label("V" + WpfProgram.Version, 12, T.TextDim, false);
+            ver.VerticalAlignment = VerticalAlignment.Center;
+            ver.Margin = new Thickness(8, 0, 0, 0);
             nameRow.Children.Add(big);
             nameRow.Children.Add(ver);
-            head.Children.Add(nameRow);
-
+            nameCol.Children.Add(nameRow);
+            head.Children.Add(nameCol);
 
             stack.Children.Add(head);
 
@@ -1301,6 +1325,53 @@ namespace WinFontSwap.Wpf
                 SetStatus(L.T("系统元素已生效：") + live + L.T(" 项"), false);
             }
             catch (Exception ex) { SetStatus(L.T("写入失败：") + ex.Message, true); }
+        }
+
+        /// <summary>「输出日志」：把运行环境与状态写进软件目录下的 yy-MM-dd-ss.log，方便在别的机器上排查兼容性。</summary>
+        void WriteDiagnosticsLog()
+        {
+            try
+            {
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("=== Yiti " + WpfProgram.Version + " ===");
+                sb.AppendLine("time      : " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                try { var os = Environment.OSVersion; sb.AppendLine("os        : " + os.VersionString + "  build=" + os.Version.Build); } catch { }
+                sb.AppendLine("dotnet    : " + Environment.Version);
+                sb.AppendLine("exe       : " + AppDomain.CurrentDomain.BaseDirectory);
+                sb.AppendLine("data      : " + Installer.DataDir);
+                sb.AppendLine("admin     : " + Installer.IsAdmin);
+                sb.AppendLine("backdrop  : " + Installer.SupportsBackdrop() + " (Mica needs Win11 22000+)");
+                sb.AppendLine("userfonts : " + Installer.SupportsUserFonts() + " (Win10 17763+)");
+                sb.AppendLine("cache svc : " + Installer.FontCacheServiceName());
+                sb.AppendLine("lang      : " + (L.En ? "en" : "zh"));
+                sb.AppendLine();
+                sb.AppendLine("[targets]");
+                foreach (var f in Installer.TargetFiles)
+                {
+                    var p = System.IO.Path.Combine(Installer.FontsDir, f);
+                    var exists = System.IO.File.Exists(p);
+                    sb.AppendLine("  " + f.PadRight(13) + (exists ? "exists  " + new System.IO.FileInfo(p).Length.ToString().PadLeft(10) + " B  " + (Installer.DetectSourceFamily(f) ?? "-") : "MISSING"));
+                }
+                sb.AppendLine();
+                sb.AppendLine("[shell elements]");
+                for (int i = 0; i < Win32Fonts.Names.Length; i++)
+                {
+                    var info = Win32Fonts.Read(Win32Fonts.Keys[i]);
+                    sb.AppendLine("  " + Win32Fonts.Names[i].PadRight(6) + (info == null ? "(none)" : info.Face + "  " + info.HeightPx + " px"));
+                }
+                sb.AppendLine();
+                sb.AppendLine("[backup]");
+                sb.AppendLine("  win32fonts.bak : " + Win32Fonts.HasBackup);
+                var latest = Installer.LatestBackup();
+                sb.AppendLine("  latest font dir: " + (latest ?? "(none)"));
+
+                var name = DateTime.Now.ToString("yy-MM-dd-ss") + ".log";
+                WpfProgram.Log("logdiag -> " + name);
+                var outPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, name);
+                System.IO.File.WriteAllText(outPath, sb.ToString(), System.Text.Encoding.UTF8);
+                SetStatus(L.T("已输出日志：") + outPath, false);
+            }
+            catch (Exception ex) { WpfProgram.Log("logdiag: " + ex); SetStatus(L.T("输出日志失败：") + ex.Message, true); }
         }
 
         void RestoreWin32()
