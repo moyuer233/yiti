@@ -82,6 +82,18 @@ This tool rewrites **system font files**: after applying, you must reboot, and u
 
 On older systems the font cache service is called `FontCache3.0.0.0`; from Windows 10 it is `FontCache`. The app picks the right one by itself.
 
+### How far it has actually been tested
+
+| System | Status | What was verified |
+| --- | --- | --- |
+| Windows 11 26200 | ✅ **Tested** | Replacing all five font files, automatic weight matching, shell elements (menu / message box / status bar / small caption / icon) applying immediately, Restore and Default preset, Chinese/English UI, backup and rollback |
+| Windows 10 1809+ | ⚠️ **Should work, not tested** | Version detection is implemented (per-user fonts, `FontCache` service name, flat grey background when Mica is unavailable), but it has not been run on a real machine |
+| Windows 7 / 8.1 | ⚠️ **Should work, not tested** | Missing fonts are greyed out with a reason; the `FontCache3.0.0.0` and no-Mica branches exist, but they have not been run on a real machine |
+
+**Feedback wanted.** If you try it on Windows 7 / 8.1 / 10, please report the result either way in [Issues](https://github.com/moyuer233/yiti/issues) and I will turn the table above into verified facts.
+
+The most useful thing you can attach is the log: open **Advanced → Write a log** and it creates `yy-mm-dd-ss.log` next to the exe (OS build, elevation, whether the five target files exist, current shell fonts, backup status). That log alone is enough.
+
 ## Files replaced
 
 | File | Font name | Scope |
