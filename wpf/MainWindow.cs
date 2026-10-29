@@ -1007,20 +1007,9 @@ namespace WinFontSwap.Wpf
             stack.Children.Add(T.Row("\uE777", L.T("只还原用户级注册"), L.T("导入最近一次的注册表备份"), rb, out advDesc3));
 
             TextBlock advDescLog;
-            var logBar = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-            var logBtn = T.Btn2(L.T("生成"), false, 13);
-            logBtn.IsEnabled = _advLogOn;              // 默认关闭
-            logBtn.Margin = new Thickness(0, 0, 10, 0);
-            logBtn.Click += delegate { WriteDiagnosticsLog(); };
-            logBar.Children.Add(logBtn);
             var logSw = T.Switch(_advLogOn);
-            logSw.Click += delegate
-            {
-                _advLogOn = logSw.IsChecked == true;
-                logBtn.IsEnabled = _advLogOn;
-            };
-            logBar.Children.Add(logSw);
-            stack.Children.Add(T.Row("\uE8A5", L.T("输出日志"), L.T("在软件目录下生成 yy-mm-dd-ss.log"), logBar, out advDescLog));
+            logSw.Click += delegate { _advLogOn = logSw.IsChecked == true; };
+            stack.Children.Add(T.Row("\uE8A5", L.T("输出日志"), L.T("开启后每次操作在软件目录生成 yy-mm-dd-ss.log"), logSw, out advDescLog));
 
             var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = stack, Padding = new Thickness(0, 0, 6, 12) };
             _pageScroll = scroll;
@@ -1328,12 +1317,19 @@ namespace WinFontSwap.Wpf
         }
 
         /// <summary>「输出日志」：把运行环境与状态写进软件目录下的 yy-MM-dd-ss.log，方便在别的机器上排查兼容性。</summary>
-        void WriteDiagnosticsLog()
+        /// <summary>开关打开时，每次执行操作后写一份日志。</summary>
+        void MaybeLog(string action)
+        {
+            if (!_advLogOn) return;
+            WriteDiagnosticsLog(action);
+        }
+
+        void WriteDiagnosticsLog(string action = "manual")
         {
             try
             {
                 var sb = new System.Text.StringBuilder();
-                sb.AppendLine("=== Yiti " + WpfProgram.Version + " ===");
+                sb.AppendLine("=== Yiti " + WpfProgram.Version + "  [" + action + "] ===");
                 sb.AppendLine("time      : " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                 try { var os = Environment.OSVersion; sb.AppendLine("os        : " + os.VersionString + "  build=" + os.Version.Build); } catch { }
                 sb.AppendLine("dotnet    : " + Environment.Version);
@@ -1368,6 +1364,7 @@ namespace WinFontSwap.Wpf
                 var name = DateTime.Now.ToString("yy-MM-dd-ss") + ".log";
                 WpfProgram.Log("logdiag -> " + name);
                 var outPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, name);
+                if (System.IO.File.Exists(outPath)) outPath = outPath.Replace(".log", "-" + DateTime.Now.Millisecond + ".log");
                 System.IO.File.WriteAllText(outPath, sb.ToString(), System.Text.Encoding.UTF8);
                 SetStatus(L.T("已输出日志：") + outPath, false);
             }
@@ -1376,7 +1373,7 @@ namespace WinFontSwap.Wpf
 
         void RestoreWin32()
         {
-            try { Win32Fonts.Restore(); SetStatus(L.T("系统元素已还原"), false); }
+            try { Win32Fonts.Restore(); SetStatus(L.T("系统元素已还原"), false); MaybeLog("restore-shell"); }
             catch (Exception ex) { SetStatus(L.T("还原失败：") + ex.Message, true); }
         }
 
@@ -1448,6 +1445,7 @@ namespace WinFontSwap.Wpf
                 // 已打开的窗口不会自己换字体，重启资源管理器让外壳重新读一遍（电脑不用重启）
                 if (!Confirm(L.T("是否确定重启资源管理器？"), L.T("应用"))) return;
                 ApplyWin32();          // 写注册表 + SystemParametersInfo 立即生效
+                MaybeLog("apply-shell");
                 RestartExplorer();     // 让已打开的窗口/菜单重新读字体
                 return;
             }
@@ -1462,6 +1460,7 @@ namespace WinFontSwap.Wpf
                 var res = Installer.Apply(list, delegate (string m) { }, generateOnly, cache, userFonts);
                 if (!generateOnly) { try { FollowCurrentFont(); } catch { } }
                 SetStatus(generateOnly ? (L.T("已生成到 ") + res.OutputDir) : L.T("已写入，正在重启…"), false);
+                MaybeLog(generateOnly ? "generate" : "apply-fonts");
                 RefreshTargets();
                 if (!generateOnly) RebootSoon();
             }
@@ -1632,6 +1631,7 @@ namespace WinFontSwap.Wpf
                 try { Win32Fonts.Restore(); } catch { }
                 string log2 = Installer.RestoreUserFonts();
                 SetStatus(L.T("已全部回滚：") + log1 + log2 + L.T(" 重启后恢复。"), false);
+                MaybeLog("rollback");
                 RefreshTargets();
             }
             catch (Exception ex) { SetStatus(L.T("回滚失败：") + ex.Message, true); }
