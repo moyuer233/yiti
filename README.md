@@ -165,7 +165,7 @@ Windows **找字体不看文件名，看字体内部的 `name` 表**（OpenType 
 
 #### 界面元素替换
 
-`HKCU\Control Panel\Desktop\WindowMetrics` 里 5 个值（`SmCaptionFont`、`MenuFont`、`MessageFont`、`StatusFont`、`IconFont`）是 92 字节的 `LOGFONTW`：偏移 0 是高度（负值＝字符高），偏移 `0x5C` 是 32 个宽字符的字体面名。程序直接改这两段，再回读校验。
+`HKCU\Control Panel\Desktop\WindowMetrics` 里 5 个值（`SmCaptionFont`、`MenuFont`、`MessageFont`、`StatusFont`、`IconFont`）是 92 字节的 `LOGFONTW`：偏移 0 是高度（负值＝字符高），偏移 `0x1C` 是 32 个宽字符的字体面名。程序直接改这两段，再回读校验。
 
 ### 三、回滚
 

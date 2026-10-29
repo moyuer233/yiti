@@ -6,7 +6,7 @@
 
 # Yiti (易体)
 
-_✨ Foolproof one-click Windows system font swapper ✨_
+_✨ The no-brainer system-wide font replacement tool for Windows ✨_
 
 <a href="README.md">中文</a> | <a href="README.en.md">English</a>
 
@@ -22,7 +22,7 @@ _✨ Foolproof one-click Windows system font swapper ✨_
 <p align="center">
   <a href="https://www.microsoft.com/windows"><img alt="platform" src="https://img.shields.io/badge/platform-Windows%207%2F8%2F10%2F11-0078D4?style=flat-square&labelColor=161b22&color=0078D4&logo=windows&logoColor=white"/></a>
   <a href="https://dotnet.microsoft.com"><img alt=".NET" src="https://img.shields.io/badge/.NET-4.8-512BD4?style=flat-square&labelColor=161b22&color=512BD4&logo=dotnet&logoColor=white"/></a>
-  <a href="https://github.com/moyuer233/yiti"><img alt="deps" src="https://img.shields.io/badge/single%20exe-no%20deps-5C2D91?style=flat-square&labelColor=161b22&color=5C2D91"/></a>
+  <a href="https://github.com/moyuer233/yiti"><img alt="deps" src="https://img.shields.io/badge/single%20exe-no%20dependencies-5C2D91?style=flat-square&labelColor=161b22&color=5C2D91"/></a>
 </p>
 
 <details>
@@ -38,51 +38,51 @@ _✨ Foolproof one-click Windows system font swapper ✨_
 
 ## Features
 
-- **System font**: the font inside Settings, the Start menu, the taskbar, title bars and other apps
-- **Shell element fonts**: small caption, menu, message box, status bar, icon
-- **Automatic weight matching**: pick one font and weights are matched at 400 / 700 / 300 — e.g. Microsoft YaHei Regular / Bold / Light all switch at once; any font can be chosen manually
-- **Automatic backup and rollback**: "Roll back all" restores everything in one click; the defaults are taken from `C:\Windows\WinSxS` first, so they still work when no backup exists
-- **Automatic OS detection**: fonts missing on the system (Windows 7 has no Light and no Segoe UI Variable) are disabled automatically
+- **System font replacement**: fonts inside Settings, the Start menu, the taskbar, title bars and other apps
+- **Shell element font replacement**: small caption, menu, message box, status bar, icon
+- **Automatic weight matching**: pick one font and the weights are matched at 400 / 700 / 300, for example Microsoft YaHei Regular / Bold / Light are replaced together; picking a font per slot is supported too
+- **Automatic backup and rollback**: Restore rolls everything back in one click; the Default preset reads from `C:\Windows\WinSxS` first, so it still works when the backup is gone
+- **Adapts to the OS version**: fonts the system does not have (Windows 7 has no Light weight and no Segoe UI Variable) are disabled automatically
 
 ## How it differs from noMeiryoUI
 
-[noMeiryoUI](https://github.com/Tatsu-syo/noMeiryoUI) changes the *UI font setting* (registry `HKCU\Control Panel`), so it cannot handle: the taskbar, preinstalled apps (Settings, Paint), applications that ignore the system font, and the title bar font on Windows 11.
+[noMeiryoUI](https://github.com/Tatsu-syo/noMeiryoUI) changes the "UI font setting" (the registry key `HKCU\Control Panel`), so it cannot touch the taskbar, preinstalled apps (Settings, Paint), programs that ignore the system font, or the Windows 11 title bar font.
 
-Yiti replaces the **system font files themselves**, so all of those change too. Two differences that matter:
+Yiti replaces **the system font files themselves**, so all of those change. Two core differences:
 
 | | Yiti | noMeiryoUI |
 |---|---|---|
-| Mechanism | Replaces the system font files (the YaHei trio + Segoe UI) | Changes the UI font setting |
-| Settings, Start menu, taskbar, title bar | ✅ all follow | ❌ unsupported |
-| Rollback | Automatic backup + one-click rollback, plus the component store when the backup is gone | Export the registry yourself |
+| How it works | Replaces the system font files (the three YaHei files + Segoe UI) | Changes the UI font setting |
+| Settings, Start menu, taskbar, title bars | ✅ all change | ❌ not supported |
+| Rollback | Automatic backup + one-click rollback; even without a backup the originals can be taken from the component store | You have to export the registry yourself |
 
-Text rendering sharpness (ClearType), apps that ship their own fonts (Office, Electron apps), and the one reboot required after the first apply.
+What stays the same: font rendering clarity (ClearType), apps that ship their own fonts (Office, Electron apps), and the fact that the first apply needs a reboot.
 
 ## Risks
 
-This tool rewrites **system font files**: after applying, you must reboot, and undoing before that reboot is not practical. Known risks:
+This tool modifies **system font files**: a change that needs a reboot and is awkward to undo before that reboot. Known risks:
 
-- **A font with incomplete coverage can leave missing glyphs.** If the font lacks CJK glyphs or the needed weights, menus and title bars may show boxes or blurry text after the reboot; some legacy apps may render badly.
-- **Office / WPS layout and export can change.** A document asking for "Microsoft YaHei" now gets your font, so exported images, printing and PDF conversion differ from before.
-- **A reboot is mandatory.** Font files are swapped at boot; a forced shutdown in between can leave the swap unfinished, needing one more reboot.
-- **Antivirus may block or flag it.** It writes to `C:\Windows\Fonts`, which some security software blocks or reports; a block is reported as an error, never silently ignored.
-- **Windows updates may overwrite it.** Feature updates reset the system fonts, so you have to apply again afterwards.
-- **Rollback depends on the backup or the component store.** Both are created automatically, but if they were cleaned, only a restore point or installation media helps — **create a restore point before the first run**.
+- **A wrong font can leave the UI with missing glyphs**: if the font lacks Chinese characters or a weight, menus and title bars show boxes or blurry text after the reboot; in bad cases some legacy programs render incorrectly.
+- **Office / WPS layout and export change**: "Microsoft YaHei" in your documents is now your font, so exported images, printing and PDF conversion will differ from before.
+- **Apps must be restarted**: the files are only swapped at boot; forcing a power-off in between can leave the swap incomplete and needs another reboot.
+- **Antivirus may block or flag it**: it has to write into `C:\Windows\Fonts`, and some security software blocks or even flags that. When it is blocked the app reports an error; it does not fail silently.
+- **System updates can overwrite it**: a Windows feature update resets the system fonts; apply again afterwards.
+- **Rollback depends on the backup or the component store**: both are handled automatically, but if both have been cleaned you are left with a restore point or the installation media — **create a restore point yourself before the first run**.
 
 ## Font support by Windows version
 
-| | Windows 7 | Windows 10 1809+ | Windows 11 22000+ |
+| | Win7 | Win10 1809+ | Win11 22000+ |
 |---|---|---|---|
 | YaHei Regular / Bold | ✅ | ✅ | ✅ |
-| YaHei Light (`msyhl.ttc`) | ❌ not present | ✅ | ✅ |
-| Segoe UI Variable (`SegUIVar.ttf`) | ❌ not present | ✅ | ✅ |
-| Cleanup of per-user same-name fonts | ❌ no such mechanism | ✅ | ✅ |
-| Taskbar / new Settings UI | partial (via `segoeui.ttf`) | ✅ | ✅ |
-| Variable font (.ttf VF) as source | ❌ default instance only | ✅ | ✅ |
+| YaHei Light (`msyhl.ttc`) | ❌ not shipped | ✅ | ✅ |
+| Segoe UI Variable (`SegUIVar.ttf`) | ❌ not shipped | ✅ | ✅ |
+| Removing per-user same-name fonts | ❌ no such mechanism | ✅ | ✅ |
+| Taskbar / Settings and other new UI | partial (via `segoeui.ttf`) | ✅ | ✅ |
+| Variable font (.ttf VF) as the source | ❌ only the default weight is drawn | ✅ | ✅ |
 
-On older systems the font cache service is called `FontCache3.0.0.0`; from Windows 10 it is `FontCache`. The app picks the right one by itself.
+On older systems the font cache service is called `FontCache3.0.0.0`; from Windows 10 it is `FontCache`.
 
-### How far it has actually been tested
+### Test progress
 
 | System | Status | What was verified |
 | --- | --- | --- |
@@ -90,107 +90,107 @@ On older systems the font cache service is called `FontCache3.0.0.0`; from Windo
 | Windows 10 1809+ | ⚠️ **Should work, not tested** | Version detection is implemented (per-user fonts, `FontCache` service name, flat grey background when Mica is unavailable), but it has not been run on a real machine |
 | Windows 7 / 8.1 | ⚠️ **Should work, not tested** | Missing fonts are greyed out with a reason; the `FontCache3.0.0.0` and no-Mica branches exist, but they have not been run on a real machine |
 
-**Feedback wanted.** If you try it on Windows 7 / 8.1 / 10, please report the result either way in [Issues](https://github.com/moyuer233/yiti/issues) and I will turn the table above into verified facts.
+**Feedback wanted.** If you try it on Windows 7 / 8.1 / 10, please report the result either way in [Issues](https://github.com/moyuer233/yiti/issues); I will improve the app based on that feedback.
 
-The most useful thing you can attach is the log: open **Advanced → Write a log** and it creates `yy-mm-dd-ss.log` next to the exe (OS build, elevation, whether the five target files exist, current shell fonts, backup status). That log alone is enough.
+To send feedback, open **Advanced → Write a log**; it creates `yy-mm-dd-ss.log` next to the exe. Attaching that log is enough.
 
 ## Files replaced
 
-| File | Font name | Scope |
+| File | Font name | What it affects |
 |---|---|---|
-| `msyh.ttc` | Microsoft YaHei Regular | Chinese body text, Settings, Start menu, Explorer |
-| `msyhbd.ttc` | Microsoft YaHei Bold | every bold Chinese label |
+| `msyh.ttc` | Microsoft YaHei Regular | Chinese body text, Settings, Start menu, File Explorer |
+| `msyhbd.ttc` | Microsoft YaHei Bold | everything bold in Chinese |
 | `msyhl.ttc` | Microsoft YaHei Light | light weight (Windows 8 and newer) |
-| `SegUIVar.ttf` | Segoe UI Variable | taskbar, Settings header, Latin text in the new Windows 11 UI |
-| `segoeui.ttf` | Segoe UI | classic English UI, legacy apps |
+| `SegUIVar.ttf` | Segoe UI Variable | taskbar, top of Settings, Latin text and digits in the Windows 11 UI |
+| `segoeui.ttf` | Segoe UI | classic English UI, legacy programs |
 
-System font replacement flow: read the font you picked → rewrite only its internal names to `Microsoft YaHei` / `Segoe UI` and the like → generate files with those names → replace the ones in the system → reboot. That is the only way Windows recognises them.
+System font replacement flow: read the font you picked → rewrite only its internal names to `Microsoft YaHei` / `Segoe UI` and the like → build files with those names → replace the ones in the system → reboot. That is the only way Windows will recognise them.
 
-Shell element font flow: write `HKCU\Control Panel\Desktop\WindowMetrics` to control the font and size of legacy UI elements.
+Shell element replacement flow: write the registry key `HKCU\Control Panel\Desktop\WindowMetrics` to control the font and size of the legacy UI.
 
-**What cannot be changed**: apps that ship their own fonts (Office, Electron apps, games), web pages that specify a font, and text rendering parameters (ClearType and friends).
+**What cannot be changed**: programs that ship their own fonts (Office, Electron apps, games), text that specifies a font inside a web page, and font rendering parameters (ClearType and friends).
 
 ### Why the internal names have to change
 
-Windows **does not pick fonts by file name — it reads the `name` table inside the font**. A font carries more than 20 name records, each with an ID:
+Windows **does not look at the file name when looking for a font; it looks at the font's internal `name` table** (the naming table in the OpenType spec). A font has more than twenty name fields, each with a number:
 
-| ID | Meaning | What the system does with it |
+| ID | Meaning | What the system uses it for |
 |---|---|---|
-| 1 | Family | the "Microsoft YaHei" string itself; GDI LOGFONT and WinUI theme resources point at it |
+| 1 | Family | the words "Microsoft YaHei". The GDI LOGFONT and the font names hardcoded in WinUI themes all refer to it |
 | 2 | Subfamily | Regular / Bold / Light |
 | 4 | Full name | "Microsoft YaHei Bold" |
-| 6 | PostScript name | Adobe apps identify fonts by it |
-| 16 / 17 | Typographic family / subfamily | modern DirectWrite prefers these |
-| 3 / 18 / 21 / 22 | Unique ID / WWS names | font cache and font menus |
+| 6 | PostScript name | Adobe-family software identifies the font by it |
+| 16 / 17 | Typographic family / subfamily | modern DirectWrite prefers these two |
+| 3 / 18 / 21 / 22 | Unique ID / WWS name | font cache and font pickers |
 
-Yiti rewrites exactly those ten fields (each record exists once per platform encoding), and **leaves `glyf` outlines, `hmtx` metrics, `cmap` mappings and `GSUB/GPOS` shaping untouched**. After the swap:
+Yiti rewrites only those 10 fields (each record exists twice, once per platform encoding: Windows and Mac) and **does not touch a single byte of the `glyf` outlines, `hmtx` metrics, `cmap` character map or the `GSUB/GPOS` layout tables**. So after the swap:
 
-- the UI still says "Microsoft YaHei", but **every stroke comes from your font**;
-- the system resolves fonts by name, finds this renamed file, so Settings, the Start menu and the taskbar follow;
-- copyright / version / trademark / designer (IDs 0, 5, 7, 9) are **deliberately left intact**: original authorship stays visible, and the app can still tell which font is actually installed.
+- the name shown in the UI is still "Microsoft YaHei", but **every stroke comes from the font you picked**;
+- the system looks fonts up by name, finds this renamed file, and Settings, the Start menu and the taskbar follow;
+- copyright / version / trademark / designer (0, 5, 7, 9) are **deliberately left alone**: they keep the original author information, and they are exactly what lets the app work out which font is currently installed.
 
 ## How it works in detail
 
-The whole process has three stages: build → replace → reboot.
+Three stages: build → replace → reboot to apply.
 
 ### 1. Build: turn your font into a look-alike
 
-1. Read the source font (for a TTC, one face by index), parse the table directory, keep only TrueType outlines (`glyf`); CFF/OTF sources are rejected.
-2. Rebuild the `name` table: IDs 1 (family), 2 (subfamily), 3/4 (full name), 6 (PostScript), 16/17 (typographic family/subfamily), 18/21/22 (WWS) become Microsoft's names; every other record (copyright 0, version 5, trademark 7, designer 9, …) is copied unchanged.
-3. Package per target:
+1. Read the source font (for a TTC, take one face by index), parse the table directory and keep TrueType outlines only (`glyf`); CFF/OTF is rejected outright.
+2. Rebuild the `name` table: replace 1 (family), 2 (subfamily), 3/4 (full name), 6 (PostScript), 16/17 (typographic family/subfamily) and 18/21/22 (WWS) with Microsoft's names, and leave every other record (copyright 0, version 5, trademark 7, designer 9, …) untouched.
+3. Pack per target:
 
-| Target file | Family names written (number of faces) |
+| Target file | Family names written in (number of faces) |
 |---|---|
-| `msyh.ttc` | `Microsoft YaHei` + `Microsoft YaHei UI`, both Regular (2-face TTC) |
-| `msyhbd.ttc` | same two families, Subfamily = **Bold**, PostScript names end with `-Bold` |
-| `msyhl.ttc` | `Microsoft YaHei Light` + `Microsoft YaHei UI Light` (typographic family stays YaHei, typographic style Light) |
-| `SegUIVar.ttf` | `Segoe UI Variable` / `… Text` / `… Display` / `… Small` in one file, **weight axis kept** (variable font) |
+| `msyh.ttc` | `Microsoft YaHei` + `Microsoft YaHei UI`, both Regular (a TTC with 2 faces) |
+| `msyhbd.ttc` | same two families, Subfamily = **Bold**, PostScript name carrying `-Bold` |
+| `msyhl.ttc` | `Microsoft YaHei Light` + `Microsoft YaHei UI Light` (typographic family stays YaHei, typographic subfamily Light) |
+| `SegUIVar.ttf` | `Segoe UI Variable` / `… Text` / `… Display` / `… Small` in one file, **keeping the weight axis** (variable font) |
 | `segoeui.ttf` | `Segoe UI` (single face) |
 
-4. Recompute table checksums and the `head` checkSumAdjustment, then lay out the TTC directory (face offsets rebased to file positions).
-5. Two self-checks: (a) structural validation of the table directory, name records and face count; (b) **actually loading it** through GDI+ `PrivateFontCollection.AddFontFile` — if Windows cannot load it, the app aborts instead of writing it into the system.
+4. Recompute the table checksums and the `head` checkSumAdjustment, then rebuild the TTC directory (face offsets are recalculated per file).
+5. Two self-checks: ① structural validation (`Verify`: table directory, name records, face count); ② **actually loading it once** (GDI+ `PrivateFontCollection.AddFontFile`). If the system cannot load it, the app reports an error and writes nothing into the system.
 
-Why multiple faces: WinUI components ask for `Microsoft YaHei UI`, classic GDI asks for `Microsoft YaHei`, and the taskbar asks for `Segoe UI Variable Text/Display/Small` — those families do not fit into a single-face file, so it has to be a multi-face TTC.
+Why multiple faces: WinUI components ask for `Microsoft YaHei UI`, classic GDI asks for `Microsoft YaHei`, and the taskbar asks for `Segoe UI Variable Text/Display/Small`. One file name cannot hold all of those families, so it has to be a multi-face TTC.
 
 ### 2. Replacing the system fonts: backup → permissions → queued renames
 
-1. Copy the originals to `C:\ProgramData\WinFontSwap\backup\<stamp>\orig\` and record their SHA-256 in `state.ini`.
-2. Take ownership, grant SYSTEM full control, and **inherit the original font's DACL** (keeping the `ALL APPLICATION PACKAGES` read ACE that UWP needs); without it, packaged apps cannot read the font.
-3. Write the new files into a staging directory, then queue two renames per file in `PendingFileRenameOperations`:
-   - `staged file → C:\Windows\Fonts\msyh.ttc`
-   - `C:\Windows\Fonts\msyh.ttc → backup path`
-   The font files are mapped by the font service, so **only the session manager can swap them at boot**.
-4. Clear the font cache: stop `FontCache` (`FontCache3.0.0.0` on Windows 7), delete `FNTCACHE.DAT` and the per-user `FontCache` directory, otherwise the old glyphs survive the reboot.
-5. Record the `applied` list and each new SHA for status display and rollback decisions.
+1. Back up the original files to `C:\ProgramData\WinFontSwap\backup\<timestamp>\orig\` and record their SHA-256 in `state.ini`.
+2. Take ownership of the files, give SYSTEM full control, and **inherit the original font's DACL** (keeping the `ALL APPLICATION PACKAGES` read permission that UWP needs); otherwise packaged apps cannot read the font after the change.
+3. Stage the new files in a temporary directory, then queue two pairs of operations in the registry value `PendingFileRenameOperations`:
+   - staged new file → `C:\Windows\Fonts\msyh.ttc`
+   - `C:\Windows\Fonts\msyh.ttc` → backup path
+   The font files are held open by the system (mapped into the font service), so **only the session manager can swap them at boot**.
+4. Clear the font cache: stop `FontCache` (called `FontCache3.0.0.0` on Windows 7), delete `FNTCACHE.DAT` and the per-user `FontCache` directory; otherwise the old outlines are still used after the reboot.
+5. Record the `applied` list and each file's new SHA-256 for the status display and the rollback decision.
 
 #### Shell element replacement
 
-The five values under `HKCU\Control Panel\Desktop\WindowMetrics` (`SmCaptionFont`, `MenuFont`, `MessageFont`, `StatusFont`, `IconFont`) are 92-byte `LOGFONTW` blobs: offset 0 holds the height (negative = character height) and offset `0x5C` holds a 32-wide-character face name. The app rewrites those two fields and reads them back to verify.
+The five values under `HKCU\Control Panel\Desktop\WindowMetrics` (`SmCaptionFont`, `MenuFont`, `MessageFont`, `StatusFont`, `IconFont`) are 92-byte `LOGFONTW` structures: offset 0 is the height (a negative value means character height) and the 32-wide-character face name starts at offset `0x1C`. The app rewrites those two fields and reads them back to verify.
 
 ### 3. Rollback
 
-Compare the SHA in `state.ini` with the current files; if they are ours, queue the originals from the backup through the same boot-time rename list and restore `WindowMetrics` from the backup. If the backup is gone, take the originals from `C:\Windows\WinSxS` by package name (`microsoftyahei` and friends).
+It compares the SHA values in `state.ini` to decide whether the current files are the ones we wrote; if so it queues the originals from the backup through the same boot-time rename mechanism and restores the backup values of `WindowMetrics`. If the originals are gone, it takes them from the component store `C:\Windows\WinSxS` by package name (`microsoftyahei` and so on).
 
 ## Why renaming a font file does not work
 
-This is the reason the tool exists. The three naive approaches all fail:
+This is the reason the tool exists. The three common "simple replacements" all fail:
 
-| Approach | What happens |
+| Attempt | Result |
 |---|---|
-| Install a new font (different family name) | System components never use it: the WinUI theme hardcodes `Microsoft YaHei UI` and GDI's LOGFONT hardcodes `Microsoft YaHei`; nothing looks up your family name |
-| Rename the new font file to `msyh.ttc` and overwrite | The file name matches, but **the internal family name is still the original one** (e.g. HarmonyOS Sans), so Windows registers it under that name ⇒ `Microsoft YaHei` cannot be resolved and the UI falls back or shows missing glyphs; a wrong face count/order inside a TTC also breaks bold and light |
-| Replace only `msyh.ttc` | Bold `msyhbd.ttc` and light `msyhl.ttc` stay YaHei, so the UI is only half swapped; the Windows 11 taskbar and Settings header use `SegUIVar.ttf`, which stays untouched; legacy menus and message boxes live in the registry and do not change either |
+| Install a new font (different family name) | System components never use it: the WinUI theme hardcodes `Microsoft YaHei UI`, the GDI LOGFONT hardcodes `Microsoft YaHei`, and nothing looks fonts up by your family name |
+| Rename the new font file to `msyh.ttc` and overwrite | The file name matches, but **the family name inside the font is still the original one** (HarmonyOS Sans, say); Windows registers it under that internal name ⇒ `Microsoft YaHei` is not found, so the UI falls back or shows missing glyphs. If the face count or order in the TTC is wrong, Bold and Light end up on the wrong slots too |
+| Replace only `msyh.ttc` | `msyhbd.ttc` (Bold) and `msyhl.ttc` (Light) are still YaHei, so the UI is "half replaced"; the Windows 11 taskbar and the top of Settings use `SegUIVar.ttf`, which stays unchanged without it; the legacy menu / message box fonts live in the registry and also stay YaHei |
 
-Four things are required, and skipping any of them leaves you with "Settings changed but the taskbar did not":
+So four things are required, and missing any one of them gives you that half-done state where "Settings changed but the taskbar did not":
 
-1. **Rewrite the internal names** (`name` table) so the system believes this is Microsoft YaHei;
-2. **Replace all five files** — the three YaHei files plus the two Segoe UI files;
-3. **Write the registry** `HKCU\Control Panel\Desktop\WindowMetrics` for legacy shell elements (menu, message box, status bar, icon);
-4. **Clear the font cache and swap at boot** — the files are locked while Windows runs, and a stale cache keeps serving the old glyphs.
+1. **Change the names inside the font** (`name` table): make the system believe it is looking at Microsoft YaHei;
+2. **Replace all five files**: the three YaHei files plus the two Segoe UI ones;
+3. **Write the registry** `HKCU\Control Panel\Desktop\WindowMetrics`: legacy UI elements (menu, message box, status bar, icon);
+4. **Clear the font cache and swap at boot**: the font files are held open and cannot be hot-swapped; a stale cache keeps serving the old outlines.
 
 ## Build from source
 
-Requires the .NET Framework compiler:
+Requires the `.NET Framework` compiler:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build-wpf.ps1
@@ -200,8 +200,8 @@ The output is always `dist\YiTi.exe`.
 
 ## Disclaimer
 
-The risks of modification are stated above. The author is not liable for system damage, data loss or any other loss caused by using this software.
+The risks of modifying the system are stated above. The author takes no responsibility for system failures, data loss or other damage caused by using this software.
 
 ## License
 
-[MIT](LICENSE) — free to use, modify and redistribute, **as long as the author attribution and this license notice are kept**.
+[MIT](LICENSE) — free to use, modify and distribute, **but the author attribution and the license notice must be kept**.
