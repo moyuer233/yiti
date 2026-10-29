@@ -337,6 +337,11 @@ namespace WinFontSwap.Wpf
             if (appIcon != null) Icon = appIcon;
             Width = 1080;
             Height = 720;
+            MinWidth = 1080;
+            MinHeight = 720;
+            MaxWidth = 1080;
+            MaxHeight = 720;
+            ResizeMode = ResizeMode.NoResize;   // 固定大小：不能拖动改变，也没有最大化
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
             WindowStyle = WindowStyle.None;   // Mica 的前提：不能有 WS_CAPTION
             Background = Brushes.Transparent;
@@ -344,7 +349,7 @@ namespace WinFontSwap.Wpf
             WindowChrome.SetWindowChrome(this, new WindowChrome
             {
                 CaptionHeight = 32,
-                ResizeBorderThickness = new Thickness(6),
+                ResizeBorderThickness = new Thickness(0),
                 GlassFrameThickness = new Thickness(0),
                 CornerRadius = new CornerRadius(0),
                 UseAeroCaptionButtons = true
@@ -625,7 +630,6 @@ namespace WinFontSwap.Wpf
             // 自绘窗口按钮（WindowStyle=None 后系统不再画）
             var sys = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 6, 10, 0) };
             sys.Children.Add(WinBtn("–", delegate { WindowState = WindowState.Minimized; }));
-            sys.Children.Add(WinBtn("□", delegate { WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized; }));
             sys.Children.Add(WinBtn("×", delegate { Close(); }));
             Grid.SetColumn(sys, 1);
             root.Children.Add(sys);
