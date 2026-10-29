@@ -148,3 +148,10 @@ about.r4=Create a restore point before the first run
 在软件目录下生成 yy-mm-dd-ss.log=Writes yy-mm-dd-ss.log next to the exe after each action
 已输出日志：=Log written: 
 输出日志失败：=Failed to write the log: 
+
+# 补充：由代码扫描补上的词条
+已按字重匹配：常规 =Matched by weight: regular 
+，粗体 =, bold 
+，细体 =, light 
+系统元素已生效：=Shell elements applied: 
+开启后每次操作在软件目录生成 yy-mm-dd-ss.log=Writes yy-mm-dd-ss.log next to the exe after each action
