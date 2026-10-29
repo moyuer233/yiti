@@ -92,7 +92,7 @@ On older systems the font cache service is called `FontCache3.0.0.0`; from Windo
 
 **Feedback wanted.** If you try it on Windows 7 / 8.1 / 10, please report the result either way in [Issues](https://github.com/moyuer233/yiti/issues); I will improve the app based on that feedback.
 
-To send feedback, open **Advanced → Write a log**; it creates `yy-mm-dd-ss.log` next to the exe. Attaching that log is enough.
+To send feedback, turn on **Advanced → Write a log** and then run one action (for example *Generate system font files*); a `yy-mm-dd-ss.log` appears next to the exe. Attaching that log is enough.
 
 ## Files replaced
 
