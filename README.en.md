@@ -25,7 +25,16 @@ _✨ Foolproof one-click Windows system font swapper ✨_
   <a href="https://github.com/moyuer233/yiti"><img alt="deps" src="https://img.shields.io/badge/single%20exe-no%20deps-5C2D91?style=flat-square&labelColor=161b22&color=5C2D91"/></a>
 </p>
 
+<details>
+<summary>Screenshots (click to expand)</summary>
+
 ![Font replacement](docs/font_en.png)
+
+![Advanced](docs/adv_en.png)
+
+![About](docs/about_en.png)
+
+</details>
 
 ## Features
 

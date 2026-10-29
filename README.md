@@ -25,7 +25,16 @@ _✨ 傻瓜式Windows全局字体替换工具 ✨_
   <a href="https://github.com/moyuer233/yiti"><img alt="deps" src="https://img.shields.io/badge/%E5%8D%95%E6%96%87%E4%BB%B6-%E6%97%A0%E4%BE%9D%E8%B5%96-5C2D91?style=flat-square&labelColor=161b22&color=5C2D91"/></a>
 </p>
 
+<details>
+<summary>界面预览（点击展开）</summary>
+
 ![字体替换](docs/font.png)
+
+![高级](docs/adv.png)
+
+![关于](docs/about.png)
+
+</details>
 
 ## 主要功能
 
