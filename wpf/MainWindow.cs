@@ -506,6 +506,19 @@ namespace WinFontSwap.Wpf
 
         bool _micaOk;
 
+        /// <summary>Win11 原生圆角（DWMWA_WINDOW_CORNER_PREFERENCE = 33，DWMWCP_ROUND = 2）。</summary>
+        void RoundCorners()
+        {
+            try
+            {
+                var h = new WindowInteropHelper(this).Handle;
+                if (h == IntPtr.Zero) return;
+                int pref = 2;   // DWMWCP_ROUND
+                DwmSetWindowAttribute(h, 33, ref pref, sizeof(int));
+            }
+            catch { }
+        }
+
         void DarkTitle()
         {
             // Win7/10 没有 DWMWA_SYSTEMBACKDROP_TYPE，别硬套；直接用纯灰底
@@ -522,9 +535,11 @@ namespace WinFontSwap.Wpf
                     DwmSetWindowAttribute(h0, 20, ref dark, sizeof(int));
                 }
                 catch { }
+                RoundCorners();
                 return;
             }
             DarkTitleForWin11();
+            RoundCorners();
         }
 
         void DarkTitleForWin11()

@@ -23,6 +23,11 @@ namespace WinFontSwap.Wpf
             Title = L.T("选择字体");
             Width = 560;
             Height = 640;
+            MinWidth = 560;
+            MinHeight = 640;
+            MaxWidth = 560;
+            MaxHeight = 640;
+            ResizeMode = ResizeMode.NoResize;   // 固定大小：不能拖、没有最大化
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             Background = T.BDrawer;
             Foreground = T.Text;
