@@ -26,7 +26,7 @@ _✨ Foolproof one-click Windows system font swapper ✨_
 </p>
 
 <details>
-<summary>Screenshots (click to expand)</summary>
+<summary><h3>Screenshots (click to expand)</h3></summary>
 
 ![Font replacement](docs/font_en.png)
 

@@ -26,7 +26,7 @@ _✨ 傻瓜式Windows全局字体替换工具 ✨_
 </p>
 
 <details>
-<summary>界面预览（点击展开）</summary>
+<summary><h3>界面预览（点击展开）</h3></summary>
 
 ![字体替换](docs/font.png)
 
