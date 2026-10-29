@@ -284,6 +284,21 @@ namespace WinFontSwap.Wpf
         FontEntry _picked;   // 用户在字体列表里实际点选的那一款（源字体行显示它，不是按字重匹配后的常规体）
         TextBlock _brandName;
         TextBlock _shellAllDesc;
+        TextBox _shellAllSize;
+
+        /// <summary>把“全部系统元素”那一行里的字号写进 5 个元素（不写系统，等「应用」）。</summary>
+        void ApplyShellSizeToAll(string text)
+        {
+            double pt;
+            if (!double.TryParse(text, out pt) || pt <= 0) return;
+            for (int i = 0; i < Win32Fonts.Names.Length; i++)
+            {
+                if (_winSize[i] != null) _winSize[i].Text = pt.ToString("0");
+                if (_winCur[i] != null && !string.IsNullOrEmpty(_winFace[i]))
+                    _winCur[i].Text = _winFace[i] + "   " + pt.ToString("0") + " pt";
+            }
+            SetStatus(L.T("这 5 项字号已设为 ") + pt.ToString("0") + " pt", false);
+        }
 
 
         /// <summary>从 exe 内嵌资源读应用图标（csc /resource: 的 LogicalName 是 app.ico，用清单资源名更可靠）。</summary>
@@ -821,12 +836,36 @@ namespace WinFontSwap.Wpf
 
             stack.Children.Add(T.SectionHeader(L.T("系统元素"), false));
 
-            // 一键把 5 个元素设成同一款字体（和「源字体」同样的行样式）
+            // 一键把 5 个元素设成同一款字体 / 同一个字号（和「源字体」同样的行样式）
+            var shellBar = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            var shellSizeLabel = T.Label(L.T("字号"), 11, T.TextFaint, false);
+            shellSizeLabel.Margin = new Thickness(0, 0, 6, 0);
+            shellSizeLabel.VerticalAlignment = VerticalAlignment.Center;
+            shellBar.Children.Add(shellSizeLabel);
+            var shellSize = new TextBox
+            {
+                Text = "9",
+                FontSize = 12,
+                Width = 66,
+                Height = 30,
+                Padding = new Thickness(4),
+                Margin = new Thickness(0, 0, 10, 0),
+                VerticalContentAlignment = VerticalAlignment.Center,
+                HorizontalContentAlignment = HorizontalAlignment.Center
+            };
+            shellSize.KeyDown += delegate (object s, KeyEventArgs e)
+            {
+                if (e.Key == Key.Enter) { ApplyShellSizeToAll(shellSize.Text); e.Handled = true; }
+            };
+            shellSize.LostFocus += delegate { ApplyShellSizeToAll(shellSize.Text); };
+            shellBar.Children.Add(shellSize);
             var shellPick = T.Btn2(L.T("选择字体…"), false, 13);
             shellPick.Click += delegate { PickShellFontForAll(); };
+            shellBar.Children.Add(shellPick);
             TextBlock shellDesc;
-            stack.Children.Add(T.Row("\uE8D2", L.T("全部系统元素"), L.T("统一指定这 5 项的字体"), shellPick, out shellDesc));
+            stack.Children.Add(T.Row("\uE8D2", L.T("全部系统元素"), L.T("统一指定这 5 项的字体和字号"), shellBar, out shellDesc));
             _shellAllDesc = shellDesc;
+            _shellAllSize = shellSize;
 
             for (int i = 0; i < Win32Fonts.Names.Length; i++)
             {

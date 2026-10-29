@@ -135,6 +135,8 @@ about.r4=Create a restore point before the first run
 # Set all shell elements at once
 全部系统元素=All shell elements
 统一指定这 5 项的字体=Use one font for all five
+统一指定这 5 项的字体和字号=Set the font and size for all five
+这 5 项字号已设为 =All five are now 
 这 5 项都已设为 =All five are now 
 # How shell element changes take effect
 系统元素已生效（已重启资源管理器）=Shell elements applied (Explorer restarted)
