@@ -62,7 +62,7 @@ namespace WinFontSwap
                 string tag = Encoding.ASCII.GetString(file, rec, 4);
                 uint off = U32(file, rec + 8);
                 uint len = U32(file, rec + 12);
-                if (off + len > file.Length) throw new InvalidDataException("表数据越界：" + tag);
+                if ((long)off + (long)len > file.Length) throw new InvalidDataException("表数据越界：" + tag);
                 var data = new byte[len];
                 Buffer.BlockCopy(file, (int)off, data, 0, (int)len);
                 list.Add(new SfntTable(tag, data));

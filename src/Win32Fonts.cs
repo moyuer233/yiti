@@ -110,32 +110,6 @@ namespace WinFontSwap
 
         public static bool HasBackup { get { try { return File.Exists(BackupPath); } catch { return false; } } }
 
-        /// <summary>读第一次备份里的系统默认值（只读，不写注册表）。键不存在时返回 null。</summary>
-        public static Info ReadBackup(string valueName)
-        {
-            try
-            {
-                if (!File.Exists(BackupPath)) return null;
-                foreach (var line in File.ReadAllLines(BackupPath, Encoding.UTF8))
-                {
-                    int eq = line.IndexOf('=');
-                    if (eq <= 0) continue;
-                    if (!string.Equals(line.Substring(0, eq), valueName, StringComparison.OrdinalIgnoreCase)) continue;
-                    var raw = Convert.FromBase64String(line.Substring(eq + 1));
-                    if (raw == null || raw.Length < 92) return null;
-                    var info = new Info();
-                    info.Raw = raw;
-                    info.HeightPx = BitConverter.ToInt32(raw, 0);
-                    info.Weight = BitConverter.ToInt32(raw, 16);
-                    info.Italic = raw[20] != 0;
-                    info.CharSet = raw[23];
-                    info.Face = Encoding.Unicode.GetString(raw, 28, 64).TrimEnd('\0');
-                    return info;
-                }
-            }
-            catch { }
-            return null;
-        }
 
         /// <summary>还原到第一次备份时的系统默认值。</summary>
         public static int Restore()

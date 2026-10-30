@@ -1,16 +1,17 @@
 # NOTE: ASCII-only. Windows PowerShell 5.1 decodes BOM-less UTF-8 as ANSI.
 $ErrorActionPreference = 'Continue'
-$log = 'H:\1\WinFontSwap\_sign.log'
+$root = $PSScriptRoot
+if (-not $root) { $root = Split-Path -Parent $MyInvocation.MyCommand.Path }
+$log = Join-Path $root '_sign.log'
 function L($m) { Add-Content -Path $log -Value ((Get-Date -Format 'HH:mm:ss') + ' ' + $m) -Encoding UTF8 }
 Set-Content -Path $log -Value '=== sign+trust+unblock ===' -Encoding UTF8
 $subject = 'CN=moyuer233'
 taskkill /F /IM YiTi.exe 2>&1 | Out-Null
-taskkill /F /IM WinFontSwap.exe 2>&1 | Out-Null
 
 $exes = @(
-  'H:\1\WinFontSwap\dist\YiTi.exe',
-  'H:\1\WinFontSwap\build\WinFontSwap.exe',
-  'H:\1\WinFontSwap\build\WinFontSwap.console.exe')
+  (Join-Path $root 'dist\YiTi.exe'),
+  (Join-Path $root 'build\WinFontSwap.exe'),
+  (Join-Path $root 'build\WinFontSwap.console.exe')) | Where-Object { Test-Path $_ }
 
 try {
   $cert = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.Subject -eq $subject } | Select-Object -First 1
@@ -24,16 +25,16 @@ try {
   Import-Certificate -FilePath $cer -CertStoreLocation Cert:\LocalMachine\TrustedPublisher | Out-Null
 } catch { L ('cert ERROR ' + $_.Exception.Message); $cert = $null }
 
+$failed = 0
 foreach ($exe in $exes) {
-  if (-not (Test-Path $exe)) { continue }
   try { Unblock-File -LiteralPath $exe -ErrorAction SilentlyContinue } catch { }
   try { Remove-Item -LiteralPath $exe -Stream Zone.Identifier -ErrorAction SilentlyContinue } catch { }
-  if ($cert) {
-    try {
-      $sig = Set-AuthenticodeSignature -FilePath $exe -Certificate $cert
-      L ('sign ' + (Split-Path $exe -Leaf) + ' -> ' + $sig.Status)
-    } catch { L ('sign ERROR ' + $_.Exception.Message) }
-  }
+  if (-not $cert) { L ('skip (no cert) ' + (Split-Path $exe -Leaf)); $failed++; continue }
+  try {
+    $sig = Set-AuthenticodeSignature -FilePath $exe -Certificate $cert
+    L ('sign ' + (Split-Path $exe -Leaf) + ' -> ' + $sig.Status)
+    if ($sig.Status -ne 'Valid') { $failed++ }
+  } catch { L ('sign ERROR ' + $_.Exception.Message); $failed++ }
   try { Unblock-File -LiteralPath $exe -ErrorAction SilentlyContinue } catch { }
   $streams = (Get-Item -LiteralPath $exe -Stream * | Where-Object { $_.Stream -ne ':$DATA' } | Measure-Object).Count
   L ('zone-streams ' + (Split-Path $exe -Leaf) + ' = ' + $streams)
@@ -53,4 +54,6 @@ try {
   L ('apphost eval = ' + (Get-ItemProperty $k2 -Name EnableWebContentEvaluation).EnableWebContentEvaluation)
 } catch { L ('apphost ERROR ' + $_.Exception.Message) }
 
-L 'done'
+L ('done failed=' + $failed)
+if ($failed -gt 0) { exit 1 }
+exit 0

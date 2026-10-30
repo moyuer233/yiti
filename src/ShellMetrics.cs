@@ -85,11 +85,12 @@ namespace WinFontSwap
                 ncm.cbSize = Marshal.SizeOf(typeof(NONCLIENTMETRICS));
                 if (!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, (uint)ncm.cbSize, ref ncm, 0))
                 {
-                    // 老系统 cbSize 不含 iPaddedBorderWidth，退回小结构长度
+                    // 老系统 cbSize 不含 iPaddedBorderWidth：用「结构长度 - 4」再取一次
+                    int fullSize = Marshal.SizeOf(typeof(NONCLIENTMETRICS));
                     ncm = new NONCLIENTMETRICS();
-                    ncm.cbSize = ncm.cbSize - 4;
+                    ncm.cbSize = fullSize - 4;
                     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, (uint)ncm.cbSize, ref ncm, 0);
-                    ncm.cbSize += 4;
+                    ncm.cbSize = fullSize;
                 }
 
                 for (int i = 0; i < Win32Fonts.Keys.Length; i++)
@@ -106,7 +107,8 @@ namespace WinFontSwap
                         case 3: ncm.lfStatusFont.lfHeight = h; ncm.lfStatusFont.lfFaceName = faces[i]; done++; break;
                     }
                 }
-                SystemParametersInfoW(SPI_SETNONCLIENTMETRICS, (uint)ncm.cbSize, ref ncm, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
+                bool setOk = SystemParametersInfoW(SPI_SETNONCLIENTMETRICS, (uint)ncm.cbSize, ref ncm, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
+                if (!setOk) done = 0;   // 写失败就不报“已生效 N 项”
 
                 // 图标字体单独一个 API
                 int iconIdx = Win32Fonts.Keys.Length - 1;

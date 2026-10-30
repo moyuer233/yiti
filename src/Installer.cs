@@ -213,6 +213,15 @@ namespace WinFontSwap
             }
         }
 
+        /// <summary>替换/回滚后调用：反查结果是按文件内容算的，内容变了必须重新算。</summary>
+        public static void ClearCaches()
+        {
+            _srcCache.Clear();
+            _glyfCache.Clear();
+            _vendorCache.Clear();
+            _nameIdCache.Clear();
+        }
+
         static readonly Dictionary<string, string> _srcCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         static readonly Dictionary<string, string> _glyfCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -254,7 +263,6 @@ namespace WinFontSwap
                 var mine = Sfnt.NameStrings(data, faces[0], ids);
                 if (string.IsNullOrEmpty(mine[0]) && string.IsNullOrEmpty(mine[1]) && string.IsNullOrEmpty(mine[2])) return null;
 
-                var self = new List<string>();
                 string matchedFamily = null;
                 int matched = 0;
                 foreach (var f in FontLibrary.All)
@@ -267,10 +275,8 @@ namespace WinFontSwap
                         bool isTarget = false;
                         foreach (var t in TargetFiles) if (string.Equals(candName, t, StringComparison.OrdinalIgnoreCase)) { isTarget = true; break; }
                         if (isTarget) continue;
-                        var cand = File.ReadAllBytes(f.Path);
-                        var cf = Sfnt.FaceOffsets(cand);
-                        if (f.FaceIndex >= cf.Length) continue;
-                        var other = Sfnt.NameStrings(cand, cf[f.FaceIndex], ids);
+                        var other = NameIds(f.Path, f.FaceIndex);   // 缓存：同一字体库只读一遍
+                        if (other == null) continue;
                         bool same = true;
                         int compared = 0;
                         for (int i = 0; i < ids.Length; i++)
@@ -320,6 +326,26 @@ namespace WinFontSwap
             }
             _srcCache[fileName] = result;
             return result;
+        }
+
+        /// <summary>候选字体的 nameID 0/5/7 字符串缓存：反查 5 个目标时不必把字体库重读 5 遍。</summary>
+        static readonly Dictionary<string, string[]> _nameIdCache = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+
+        static string[] NameIds(string path, int faceIndex)
+        {
+            var key = path + "#" + faceIndex;
+            string[] cached;
+            if (_nameIdCache.TryGetValue(key, out cached)) return cached;
+            string[] ids = null;
+            try
+            {
+                var data = File.ReadAllBytes(path);
+                var faces = Sfnt.FaceOffsets(data);
+                if (faceIndex < faces.Length) ids = Sfnt.NameStrings(data, faces[faceIndex], new[] { 0, 5, 7 });
+            }
+            catch { }
+            _nameIdCache[key] = ids;
+            return ids;
         }
 
         static readonly Dictionary<string, string> _vendorCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -491,18 +517,26 @@ namespace WinFontSwap
 
         static void RemoveQueueEntries(params string[] files)
         {
+            var want = new List<string>();
+            if (files != null) foreach (var f in files) if (!string.IsNullOrEmpty(f)) want.Add(f);
             var pairs = ReadQueueOrDefault();
-            pairs.RemoveAll(p => IsOurs(p[0]) || IsOurs(p[1]));
+            pairs.RemoveAll(p => IsOurEntry(p, want));
             WriteQueue(pairs);
         }
 
-        /// <summary>这条队列记录是不是本工具写的（源/目标沾到 WinFontSwap 或目标字体名）。</summary>
-        static bool IsOurs(string s)
+        /// <summary>
+        /// 这条队列记录是不是本工具写的：源路径必须来自我们的暂存目录（WinFontSwap），
+        /// 且目标文件名必须属于本次要清掉的那几个目标 —— 别的程序（含 Windows Update）排的字体替换不能动。
+        /// </summary>
+        static bool IsOurEntry(string[] pair, List<string> want)
         {
-            if (string.IsNullOrEmpty(s)) return false;
-            if (s.IndexOf("WinFontSwap", StringComparison.OrdinalIgnoreCase) >= 0) return true;
-            foreach (var f in TargetFiles)
-                if (s.EndsWith("\\" + f, StringComparison.OrdinalIgnoreCase)) return true;
+            if (pair == null || pair.Length < 2) return false;
+            string src = pair[0] ?? "";
+            string dst = pair[1] ?? "";
+            if (src.IndexOf("WinFontSwap", StringComparison.OrdinalIgnoreCase) < 0) return false;
+            var name = Path.GetFileName(dst.Replace("/", "\\"));
+            if (string.IsNullOrEmpty(name)) return false;
+            foreach (var f in want) if (string.Equals(name, f, StringComparison.OrdinalIgnoreCase)) return true;
             return false;
         }
 
@@ -656,26 +690,48 @@ namespace WinFontSwap
             using (var key = Registry.CurrentUser.OpenSubKey(sub, true))
             {
                 if (key == null) return 0;
+                // 只处理「用户自己装进 %LOCALAPPDATA%\Microsoft\Windows\Fonts 的同名字体」：
+                // 这是唯一会盖住系统字体的那一类；用户装在别处的同类注册项不动。
+                string userFonts = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "Microsoft", "Windows", "Fonts");
                 var hit = new List<string>();
                 foreach (var n in key.GetValueNames())
                 {
                     var lower = n.ToLowerInvariant();
-                    if (lower.Contains("yahei") || lower.Contains("雅黑") || lower.StartsWith("segoe ui"))
-                        hit.Add(n);
+                    if (!(lower.Contains("yahei") || lower.Contains("雅黑") || lower.StartsWith("segoe ui"))) continue;
+                    string val = key.GetValue(n) as string;
+                    if (string.IsNullOrEmpty(val)) continue;
+                    if (val.IndexOf(userFonts, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                    hit.Add(n);
                 }
                 if (hit.Count == 0) return 0;
 
+                // 备份失败就不动：宁可这次替换不生效，也不能让用户的注册项没有副本
+                var reg = Path.Combine(backupDir, "HKCU-Fonts.reg");
                 try
                 {
-                    var reg = Path.Combine(backupDir, "HKCU-Fonts.reg");
                     var psi = new ProcessStartInfo("reg.exe",
                         "export \"HKCU\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts\" \"" + reg + "\" /y");
                     psi.CreateNoWindow = true;
                     psi.UseShellExecute = false;
                     var p = Process.Start(psi);
-                    if (p != null) p.WaitForExit(10000);
+                    if (p == null || !p.WaitForExit(15000) || p.ExitCode != 0)
+                    {
+                        log("导出用户级字体注册失败，已跳过清理（未删除任何注册项）");
+                        return 0;
+                    }
+                    if (!File.Exists(reg) || new FileInfo(reg).Length == 0)
+                    {
+                        log("用户级字体注册备份为空，已跳过清理（未删除任何注册项）");
+                        return 0;
+                    }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    log("导出用户级字体注册失败，已跳过清理：" + ex.Message);
+                    return 0;
+                }
 
                 int done = 0;
                 foreach (var n in hit)
@@ -702,7 +758,9 @@ namespace WinFontSwap
             if (newest == null) return "没有备份";
             var psi = new ProcessStartInfo("reg.exe", "import \"" + newest + "\"") { CreateNoWindow = true, UseShellExecute = false };
             var p = Process.Start(psi);
-            if (p != null) p.WaitForExit(15000);
+            if (p == null) return "无法启动 reg.exe";
+            if (!p.WaitForExit(20000)) return "导入超时：" + Path.GetFileName(newest);
+            if (p.ExitCode != 0) return "导入失败（reg exit " + p.ExitCode + "）：" + Path.GetFileName(newest);
             return "已恢复：" + Path.GetFileName(newest);
         }
 
@@ -722,7 +780,7 @@ namespace WinFontSwap
                 var userCache = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "FontCache");
                 try { if (Directory.Exists(userCache)) Directory.Delete(userCache, true); } catch { }
 
-                var psi2 = new ProcessStartInfo("sc.exe", "start FontCache") { CreateNoWindow = true, UseShellExecute = false };
+                var psi2 = new ProcessStartInfo("sc.exe", "start " + FontCacheServiceName()) { CreateNoWindow = true, UseShellExecute = false };
                 var p2 = Process.Start(psi2);
                 if (p2 != null) p2.WaitForExit(8000);
                 log("已清字体缓存（重启后由系统重建）");
@@ -891,6 +949,7 @@ namespace WinFontSwap
             log("已写入重启替换队列：" + string.Join("、", applied.ToArray()));
             result.Queued = true;
             result.Message = "重启后生效";
+            ClearCaches();
             return result;
         }
 
@@ -1091,6 +1150,7 @@ namespace WinFontSwap
             state["date"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
             WriteState(state);
             log("回滚已排入重启队列：" + string.Join("、", files.ToArray()));
+            ClearCaches();
         }
 
         public static string HumanSize(long bytes)

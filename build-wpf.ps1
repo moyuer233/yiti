@@ -1,16 +1,18 @@
 $ErrorActionPreference = 'Stop'
-# Gate: every tracked .ps1 must stay ASCII-only
-& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path 'H:\1\WinFontSwap' 'check-ascii.ps1')
+# Every tracked .ps1 must stay ASCII-only (PowerShell 5.1 decodes BOM-less UTF-8 as ANSI).
+$root = $PSScriptRoot
+if (-not $root) { $root = Split-Path -Parent $MyInvocation.MyCommand.Path }
+& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'check-ascii.ps1')
 if ($LASTEXITCODE -ne 0) { throw 'ASCII check failed' }
 
-$root = 'H:\1\WinFontSwap'
 $csc = 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 $gac = 'C:\Windows\Microsoft.NET\assembly'
 $outDir = Join-Path $root 'dist'
 New-Item -ItemType Directory -Force $outDir | Out-Null
 $out = Join-Path $outDir 'YiTi.exe'
 
-Get-Process WinFontSwapWpf -ErrorAction SilentlyContinue | ForEach-Object { $_.Kill() }
+# Kill the running release build so csc can overwrite it (CS0016 otherwise).
+Get-Process YiTi -ErrorAction SilentlyContinue | ForEach-Object { $_.Kill() }
 Start-Sleep -Milliseconds 400
 
 $a = @()
@@ -43,12 +45,15 @@ if (Test-Path (Join-Path $langSrc 'en.txt')) { $a += ('/resource:' + (Join-Path 
 & $csc $a
 if ($LASTEXITCODE -ne 0) { throw ('WPF compile failed: ' + $LASTEXITCODE) }
 
-# sign as moyuer233 (elevated, silent because UAC is off)
-$signed = 'not signed'
+# Sign + trust. UAC is off on the build machine, so -Verb RunAs is silent.
+$signNote = 'sign skipped'
 try {
   $pr = Start-Process powershell -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $root 'sign.ps1') -Verb RunAs -WindowStyle Hidden -PassThru -Wait
-  $signed = 'sign exit ' + $pr.ExitCode
-} catch { $signed = 'sign skipped' }
+  $signNote = 'sign exit ' + $pr.ExitCode
+} catch { $signNote = 'sign skipped: ' + $_.Exception.Message }
 
-$fi = Get-Item $out
-'WPF OK  ' + $fi.FullName + '  ' + $fi.Length + ' bytes  ' + $signed
+$sig = Get-AuthenticodeSignature -LiteralPath $out
+if ($sig.Status -ne 'Valid') { throw ('signature is ' + $sig.Status + ' (see _sign.log)') }
+
+$fi = Get-Item -LiteralPath $out
+'WPF OK  ' + $fi.FullName + '  ' + $fi.Length + ' bytes  ' + $signNote + '  sig=Valid'

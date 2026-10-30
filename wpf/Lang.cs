@@ -103,14 +103,9 @@ namespace WinFontSwap.Wpf
             { "重启后生效。", "Takes effect after a reboot." },
         };
 
-        /// <summary>外置文案文件（exe 同目录 lang\zh.txt / lang\en.txt）覆盖内建表，方便改文案不用重新编译。</summary>
+        /// <summary>编译进 exe 的 lang\zh.txt / lang\en.txt 覆盖内建表（改文案要重新编译）。</summary>
         static readonly Dictionary<string, string> Override = new Dictionary<string, string>(StringComparer.Ordinal);
         static string _loadedFor;
-
-        public static string LangDir
-        {
-            get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "lang"); }
-        }
 
         /// <summary>读编译进 exe 的资源 lang.zh.txt / lang.en.txt；每行「原文=显示文本」，# 开头为注释。</summary>
         public static void LoadFile()

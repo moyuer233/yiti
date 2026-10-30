@@ -480,8 +480,8 @@ namespace WinFontSwap.Wpf
                     }
                     else if (a == "--logdiag")
                     {
-                        // 自测：直接生成一份日志再退出
-                        WriteDiagnosticsLog();
+                        // 自测：直接生成一份日志
+                        try { WriteDiagnosticsLog(); } catch (Exception ex) { WpfProgram.Log("logdiag: " + ex); }
                     }
                     else if (a == "--confirmdemo")
                     {
@@ -1377,7 +1377,6 @@ namespace WinFontSwap.Wpf
                 sb.AppendLine("  latest font dir: " + (latest ?? "(none)"));
 
                 var name = DateTime.Now.ToString("yy-MM-dd-ss") + ".log";
-                WpfProgram.Log("logdiag -> " + name);
                 var outPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, name);
                 if (System.IO.File.Exists(outPath)) outPath = outPath.Replace(".log", "-" + DateTime.Now.Millisecond + ".log");
                 System.IO.File.WriteAllText(outPath, sb.ToString(), System.Text.Encoding.UTF8);

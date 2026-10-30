@@ -42,7 +42,6 @@ namespace WinFontSwap
                 foreach (var file in SafeFiles(dir))
                 {
                     var ext = System.IO.Path.GetExtension(file).ToLowerInvariant();
-                    if (ext != ".ttf" && ext != ".ttc" && ext != ".ttf" ) continue;
                     if (ext != ".ttf" && ext != ".ttc") continue;
                     foreach (var e in ReadFile(file)) list.Add(e);
                 }
