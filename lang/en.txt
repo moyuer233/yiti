@@ -155,3 +155,27 @@ about.r4=Create a restore point before the first run
 ，细体 =, light 
 系统元素已生效：=Shell elements applied: 
 开启后每次操作在软件目录生成 yy-mm-dd-ss.log=Writes yy-mm-dd-ss.log next to the exe after each action
+
+# Backups / half-replaced / restore point
+备份管理=Backups
+查看、删除历史备份，或还原到其中某一次=Review or delete old backups, or roll back to one of them
+管理=Manage
+打开目录=Open folder
+删除选中=Delete
+还原到此备份=Restore this backup
+关闭=Close
+删除这个备份？=Delete this backup?
+删除失败=Delete failed
+还原到这个备份？重启后生效。=Restore this backup? It takes effect after a reboot.
+还原失败=Restore failed
+已排入重启队列：=Queued for the next reboot: 
+ 个文件= files
+还没有备份=No backups yet
+共 =Total 
+ 个备份，占用 = backups, using 
+半替换：=Half-replaced: 
+ 还是原版或没生效= are still original or never landed
+重新应用=Re-apply
+、=, 
+正在创建系统还原点…=Creating a system restore point…
+还原点未创建：=Restore point not created: 

@@ -29,6 +29,7 @@ namespace WinFontSwap.Wpf
             MaxHeight = 640;
             ResizeMode = ResizeMode.NoResize;   // 固定大小：不能拖、没有最大化
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            SourceInitialized += delegate { Styles.DarkTitle(this); };
             Background = T.BDrawer;
             Foreground = T.Text;
             FontSize = 13;

@@ -285,6 +285,8 @@ namespace WinFontSwap.Wpf
         FontEntry _picked;   // 用户在字体列表里实际点选的那一款（源字体行显示它，不是按字重匹配后的常规体）
         TextBlock _brandName;
         TextBlock _shellAllDesc;
+        Border _mixedBanner;
+        TextBlock _mixedText;
         TextBox _shellAllSize;
 
         /// <summary>把“全部系统元素”那一行里的字号写进 5 个元素（不写系统，等「应用」）。</summary>
@@ -482,6 +484,14 @@ namespace WinFontSwap.Wpf
                     {
                         // 自测：直接生成一份日志
                         try { WriteDiagnosticsLog(); } catch (Exception ex) { WpfProgram.Log("logdiag: " + ex); }
+                    }
+                    else if (a == "--backupdemo")
+                    {
+                        Dispatcher.BeginInvoke(new Action(delegate
+                        {
+                            var dlg = new BackupDialog { Owner = this };
+                            dlg.ShowDialog();
+                        }));
                     }
                     else if (a == "--confirmdemo")
                     {
@@ -790,6 +800,28 @@ namespace WinFontSwap.Wpf
             };
             var stack = new StackPanel();
             stack.Children.Add(T.Label(L.T("字体替换"), 28, T.Text, true));
+
+            // 半替换提示：只在检测到“部分目标换过、部分没换”时出现
+            var bannerBar = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            var bannerText = T.Label("", 12, T.Text, false);
+            bannerText.VerticalAlignment = VerticalAlignment.Center;
+            bannerText.Margin = new Thickness(0, 0, 12, 0);
+            bannerText.TextWrapping = TextWrapping.Wrap;
+            var bannerBtn = T.Btn2(L.T("重新应用"), false, 12);
+            bannerBtn.Click += delegate { RunApply(false); };
+            bannerBar.Children.Add(bannerText);
+            bannerBar.Children.Add(bannerBtn);
+            _mixedBanner = new Border
+            {
+                Background = T.B(Color.FromRgb(0x3A, 0x2E, 0x1F)),
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(14, 10, 14, 10),
+                Margin = new Thickness(0, 12, 0, 0),
+                Visibility = Visibility.Collapsed,
+                Child = bannerBar
+            };
+            _mixedText = bannerText;
+            stack.Children.Add(_mixedBanner);
             var spacer = new Border { Height = 14 };
             stack.Children.Add(spacer);
 
@@ -1021,6 +1053,15 @@ namespace WinFontSwap.Wpf
             };
             stack.Children.Add(T.Row("\uE777", L.T("只还原用户级注册"), L.T("导入最近一次的注册表备份"), rb, out advDesc3));
 
+            TextBlock advDescBackup;
+            var backupBtn = T.Btn2(L.T("管理"), false, 13);
+            backupBtn.Click += delegate
+            {
+                var dlg = new BackupDialog { Owner = this };
+                dlg.ShowDialog();
+            };
+            stack.Children.Add(T.Row("\uE777", L.T("备份管理"), L.T("查看、删除历史备份，或还原到其中某一次"), backupBtn, out advDescBackup));
+
             TextBlock advDescLog;
             var logSw = T.Switch(_advLogOn);
             logSw.Click += delegate { _advLogOn = logSw.IsChecked == true; };
@@ -1227,8 +1268,24 @@ namespace WinFontSwap.Wpf
                     }
                     _metaText[i].Text = string.Join("   ", parts.ToArray());
                 }
+                UpdateMixedBanner();
             }
             catch (Exception ex) { SetStatus(L.T("读系统字体状态失败：") + ex.Message, true); }
+        }
+
+        /// <summary>检测“半替换”：一部分目标已经是我们的字体、另一部分还是原版/没落地。</summary>
+        void UpdateMixedBanner()
+        {
+            if (_mixedBanner == null || _mixedText == null) return;
+            Installer.ConsistencyReport rep;
+            try { rep = Installer.CheckConsistency(); } catch { return; }
+            if (!rep.IsMixed) { _mixedBanner.Visibility = Visibility.Collapsed; return; }
+
+            var bad = new List<string>();
+            foreach (var f in rep.AppliedPending) bad.Add(Installer.LabelOf(f));
+            foreach (var f in rep.Never) bad.Add(Installer.LabelOf(f));
+            _mixedText.Text = L.T("半替换：") + string.Join(L.T("、"), bad.ToArray()) + L.T(" 还是原版或没生效");
+            _mixedBanner.Visibility = Visibility.Visible;
         }
 
         void LoadWin32()
@@ -1466,6 +1523,15 @@ namespace WinFontSwap.Wpf
 
             // 有字体要写：必须重启才生效 —— 直接问「是否确定重启」
             if (!generateOnly && !Confirm(L.T("是否确定重启？"), L.T("应用"))) return;
+
+            // 护栏：动手前先建系统还原点（建不了不阻断，只在状态栏说明原因）
+            if (!generateOnly)
+            {
+                SetStatus(L.T("正在创建系统还原点…"), false);
+                var rpErr = Installer.CreateRestorePoint();
+                if (rpErr != null) SetStatus(L.T("还原点未创建：") + rpErr, false);
+                MaybeLog(rpErr == null ? "restore-point-ok" : "restore-point-failed: " + rpErr);
+            }
             SetStatus(generateOnly ? L.T("正在生成…") : L.T("正在生成并写入…"), false);
             try
             {

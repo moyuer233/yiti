@@ -1,5 +1,7 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Interop;
 using System.Windows.Markup;
 
 namespace WinFontSwap.Wpf
@@ -7,6 +9,24 @@ namespace WinFontSwap.Wpf
     /// <summary>Window.Resources 用的隐式深色样式（LF 风格：无边框输入、深色列表与滚动条）。</summary>
     internal static class Styles
     {
+        [DllImport("dwmapi.dll")]
+        static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+
+        /// <summary>给带系统标题栏的窗口（字体选择 / 备份管理）套深色标题栏 + 圆角。</summary>
+        public static void DarkTitle(Window w)
+        {
+            try
+            {
+                var h = new WindowInteropHelper(w).Handle;
+                if (h == IntPtr.Zero) return;
+                int dark = 1;
+                DwmSetWindowAttribute(h, 20, ref dark, sizeof(int));   // DWMWA_USE_IMMERSIVE_DARK_MODE
+                int pref = 2;
+                DwmSetWindowAttribute(h, 33, ref pref, sizeof(int));   // DWMWA_WINDOW_CORNER_PREFERENCE = ROUND
+            }
+            catch { }
+        }
+
         public const string Xaml = @"
 <ResourceDictionary xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'
                     xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'>

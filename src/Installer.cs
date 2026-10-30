@@ -1153,6 +1153,142 @@ namespace WinFontSwap
             ClearCaches();
         }
 
+
+        // ---------- 一致性检查 / 备份管理 / 还原点 ----------
+
+        public sealed class ConsistencyReport
+        {
+            public readonly List<string> AppliedOk = new List<string>();      // 已替换且文件与记录一致
+            public readonly List<string> AppliedPending = new List<string>(); // 记录说换过，但文件还是旧的（排队中/被覆盖）
+            public readonly List<string> Never = new List<string>();          // 系统里有，但从未替换过
+            public readonly List<string> Missing = new List<string>();        // 本机没有这个目标文件
+            public bool IsMixed
+            {
+                get { return AppliedOk.Count > 0 && (AppliedPending.Count > 0 || Never.Count > 0); }
+            }
+        }
+
+        /// <summary>按 state.ini 的 applied/sha 记录核对每个目标现在到底换没换，用来发现“半替换”。</summary>
+        public static ConsistencyReport CheckConsistency()
+        {
+            var rep = new ConsistencyReport();
+            var st = ReadState();
+            string appliedList = st.ContainsKey("applied") ? st["applied"] : "";
+            var applied = new List<string>();
+            foreach (var s in appliedList.Split(';')) if (!string.IsNullOrEmpty(s)) applied.Add(s);
+            foreach (var f in TargetFiles)
+            {
+                var target = Path.Combine(FontsDir, f);
+                if (!File.Exists(target)) { rep.Missing.Add(f); continue; }
+                bool recorded = applied.Contains(f);
+                string want;
+                st.TryGetValue("sha_" + f, out want);
+                if (!recorded)
+                {
+                    rep.Never.Add(f);
+                    continue;
+                }
+                string now = null;
+                try { now = Sha256(target); } catch { }
+                if (string.IsNullOrEmpty(want) || string.Equals(now, want, StringComparison.OrdinalIgnoreCase)) rep.AppliedOk.Add(f);
+                else rep.AppliedPending.Add(f);
+            }
+            return rep;
+        }
+
+        public sealed class BackupEntry
+        {
+            public string Dir;
+            public DateTime Date;
+            public long Bytes;
+            public readonly List<string> Files = new List<string>();
+            public string Family;
+        }
+
+        /// <summary>列出所有备份目录（新的在前），带体积、包含的文件与被替换的字体族。</summary>
+        public static List<BackupEntry> ListBackups()
+        {
+            var list = new List<BackupEntry>();
+            try
+            {
+                if (!Directory.Exists(BackupRoot)) return list;
+                foreach (var dir in Directory.GetDirectories(BackupRoot))
+                {
+                    var e = new BackupEntry();
+                    e.Dir = dir;
+                    try { e.Date = Directory.GetCreationTime(dir); } catch { e.Date = DateTime.MinValue; }
+                    long bytes = 0;
+                    foreach (var f in TargetFiles)
+                    {
+                        var origin = Path.Combine(dir, "orig", f);
+                        var direct = Path.Combine(dir, f);
+                        var p = File.Exists(origin) ? origin : (File.Exists(direct) ? direct : null);
+                        if (p == null) continue;
+                        e.Files.Add(f);
+                        try { bytes += new FileInfo(p).Length; } catch { }
+                    }
+                    e.Bytes = bytes;
+                    var st = Path.Combine(dir, "state.ini");
+                    if (File.Exists(st))
+                    {
+                        try
+                        {
+                            foreach (var line in File.ReadAllLines(st, Encoding.UTF8))
+                            {
+                                if (!line.StartsWith("family_", StringComparison.OrdinalIgnoreCase)) continue;
+                                var v = line.Substring(line.IndexOf('=') + 1).Trim();
+                                if (!string.IsNullOrEmpty(v)) { e.Family = v; break; }
+                            }
+                        }
+                        catch { }
+                    }
+                    list.Add(e);
+                }
+                list.Sort(delegate (BackupEntry a, BackupEntry b) { return b.Date.CompareTo(a.Date); });
+            }
+            catch { }
+            return list;
+        }
+
+        /// <summary>删除一个备份目录（只允许删 backup 下的子目录）。</summary>
+        public static void DeleteBackup(string dir)
+        {
+            if (string.IsNullOrEmpty(dir)) throw new ArgumentException("没有指定备份");
+            var full = Path.GetFullPath(dir);
+            var root = Path.GetFullPath(BackupRoot) + Path.DirectorySeparatorChar;
+            if (!full.StartsWith(root, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("只能删除备份目录下的内容");
+            if (Directory.Exists(full)) Directory.Delete(full, true);
+        }
+
+        /// <summary>
+        /// 创建系统还原点（系统字体替换前的前置护栏）。
+        /// 返回 null 表示成功；返回字符串表示失败原因（例如 24 小时内已创建过、系统保护未开启）。
+        /// </summary>
+        public static string CreateRestorePoint()
+        {
+            try
+            {
+                var psi = new ProcessStartInfo("powershell.exe",
+                    "-NoProfile -ExecutionPolicy Bypass -Command \"Checkpoint-Computer -Description 'YiTi before font swap' -RestorePointType MODIFY_SETTINGS\"");
+                psi.CreateNoWindow = true;
+                psi.UseShellExecute = false;
+                psi.RedirectStandardError = true;
+                psi.RedirectStandardOutput = true;
+                var p = Process.Start(psi);
+                if (p == null) return "无法启动 powershell";
+                string err = p.StandardError.ReadToEnd();
+                p.StandardOutput.ReadToEnd();
+                if (!p.WaitForExit(180000)) { try { p.Kill(); } catch { } return "创建还原点超时"; }
+                if (p.ExitCode != 0)
+                {
+                    var msg = (err ?? "").Trim();
+                    if (msg.Length > 300) msg = msg.Substring(0, 300);
+                    return string.IsNullOrEmpty(msg) ? ("Checkpoint-Computer 退出码 " + p.ExitCode) : msg;
+                }
+                return null;
+            }
+            catch (Exception ex) { return ex.Message; }
+        }
         public static string HumanSize(long bytes)
         {
             if (bytes > 1024L * 1024L) return (bytes / 1024.0 / 1024.0).ToString("0.0") + " MB";

@@ -43,6 +43,9 @@ _✨ The no-brainer system-wide font replacement tool for Windows ✨_
 - **Automatic weight matching**: pick one font and the weights are matched at 400 / 700 / 300, for example Microsoft YaHei Regular / Bold / Light are replaced together; picking a font per slot is supported too
 - **Automatic backup and rollback**: Restore rolls everything back in one click; the Default preset reads from `C:\Windows\WinSxS` first, so it still works when the backup is gone
 - **Adapts to the OS version**: fonts the system does not have (Windows 7 has no Light weight and no Segoe UI Variable) are disabled automatically
+- **Creates a system restore point before applying**: taken right before anything is written; if it cannot be created the status bar says why (it does not block the swap)
+- **Half-replaced detection**: on launch it verifies that all five files were really replaced; if only part of them changed, the font page shows a banner with a one-click **Re-apply**
+- **Backup manager**: lists every backup taken before a swap (date, size, files inside) and lets you delete one or roll back to any of them
 
 ## How it differs from noMeiryoUI
 
