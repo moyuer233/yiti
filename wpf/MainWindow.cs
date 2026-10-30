@@ -485,6 +485,10 @@ namespace WinFontSwap.Wpf
                         // 自测：直接生成一份日志
                         try { WriteDiagnosticsLog(); } catch (Exception ex) { WpfProgram.Log("logdiag: " + ex); }
                     }
+                    else if (a == "--advgen")
+                    {
+                        Dispatcher.BeginInvoke(new Action(delegate { RunApply(true); }));
+                    }
                     else if (a == "--backupdemo")
                     {
                         Dispatcher.BeginInvoke(new Action(delegate
@@ -658,6 +662,14 @@ namespace WinFontSwap.Wpf
             // ---- 右栏 ----
             var right = new Grid();
             right.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            right.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            // 状态栏放在外壳里：任何页面的操作反馈都在同一个位置显示
+            _status = T.Label("", 12, T.TextDim, false);
+            _status.Margin = new Thickness(26, 0, 26, 14);
+            _status.TextWrapping = TextWrapping.Wrap;
+            Grid.SetRow(_status, 1);
+            right.Children.Add(_status);
 
             // 自绘窗口按钮（WindowStyle=None 后系统不再画）
             var sys = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 6, 10, 0) };
@@ -987,9 +999,6 @@ namespace WinFontSwap.Wpf
             bar.Children.Add(rollback);
             bar.Children.Add(defaults);
             bottom.Children.Add(bar);
-            _status = T.Label("", 12, T.TextDim, false);
-            _status.Margin = new Thickness(0, 8, 0, 0);
-            bottom.Children.Add(_status);
             Grid.SetRow(bottom, 1);
             root.Children.Add(bottom);
 
@@ -1511,8 +1520,8 @@ namespace WinFontSwap.Wpf
             // 只改了系统元素：直接写注册表，不要求先选字体，也不问重启
             if (!hasFonts)
             {
-                if (!hasShell) { SetStatus(L.T("先选一个字体。"), true); return; }
                 if (generateOnly) { SetStatus(L.T("生成字体文件需要先选一个字体。"), true); return; }
+                if (!hasShell) { SetStatus(L.T("先选一个字体。"), true); return; }
                 // 已打开的窗口不会自己换字体，重启资源管理器让外壳重新读一遍（电脑不用重启）
                 if (!Confirm(L.T("是否确定重启资源管理器？"), L.T("应用"))) return;
                 ApplyWin32();          // 写注册表 + SystemParametersInfo 立即生效
