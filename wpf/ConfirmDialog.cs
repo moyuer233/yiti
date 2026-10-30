@@ -13,6 +13,14 @@ namespace WinFontSwap.Wpf
     {
         public bool Result;
 
+        /// <summary>只有「好」的信息框：用于告诉用户操作结果（和应用同风格，不用系统 MessageBox）。</summary>
+        public static void Info(Window owner, string title, string message)
+        {
+            var dlg = new ConfirmDialog(title, message, L.T("好"), null);
+            if (owner != null) dlg.Owner = owner;
+            dlg.ShowDialog();
+        }
+
         public ConfirmDialog(string title, string message, string okText, string cancelText)
         {
             Title = title;
@@ -49,12 +57,16 @@ namespace WinFontSwap.Wpf
             stack.Children.Add(tbMsg);
 
             var bar = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 20, 0, 0) };
-            var cancel = T.Btn2(cancelText, false, 13);
-            cancel.Margin = new Thickness(0, 0, 10, 0);
-            cancel.Click += delegate { Result = false; Close(); };
+            Button cancel = null;
+            if (!string.IsNullOrEmpty(cancelText))
+            {
+                cancel = T.Btn2(cancelText, false, 13);
+                cancel.Margin = new Thickness(0, 0, 10, 0);
+                cancel.Click += delegate { Result = false; Close(); };
+                bar.Children.Add(cancel);
+            }
             var ok = T.Btn2(okText, true, 13);
             ok.Click += delegate { Result = true; Close(); };
-            bar.Children.Add(cancel);
             bar.Children.Add(ok);
             stack.Children.Add(bar);
 
@@ -72,7 +84,7 @@ namespace WinFontSwap.Wpf
                 if (e.Key == Key.Escape) { Result = false; Close(); }
                 if (e.Key == Key.Enter) { Result = true; Close(); }
             };
-            Loaded += delegate { cancel.Focus(); };   // 默认焦点在取消，避免误按回车
+            Loaded += delegate { if (cancel != null) cancel.Focus(); };   // 默认焦点在取消，避免误按回车
         }
     }
 }

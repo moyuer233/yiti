@@ -1057,8 +1057,13 @@ namespace WinFontSwap.Wpf
             var rb = T.Btn2(L.T("恢复"), false, 13);
             rb.Click += delegate
             {
-                try { SetStatus(Installer.RestoreUserFonts(), false); }
-                catch (Exception ex) { SetStatus(L.T("恢复失败：") + ex.Message, true); }
+                string msg;
+                bool bad = false;
+                try { msg = Installer.RestoreUserFonts(); if (msg.StartsWith("导入失败") || msg.StartsWith("导入超时") || msg.StartsWith("无法启动")) bad = true; }
+                catch (Exception ex) { msg = L.T("恢复失败：") + ex.Message; bad = true; }
+                SetStatus(msg, bad);
+                MaybeLog("restore-userfonts");
+                ConfirmDialog.Info(this, L.T("只还原用户级注册"), msg);
             };
             stack.Children.Add(T.Row("\uE777", L.T("只还原用户级注册"), L.T("导入最近一次的注册表备份"), rb, out advDesc3));
 
@@ -1520,7 +1525,7 @@ namespace WinFontSwap.Wpf
             // 只改了系统元素：直接写注册表，不要求先选字体，也不问重启
             if (!hasFonts)
             {
-                if (generateOnly) { SetStatus(L.T("生成字体文件需要先选一个字体。"), true); return; }
+                if (generateOnly) { var m0 = L.T("生成字体文件需要先选一个字体。"); SetStatus(m0, true); ConfirmDialog.Info(this, L.T("只生成不写入"), m0); return; }
                 if (!hasShell) { SetStatus(L.T("先选一个字体。"), true); return; }
                 // 已打开的窗口不会自己换字体，重启资源管理器让外壳重新读一遍（电脑不用重启）
                 if (!Confirm(L.T("是否确定重启资源管理器？"), L.T("应用"))) return;
@@ -1550,10 +1555,11 @@ namespace WinFontSwap.Wpf
                 if (!generateOnly) { try { FollowCurrentFont(); } catch { } }
                 SetStatus(generateOnly ? (L.T("已生成到 ") + res.OutputDir) : L.T("已写入，正在重启…"), false);
                 MaybeLog(generateOnly ? "generate" : "apply-fonts");
+                if (generateOnly) ConfirmDialog.Info(this, L.T("只生成不写入"), L.T("已生成到 ") + res.OutputDir);
                 RefreshTargets();
                 if (!generateOnly) RebootSoon();
             }
-            catch (Exception ex) { SetStatus(L.T("失败：") + ex.Message, true); }
+            catch (Exception ex) { SetStatus(L.T("失败：") + ex.Message, true); ConfirmDialog.Info(this, L.T("失败："), ex.Message); }
         }
 
         /// <summary>
@@ -1719,23 +1725,26 @@ namespace WinFontSwap.Wpf
                 else log1 = L.T("没有字体备份; ");
                 try { Win32Fonts.Restore(); } catch { }
                 string log2 = Installer.RestoreUserFonts();
-                SetStatus(L.T("已全部回滚：") + log1 + log2 + L.T(" 重启后恢复。"), false);
+                var msg = L.T("已全部回滚：") + log1 + log2 + L.T(" 重启后恢复。");
+                SetStatus(msg, false);
                 MaybeLog("rollback");
                 RefreshTargets();
+                ConfirmDialog.Info(this, L.T("还原"), msg);
             }
-            catch (Exception ex) { SetStatus(L.T("回滚失败：") + ex.Message, true); }
+            catch (Exception ex) { SetStatus(L.T("回滚失败：") + ex.Message, true); ConfirmDialog.Info(this, L.T("还原"), L.T("回滚失败：") + ex.Message); }
         }
 
         void RunRollbackFontsOnly()
         {
             try
             {
-                if (Installer.LatestBackup() == null) { SetStatus(L.T("没有可回滚的备份。"), true); return; }
+                if (Installer.LatestBackup() == null) { SetStatus(L.T("没有可回滚的备份。"), true); ConfirmDialog.Info(this, L.T("只还原字体文件"), L.T("没有可回滚的备份。")); return; }
                 Installer.Rollback(delegate (string m) { });
                 SetStatus(L.T("已还原字体文件，重启后恢复。"), false);
                 RefreshTargets();
+                ConfirmDialog.Info(this, L.T("只还原字体文件"), L.T("已还原字体文件，重启后恢复。"));
             }
-            catch (Exception ex) { SetStatus(L.T("回滚失败：") + ex.Message, true); }
+            catch (Exception ex) { SetStatus(L.T("回滚失败：") + ex.Message, true); ConfirmDialog.Info(this, L.T("只还原字体文件"), L.T("回滚失败：") + ex.Message); }
         }
 
         void RunRollback()

@@ -179,3 +179,4 @@ about.r4=Create a restore point before the first run
 、=, 
 正在创建系统还原点…=Creating a system restore point…
 还原点未创建：=Restore point not created: 
+好=OK
