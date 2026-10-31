@@ -15,6 +15,10 @@ namespace WinFontSwap.Wpf
         readonly TextBlock _summary = new TextBlock();
         readonly TextBlock _stage = new TextBlock();
         List<Installer.BackupEntry> _entries = new List<Installer.BackupEntry>();
+        readonly List<CheckBox> _checks = new List<CheckBox>();
+        readonly TextBlock _selInfo = new TextBlock();
+        Button _delBtn;
+        readonly CheckBox _selectAll = new CheckBox();
 
         public BackupDialog()
         {
@@ -31,6 +35,8 @@ namespace WinFontSwap.Wpf
             var root = new Grid { Margin = new Thickness(16) };
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });   // 批量工具条
             root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
@@ -94,10 +100,32 @@ namespace WinFontSwap.Wpf
             Grid.SetRow(settings, 1);
             root.Children.Add(settings);
 
-            _list.SelectionMode = SelectionMode.Extended;
-            _list.HorizontalContentAlignment = HorizontalAlignment.Left;
+            // 批量工具条：全选 + 已选计数
+            var tools = new Grid { Margin = new Thickness(0, 0, 0, 6) };
+            tools.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            tools.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            var allBox = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            _selectAll.VerticalAlignment = VerticalAlignment.Center;
+            _selectAll.Margin = new Thickness(0, 0, 8, 0);
+            _selectAll.Click += delegate { foreach (var cb in _checks) cb.IsChecked = _selectAll.IsChecked == true; UpdateSelInfo(); };
+            allBox.Children.Add(_selectAll);
+            var allLabel = T.Label(L.T("backup.select.all"), 12, T.Text, false);
+            allLabel.VerticalAlignment = VerticalAlignment.Center;
+            allBox.Children.Add(allLabel);
+            tools.Children.Add(allBox);
+            _selInfo.FontSize = 12;
+            _selInfo.Foreground = T.TextDim;
+            _selInfo.VerticalAlignment = VerticalAlignment.Center;
+            _selInfo.HorizontalAlignment = HorizontalAlignment.Right;
+            Grid.SetColumn(_selInfo, 1);
+            tools.Children.Add(_selInfo);
+            Grid.SetRow(tools, 2);
+            root.Children.Add(tools);
+
+            _list.SelectionMode = SelectionMode.Single;
+            _list.HorizontalContentAlignment = HorizontalAlignment.Stretch;
             _list.Padding = new Thickness(4);
-            Grid.SetRow(_list, 2);
+            Grid.SetRow(_list, 3);
             root.Children.Add(_list);
 
             var bar = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
@@ -107,6 +135,7 @@ namespace WinFontSwap.Wpf
             var del = T.Btn2(L.T("backup.delete.selected"), false, 13);
             del.Margin = new Thickness(0, 0, 8, 0);
             del.Click += delegate { DeleteSelected(); };
+            _delBtn = del;
             var restore = T.Btn2(L.T("backup.restore.this.backup"), true, 13);
             restore.Margin = new Thickness(0, 0, 8, 0);
             restore.Click += delegate { RestoreSelected(); };
@@ -116,7 +145,7 @@ namespace WinFontSwap.Wpf
             bar.Children.Add(del);
             bar.Children.Add(restore);
             bar.Children.Add(close);
-            Grid.SetRow(bar, 3);
+            Grid.SetRow(bar, 4);
             root.Children.Add(bar);
 
             Content = root;
@@ -146,20 +175,42 @@ namespace WinFontSwap.Wpf
         {
             _entries = Installer.ListBackups();
             _list.Items.Clear();
+            _checks.Clear();
+            _selectAll.IsChecked = false;
             long total = 0;
             foreach (var e in _entries)
             {
                 total += e.Bytes;
                 var name = Path.GetFileName(e.Dir);
-                _list.Items.Add(e.Date.ToString("yyyy-MM-dd HH:mm") + "   " + Installer.HumanSize(e.Bytes).PadLeft(9)
-                    + "   " + e.Files.Count + L.T("backup.files") + "   " + name);
+                var row = new Grid();
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                var cb = new CheckBox { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 10, 0) };
+                cb.Click += delegate { UpdateSelInfo(); };
+                row.Children.Add(cb);
+                _checks.Add(cb);
+                var txt = T.Label(e.Date.ToString("yyyy-MM-dd HH:mm") + "   " + Installer.HumanSize(e.Bytes).PadLeft(9)
+                    + "   " + e.Files.Count + L.T("backup.files") + "   " + name, 12, T.Text, false);
+                txt.VerticalAlignment = VerticalAlignment.Center;
+                Grid.SetColumn(txt, 1);
+                row.Children.Add(txt);
+                _list.Items.Add(row);
             }
+            UpdateSelInfo();
             _summary.Text = _entries.Count == 0
                 ? L.T("backup.no.backups.yet")
                 : L.T("backup.total") + _entries.Count + L.T("backup.backups.using") + Installer.HumanSize(total);
             int sdirs; long sbytes;
             Installer.StageUsage(out sdirs, out sbytes);
             _stage.Text = L.T("backup.staging") + sdirs + L.T("backup.using") + Installer.HumanSize(sbytes);
+        }
+
+        void UpdateSelInfo()
+        {
+            int n = 0;
+            foreach (var cb in _checks) if (cb.IsChecked == true) n++;
+            _selInfo.Text = L.T("backup.selected") + n + L.T("backup.selected.unit");
+            if (_delBtn != null) _delBtn.Content = L.T("backup.delete.selected") + (n > 0 ? " (" + n + ")" : "");
         }
 
         bool Ask(string question, string title)
@@ -193,11 +244,8 @@ namespace WinFontSwap.Wpf
         void DeleteSelected()
         {
             var picked = new List<Installer.BackupEntry>();
-            foreach (var item in _list.SelectedItems)
-            {
-                int idx = _list.Items.IndexOf(item);
-                if (idx >= 0 && idx < _entries.Count) picked.Add(_entries[idx]);
-            }
+            for (int i = 0; i < _checks.Count && i < _entries.Count; i++)
+                if (_checks[i].IsChecked == true) picked.Add(_entries[i]);
             if (picked.Count == 0) return;
             string names = "";
             foreach (var e in picked) names += "\n" + Path.GetFileName(e.Dir);
