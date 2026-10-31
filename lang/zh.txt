@@ -70,7 +70,7 @@ adv.remove.per.user.same.name.fonts=写入时清除用户级同名字体
 
 
 adv.review.or.delete.old.backups.or.roll.back.to=查看、还原、删除历史备份
-adv.they.shadow.the.system.font=会阻止替换
+adv.user.fonts.tip=如果你以前把「微软雅黑」用「为当前用户安装」的方式装过一份（文件名常是 msyh_0.ttc、msyhbd_0.ttc 这种），那么 DirectWrite 会优先读用户级那份。这时我们替换 C:\Windows\Fonts\msyh.ttc 再重启，界面依然显示用户级那份 —— 表现就是「替换成功但看不出变化」。
 adv.this.windows.version.has.no.per.user.fonts=此版本 Windows 没有用户级字体
 adv.restart.explorer=重启资源管理器
 adv.write.a.log=输出日志

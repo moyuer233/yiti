@@ -70,7 +70,7 @@ adv.remove.per.user.same.name.fonts=Remove per-user same-name fonts
 
 
 adv.review.or.delete.old.backups.or.roll.back.to=Review, restore or delete old backups
-adv.they.shadow.the.system.font=They override the system font
+adv.user.fonts.tip=If Microsoft YaHei was once installed "for the current user" (the files are usually msyh_0.ttc and msyhbd_0.ttc), DirectWrite reads that per-user copy first. Replacing C:\Windows\Fonts\msyh.ttc and rebooting then leaves the UI on the per-user copy, so the swap looks like it succeeded but nothing changed.
 adv.this.windows.version.has.no.per.user.fonts=This Windows version has no per-user fonts
 adv.restart.explorer=Restart Explorer
 adv.write.a.log=Write a log

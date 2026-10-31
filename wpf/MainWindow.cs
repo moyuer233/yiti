@@ -1113,8 +1113,14 @@ namespace WinFontSwap.Wpf
             var userSw = T.Switch(_advUserFontsOn && canUserFonts);
             userSw.Click += delegate { _advUserFontsOn = userSw.IsChecked == true; };
             _advUserFonts = userSw;
-            stack.Children.Add(T.Row("\uE74D", L.T("adv.remove.per.user.same.name.fonts"),
-                canUserFonts ? L.T("adv.they.shadow.the.system.font") : L.T("adv.this.windows.version.has.no.per.user.fonts"), userSw, out advDesc2, !canUserFonts));
+            var userRow = T.Row("\uE74D", L.T("adv.remove.per.user.same.name.fonts"),
+                canUserFonts ? "" : L.T("adv.this.windows.version.has.no.per.user.fonts"), userSw, out advDesc2, !canUserFonts);
+            // 行内不再写解释，改成悬停提示
+            userRow.ToolTip = new TextBlock { Text = L.T("adv.user.fonts.tip"), MaxWidth = 520, TextWrapping = TextWrapping.Wrap };
+            ToolTipService.SetInitialShowDelay(userRow, 350);
+            ToolTipService.SetShowDuration(userRow, 120000);
+            ToolTipService.SetPlacement(userRow, System.Windows.Controls.Primitives.PlacementMode.Right);
+            stack.Children.Add(userRow);
 
             TextBlock advDescGen;
             var genBtn = T.Btn2(L.T("adv.generate"), false, 13);
