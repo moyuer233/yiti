@@ -642,6 +642,38 @@ namespace WinFontSwap
             return false;
         }
 
+        /// <summary>待执行的重启队列里引用到的 backup/stage 子目录：这些目录在重启前不能删。</summary>
+        static HashSet<string> DirsReferencedByQueue()
+        {
+            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                foreach (var p in ReadQueueOrDefault())
+                {
+                    if (p == null) continue;
+                    foreach (var raw in p)
+                    {
+                        var s = (raw ?? "").Replace(@"\??\", "");
+                        if (s.Length == 0) continue;
+                        if (s.IndexOf("WinFontSwap", StringComparison.OrdinalIgnoreCase) < 0) continue;
+                        if (s.StartsWith(BackupRoot, StringComparison.OrdinalIgnoreCase))
+                        {
+                            var dir = Path.GetDirectoryName(s);
+                            if (!string.IsNullOrEmpty(dir)) set.Add(dir);
+                        }
+                        else if (s.StartsWith(StageRoot, StringComparison.OrdinalIgnoreCase))
+                        {
+                            var rel = s.Substring(StageRoot.Length).TrimStart('\\');
+                            var parts = rel.Split('\\');
+                            if (parts.Length > 0 && parts[0].Length > 0) set.Add(Path.Combine(StageRoot, parts[0]));
+                        }
+                    }
+                }
+            }
+            catch { }
+            return set;
+        }
+
         static void AddQueuePairs(List<string[]> pairs)
         {
             var all = ReadQueueOrDefault();
@@ -1325,12 +1357,14 @@ namespace WinFontSwap
             }
             dirs.Sort(StringComparer.Ordinal);
             dirs.Reverse();   // 新 → 旧
+            var inQueue = DirsReferencedByQueue();   // 还在重启队列里的目录绝对不能删
             int removed = 0;
             int kept = 0;
             foreach (var d in dirs)
             {
                 bool isNew = keepDir != null && string.Equals(Path.GetFullPath(d), Path.GetFullPath(keepDir), StringComparison.OrdinalIgnoreCase);
                 if (isNew) { kept++; continue; }
+                if (inQueue.Contains(Path.GetFullPath(d))) { kept++; continue; }
                 if (kept < keep) { kept++; continue; }
                 try
                 {

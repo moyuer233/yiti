@@ -215,12 +215,20 @@ namespace WinFontSwap
             return bestDiff <= 200 ? best : null;
         }
 
-        /// <summary>这个条目所在文件是不是可变字体（只看文件名像 VF 的，避免把全库字体都读一遍）。</summary>
+        static readonly Dictionary<string, bool> _varCache = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>这个条目所在文件是不是可变字体；按文件缓存，避免同一文件反复读几十 MB。</summary>
         public static bool IsVariableEntry(FontEntry e)
         {
-            if (e == null) return false;
-            try { return Sfnt.IsVariable(File.ReadAllBytes(e.Path), e.FaceIndex); }
-            catch { return false; }
+            if (e == null || string.IsNullOrEmpty(e.Path)) return false;
+            var key = e.Path + "#" + e.FaceIndex;
+            bool cached;
+            if (_varCache.TryGetValue(key, out cached)) return cached;
+            bool result = false;
+            try { result = Sfnt.IsVariable(File.ReadAllBytes(e.Path), e.FaceIndex); }
+            catch { }
+            _varCache[key] = result;
+            return result;
         }
 
         /// <summary>
@@ -229,13 +237,19 @@ namespace WinFontSwap
         /// </summary>
         public static bool HasWidthVariation(FontEntry e)
         {
-            if (e == null) return false;
+            if (e == null || string.IsNullOrEmpty(e.Path)) return false;
+            var key = "hvar:" + e.Path + "#" + e.FaceIndex;
+            bool cached;
+            if (_varCache.TryGetValue(key, out cached)) return cached;
+            bool result = false;
             try
             {
                 var data = File.ReadAllBytes(e.Path);
-                return Sfnt.IsVariable(data, e.FaceIndex) && Sfnt.HasTable(data, e.FaceIndex, "HVAR");
+                result = Sfnt.IsVariable(data, e.FaceIndex) && Sfnt.HasTable(data, e.FaceIndex, "HVAR");
             }
-            catch { return false; }
+            catch { }
+            _varCache[key] = result;
+            return result;
         }
 
         /// <summary>同一个家族的静态字重文件（用户选了可变字体时优先用它：可变字体的默认实例未必是 400）。</summary>

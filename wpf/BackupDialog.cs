@@ -214,7 +214,10 @@ namespace WinFontSwap.Wpf
                 txt.VerticalAlignment = VerticalAlignment.Center;
                 Grid.SetColumn(txt, 1);
                 row.Children.Add(txt);
-                row.ToolTip = BuildTip(e);        // 悬停看“当时改了什么、结果如何”
+                // 悬停时才现算：算一次要读 5 个字体文件，列表一打开就把 20 份全算会卡住界面
+                var entry = e;
+                row.ToolTip = " ";
+                row.ToolTipOpening += delegate { row.ToolTip = BuildTip(entry); };
                 ToolTipService.SetInitialShowDelay(row, 350);
                 ToolTipService.SetShowDuration(row, 60000);
                 ToolTipService.SetPlacement(row, System.Windows.Controls.Primitives.PlacementMode.Mouse);   // 跟着鼠标走
