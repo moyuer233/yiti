@@ -49,6 +49,7 @@
 "user.fonts.tip" = "写入时清除当前用户已安装的同名字体"
 "this.windows.version.has.no.per.user.fonts" = "此版本 Windows 没有用户字体"
 "restart.explorer" = "重启资源管理器"
+"auto.restart.explorer" = "应用后自动重启资源管理器"
 "write.a.log" = "输出日志"
 "writes.yy.mm.dd.ss.log.next.to.the.exe.after" = "开启后每次操作在软件目录生成 yy-mm-dd-ss.log"
 
@@ -160,6 +161,7 @@
 "pick.a.font.first.to.generate.the.font.files" = "生成字体文件需要先选择一个字体。"
 "reboot.failed" = "重启失败："
 "reboot.pending" = "待重启"
+"write.shell.without.restart" = "只写入窗口字体，不重启资源管理器？（已打开的窗口可能还显示旧字体）"
 "restart.explorer.now" = "是否确定重启资源管理器？"
 "restart.now" = "是否确定重启？"
 "restorable.from.backup" = "（可从备份还原）"

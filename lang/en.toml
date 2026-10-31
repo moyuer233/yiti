@@ -49,6 +49,7 @@
 "user.fonts.tip" = "Clear the same-name fonts installed by the current user on apply"
 "this.windows.version.has.no.per.user.fonts" = "This Windows version has no per-user fonts"
 "restart.explorer" = "Restart Explorer"
+"auto.restart.explorer" = "Restart Explorer automatically after applying"
 "write.a.log" = "Write a log"
 "writes.yy.mm.dd.ss.log.next.to.the.exe.after" = "Writes yy-mm-dd-ss.log next to the exe after each action"
 
@@ -161,6 +162,7 @@
 "pick.a.font.first.to.generate.the.font.files" = "Pick a font first to generate the font files."
 "reboot.failed" = "Reboot failed: "
 "reboot.pending" = "reboot pending"
+"write.shell.without.restart" = "Write the window fonts without restarting Explorer? (open windows may keep the old font)"
 "restart.explorer.now" = "Restart Explorer now?"
 "restart.now" = "Restart now?"
 "restorable.from.backup" = " (can be restored from a backup)"

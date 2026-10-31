@@ -281,6 +281,7 @@ namespace WinFontSwap.Wpf
         ToggleButton[] _winTog = new ToggleButton[Win32Fonts.Names.Length];
         ToggleButton _advCache, _advUserFonts, _advAutoWeight;
         bool _advCacheOn = true, _advUserFontsOn = true;
+        bool _advAutoExplorerOn = true;   // 应用窗口字体后是否自动重启资源管理器
         bool _advAutoWeightOn = true;   // 自动按字重配对常规/粗体/细体
         bool _advLogOn;                 // 输出日志：默认关闭
         bool _fakeOld;
@@ -1168,6 +1169,11 @@ namespace WinFontSwap.Wpf
             restartExplorerBtn.Click += delegate { RestartExplorerFromButton(); };
             stack.Children.Add(T.Row("\uE777", L.T("adv.restart.explorer"), "", restartExplorerBtn, out advDescRestartExplorer));
 
+            TextBlock advDescAutoExplorer;
+            var autoExplorerSw = T.Switch(_advAutoExplorerOn);
+            autoExplorerSw.Click += delegate { _advAutoExplorerOn = autoExplorerSw.IsChecked == true; };
+            stack.Children.Add(T.Row("\uE777", L.T("adv.auto.restart.explorer"), "", autoExplorerSw, out advDescAutoExplorer));
+
             // 所有块统一高度，避免开关行比按钮行矮一截
             foreach (var child in stack.Children)
             {
@@ -1731,14 +1737,20 @@ namespace WinFontSwap.Wpf
                 // 已打开的窗口不会自己换字体，重启资源管理器让外壳重新读一遍（电脑不用重启）
                 string summary = ShellChangeSummary();
                 if (string.IsNullOrEmpty(summary)) { SetStatus(L.T("msg.nothing.to.apply"), true); ConfirmDialog.Info(this, L.T("font.apply"), L.T("msg.nothing.to.apply")); return; }
-                if (!Confirm(L.T("msg.restart.explorer.now") + "\n\n" + summary, L.T("font.apply"))) return;
+                if (!Confirm((_advAutoExplorerOn ? L.T("msg.restart.explorer.now") : L.T("msg.write.shell.without.restart")) + "\n\n" + summary, L.T("font.apply"))) return;
                 Diagnostics.Append("apply-shell: " + ShellChangeSummary().Replace("\r\n", " | "));
                 ApplyWin32();          // 写注册表 + SystemParametersInfo 立即生效
                 MaybeLog("apply-shell");
-                bool restarted = RestartExplorer();   // 让已打开的窗口/菜单重新读字体
+                bool restarted = false;
+                bool failed = false;
+                if (_advAutoExplorerOn)
+                {
+                    restarted = RestartExplorer();   // 让已打开的窗口/菜单重新读字体
+                    failed = !restarted;
+                }
                 string done = restarted ? L.T("msg.shell.elements.applied.2") + L.T("msg.explorer.restarted")
-                                        : L.T("msg.written.but.restarting.explorer.failed");
-                SetStatus(done, !restarted);
+                                        : (failed ? L.T("msg.written.but.restarting.explorer.failed") : L.T("msg.shell.elements.applied.2"));
+                SetStatus(done, failed);
                 ConfirmDialog.Info(this, L.T("font.apply"), done);
                 return;
             }
