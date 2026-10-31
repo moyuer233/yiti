@@ -81,6 +81,10 @@ namespace WinFontSwap.Wpf
     <Setter Property='Padding' Value='8,5'/>
     <Setter Property='FontSize' Value='12'/>
     <Setter Property='HasDropShadow' Value='True'/>
+    <!-- 提示一律贴在鼠标旁边 -->
+    <Setter Property='Placement' Value='Mouse'/>
+    <Setter Property='HorizontalOffset' Value='12'/>
+    <Setter Property='VerticalOffset' Value='16'/>
     <Setter Property='Template'>
       <Setter.Value>
         <ControlTemplate TargetType='ToolTip'>

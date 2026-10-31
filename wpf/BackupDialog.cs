@@ -202,7 +202,9 @@ namespace WinFontSwap.Wpf
                 row.ToolTip = BuildTip(e);        // 悬停看“当时改了什么、结果如何”
                 ToolTipService.SetInitialShowDelay(row, 350);
                 ToolTipService.SetShowDuration(row, 60000);
-                ToolTipService.SetPlacement(row, System.Windows.Controls.Primitives.PlacementMode.Right);
+                ToolTipService.SetPlacement(row, System.Windows.Controls.Primitives.PlacementMode.Mouse);   // 跟着鼠标走
+                ToolTipService.SetHorizontalOffset(row, 12);
+                ToolTipService.SetVerticalOffset(row, 16);
                 _list.Items.Add(row);
             }
             UpdateSelInfo();

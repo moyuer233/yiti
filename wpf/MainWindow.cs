@@ -1119,7 +1119,9 @@ namespace WinFontSwap.Wpf
             userRow.ToolTip = new TextBlock { Text = L.T("adv.user.fonts.tip"), MaxWidth = 520, TextWrapping = TextWrapping.Wrap };
             ToolTipService.SetInitialShowDelay(userRow, 350);
             ToolTipService.SetShowDuration(userRow, 120000);
-            ToolTipService.SetPlacement(userRow, System.Windows.Controls.Primitives.PlacementMode.Right);
+            ToolTipService.SetPlacement(userRow, System.Windows.Controls.Primitives.PlacementMode.Mouse);   // 跟着鼠标走
+            ToolTipService.SetHorizontalOffset(userRow, 12);
+            ToolTipService.SetVerticalOffset(userRow, 16);
             stack.Children.Add(userRow);
 
             TextBlock advDescLog;
