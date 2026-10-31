@@ -25,7 +25,9 @@ namespace WinFontSwap.Wpf
         Button _editBtn;
         Button _restoreBtn;
 
-        public BackupDialog()
+        public BackupDialog() : this(false) { }
+
+        public BackupDialog(bool editMode)
         {
             Title = L.T("backup.backups");
             Width = 760;
@@ -165,7 +167,7 @@ namespace WinFontSwap.Wpf
 
             Content = root;
             SourceInitialized += delegate { Styles.DarkTitle(this); };
-            SetEditMode(false);
+            SetEditMode(editMode);
         }
 
         void ApplyKeep(TextBox box)
@@ -298,7 +300,9 @@ namespace WinFontSwap.Wpf
             if (_batchBar != null) _batchBar.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
             if (_delBtn != null) _delBtn.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
             if (_editBtn != null) _editBtn.Content = L.T(on ? "backup.edit.done" : "backup.edit.mode");
+            // 编辑模式只做批量管理：两个还原入口都收起来，避免"勾着多份还能点还原"的歧义
             if (_restoreBtn != null) _restoreBtn.Visibility = on ? Visibility.Collapsed : Visibility.Visible;
+            if (_regBtn != null) _regBtn.Visibility = on ? Visibility.Collapsed : Visibility.Visible;
             Load();
         }
 

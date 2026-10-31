@@ -539,11 +539,12 @@ namespace WinFontSwap.Wpf
                     {
                         Dispatcher.BeginInvoke(new Action(delegate { RunApply(true); }));
                     }
-                    else if (a == "--backupdemo")
+                    else if (a == "--backupdemo" || a == "--backupdemoedit")
                     {
+                        bool edit = a == "--backupdemoedit";
                         Dispatcher.BeginInvoke(new Action(delegate
                         {
-                            var dlg = new BackupDialog { Owner = this };
+                            var dlg = new BackupDialog(edit) { Owner = this };
                             dlg.ShowDialog();
                         }));
                     }

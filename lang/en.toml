@@ -82,7 +82,7 @@
 "close" = "Close"
 "edit.mode" = "Edit mode"
 "edit.done" = "Done"
-"restore.user.registry" = "Restore user registry"
+"restore.user.registry" = "Restore user fonts"
 "restore.user.registry.desc" = "Import the same-name fonts the current user has installed, from this backup"
 "restore.user.registry.prompt" = "Import this registry backup?"
 "no.user.registry.backup" = "No HKCU-Fonts*.reg backup found (only created when same-name fonts installed by the current user were cleared)"
