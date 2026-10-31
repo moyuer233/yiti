@@ -174,6 +174,28 @@ Windows **找字体不看文件名，看字体内部的 `name` 表**（OpenType 
 ### 三、回滚
 
 读 `state.ini` 里的 SHA 判断当前文件是不是我们写进去的；是则把备份里的原版排进同一套重启改名队列，并把 `WindowMetrics` 恢复成备份值。原版丢失时，从 `C:\Windows\WinSxS` 里按包名（`microsoftyahei` 等）取组件存储中的原版。
+### 四、用户级字体与「写入时清除用户级同名字体」
+
+Windows 的字体分两层，**用户级优先于系统级**：
+
+| 层级 | 文件位置 | 注册表 | 优先级 |
+|---|---|---|---|
+| 用户级（Win10 1809 起） | `%LOCALAPPDATA%\Microsoft\Windows\Fonts\` | `HKCU\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts` | 高 |
+| 系统级 | `C:\Windows\Fonts\` | `HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts` | 低 |
+
+用「为当前用户安装」装过微软雅黑的话，文件名通常是 `msyh_0.ttc` 这种。DirectWrite 会优先读这一份，所以替换 `C:\Windows\Fonts\msyh.ttc` 再重启，界面依然显示用户级那份 —— 看着像“替换成功但没变化”。
+
+高级页的「写入时清除用户级同名字体」默认开着，它做四件事：
+
+1. 先把 `HKCU\...\Fonts` 整键导出到 `backup\<时间戳>\HKCU-Fonts.reg`；导出失败或文件为空就中止清理，不会“删了没备份”；
+2. 只删除同时满足两个条件的注册项：值指向 `%LOCALAPPDATA%\Microsoft\Windows\Fonts\` 下的文件，且名字是雅黑 / 微软雅黑 / Segoe UI 的同名条目；
+3. 只删注册项，不删字体文件，文件还留在用户字体目录里；
+4. 重启后系统只认替换过的系统字体文件。
+
+撤回用「备份管理」里的「还原用户级注册」：选那次备份 → 点按钮，导入该备份的 `HKCU-Fonts*.reg`，重新登录后用户级字体恢复原来的优先级。
+
+没有用户级同名字体时，这个开关开与关没有区别，也不会生成 `.reg` 备份，备份管理里那个按钮就是灰的。确认本机从没“为当前用户安装”过雅黑/Segoe UI，或者故意想让自己装的那份优先，可以关掉。Windows 10 1809 之前的系统没有用户级字体机制，高级页这一行会置灰。
+
 ## 为什么「把字体文件改个名」没用
 
 这是这个工具存在的理由。常见的三种“简单替换”都会失败：
