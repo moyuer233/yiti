@@ -73,8 +73,6 @@ adv.restore.the.font.files.from.the.latest.backu=Restore the font files from the
 adv.review.or.delete.old.backups.or.roll.back.to=Review, restore or delete old backups
 adv.they.shadow.the.system.font=They override the system font
 adv.this.windows.version.has.no.per.user.fonts=This Windows version has no per-user fonts
-adv.shell.only=Shell elements only
-adv.shell.only.desc=Leave the system font files alone; only change menus, title bars, status bars
 adv.restart.explorer=Restart Explorer
 adv.restart.explorer.desc=Make open windows and menus re-read the shell fonts
 adv.write.a.log=Write a log
@@ -88,6 +86,12 @@ about.source.code.and.issue.tracker=Source code and issue tracker
 
 # ===== Backup manager =====
 backup.backups=Backups
+backup.auto=Auto backup
+backup.keep=Keep at most
+backup.keep.unit=folder(s)
+backup.delete.selected=Delete selected
+backup.delete.selected.prompt=Delete the selected backups?
+backup.deleted=Deleted 
 backup.backups.using= backups, using 
 backup.clear.staging=Clear staging
 backup.clear.the.staging.directory=Clear the staging directory?

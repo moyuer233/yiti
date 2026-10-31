@@ -47,6 +47,71 @@ namespace WinFontSwap
         public static string BackupRoot { get { return Path.Combine(DataDir, "backup"); } }
         public static string StageRoot { get { return Path.Combine(DataDir, "stage"); } }
         public static string StatePath { get { return Path.Combine(DataDir, "state.ini"); } }
+        public static string SettingsPath { get { return Path.Combine(DataDir, "settings.ini"); } }
+
+        static string GetSetting(string key, string def)
+        {
+            try
+            {
+                if (!File.Exists(SettingsPath)) return def;
+                foreach (var line in File.ReadAllLines(SettingsPath, Encoding.UTF8))
+                {
+                    int i = line.IndexOf('=');
+                    if (i <= 0) continue;
+                    if (string.Equals(line.Substring(0, i).Trim(), key, StringComparison.OrdinalIgnoreCase))
+                        return line.Substring(i + 1).Trim();
+                }
+            }
+            catch { }
+            return def;
+        }
+
+        static void SetSetting(string key, string value)
+        {
+            try
+            {
+                Directory.CreateDirectory(DataDir);
+                var lines = new List<string>();
+                if (File.Exists(SettingsPath))
+                {
+                    foreach (var line in File.ReadAllLines(SettingsPath, Encoding.UTF8))
+                    {
+                        int i = line.IndexOf('=');
+                        if (i > 0 && string.Equals(line.Substring(0, i).Trim(), key, StringComparison.OrdinalIgnoreCase)) continue;
+                        if (line.Trim().Length > 0) lines.Add(line);
+                    }
+                }
+                lines.Add(key + "=" + value);
+                File.WriteAllLines(SettingsPath, lines.ToArray(), Encoding.UTF8);
+            }
+            catch { }
+        }
+
+        /// <summary>应用前是否把原字体存进备份目录（默认开）。关掉后仍会把旧文件移到暂存目录，但不会出现在备份列表里。</summary>
+        public static bool AutoBackup
+        {
+            get { return GetSetting("auto_backup", "1") != "0"; }
+            set { SetSetting("auto_backup", value ? "1" : "0"); }
+        }
+
+        /// <summary>自动备份最多保留几个（默认 20，范围 1..200）。</summary>
+        public static int MaxAutoBackups
+        {
+            get
+            {
+                int n;
+                if (!int.TryParse(GetSetting("max_backups", "20"), out n)) n = 20;
+                if (n < 1) n = 1;
+                if (n > 200) n = 200;
+                return n;
+            }
+            set
+            {
+                if (value < 1) value = 1;
+                if (value > 200) value = 200;
+                SetSetting("max_backups", value.ToString());
+            }
+        }
 
         public const string SessionManagerKey = @"SYSTEM\CurrentControlSet\Control\Session Manager";
 
@@ -883,7 +948,12 @@ namespace WinFontSwap
             var stageDir = Path.Combine(StageRoot, stamp);
             var build = BuildFonts(sources, stageDir, log);
 
-            var result = new ApplyResult { BackupDir = Path.Combine(BackupRoot, stamp), OutputDir = stageDir };
+            bool autoBackup = AutoBackup;
+            var result = new ApplyResult
+            {
+                BackupDir = autoBackup ? Path.Combine(BackupRoot, stamp) : Path.Combine(stageDir, "old"),
+                OutputDir = stageDir
+            };
 
             if (generateOnly)
             {
@@ -965,6 +1035,11 @@ namespace WinFontSwap
             }
             catch (Exception ex) { log("写备份状态快照失败（不影响本次替换）：" + ex.Message); }
 
+            if (autoBackup)
+            {
+                try { PruneAutoBackups(MaxAutoBackups, result.BackupDir, log); }
+                catch (Exception ex) { log("裁剪旧备份失败：" + ex.Message); }
+            }
             log("已写入重启替换队列：" + string.Join("、", applied.ToArray()));
             result.Queued = true;
             result.Message = "重启后生效";
@@ -1164,6 +1239,39 @@ namespace WinFontSwap
             }
             catch (Exception ex) { log("清空暂存目录失败：" + ex.Message); }
             return n;
+        }
+
+        /// <summary>只保留最近 keep 个自动备份（目录名必须是 yyyyMMdd_HHmmss），刚建的那个永远保留。</summary>
+        public static int PruneAutoBackups(int keep, string keepDir, Action<string> log)
+        {
+            if (!Directory.Exists(BackupRoot)) return 0;
+            var dirs = new List<string>();
+            foreach (var d in Directory.GetDirectories(BackupRoot))
+            {
+                var name = Path.GetFileName(d);
+                DateTime t;
+                if (!DateTime.TryParseExact(name, "yyyyMMdd_HHmmss", null,
+                        System.Globalization.DateTimeStyles.None, out t)) continue;   // 只动自动备份，手工/测试目录留着
+                dirs.Add(d);
+            }
+            dirs.Sort(StringComparer.Ordinal);
+            dirs.Reverse();   // 新 → 旧
+            int removed = 0;
+            int kept = 0;
+            foreach (var d in dirs)
+            {
+                bool isNew = keepDir != null && string.Equals(Path.GetFullPath(d), Path.GetFullPath(keepDir), StringComparison.OrdinalIgnoreCase);
+                if (isNew) { kept++; continue; }
+                if (kept < keep) { kept++; continue; }
+                try
+                {
+                    DeleteBackup(d);
+                    removed++;
+                    if (log != null) log("已删除旧备份 " + Path.GetFileName(d));
+                }
+                catch (Exception ex) { if (log != null) log("删除旧备份失败：" + ex.Message); }
+            }
+            return removed;
         }
 
         public static string LatestBackup()
