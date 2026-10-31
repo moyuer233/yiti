@@ -150,6 +150,7 @@ msg.no.usable.backup.pick.a.font.instead=No usable backup - select a font first
 msg.not.in.any.backup=(no copy of this file in any backup)
 msg.not.supported.on.this.windows.version=Not supported on this Windows version
 msg.pick.a.font.first=Pick a font first.
+msg.nothing.to.apply=Nothing to apply: no font selected and no shell element changed.
 msg.pick.a.font.first.to.generate.the.font.files=Pick a font first to generate the font files.
 msg.reboot.failed=Reboot failed: 
 msg.reboot.pending=reboot pending

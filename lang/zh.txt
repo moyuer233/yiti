@@ -151,6 +151,7 @@ msg.no.usable.backup.pick.a.font.instead=没有可用备份，请先选择字体
 msg.not.in.any.backup=（备份内无当前文件）
 msg.not.supported.on.this.windows.version=不支持当前系统
 msg.pick.a.font.first=先选一个字体。
+msg.nothing.to.apply=没有要应用的内容：字体没选，界面元素也没改动。
 msg.pick.a.font.first.to.generate.the.font.files=生成字体文件需要先选择一个字体。
 msg.reboot.failed=重启失败：
 msg.reboot.pending=待重启

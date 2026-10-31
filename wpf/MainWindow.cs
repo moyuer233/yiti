@@ -497,6 +497,26 @@ namespace WinFontSwap.Wpf
                         // 自测：直接生成一份日志
                         try { WriteDiagnosticsLog(); } catch (Exception ex) { WpfProgram.Log("logdiag: " + ex); }
                     }
+                    else if (a == "--shelltest")
+                    {
+                        // 自测：模拟“全部系统元素”选了 MiSans VF Medium，看 AnyShellSelected 的判定过程
+                        Dispatcher.BeginInvoke(new Action(delegate
+                        {
+                            var sb = new System.Text.StringBuilder();
+                            for (int i = 0; i < Win32Fonts.Names.Length; i++)
+                            {
+                                _winFace[i] = "MiSans VF Medium";
+                                if (_winSize[i] != null) _winSize[i].Text = "9";
+                            }
+                            for (int i = 0; i < Win32Fonts.Names.Length; i++)
+                            {
+                                var cur = _winInfo[i];
+                                sb.AppendLine("row" + i + " on=" + _winOn[i] + " face=[" + _winFace[i] + "] cur=[" + (cur == null ? "null" : cur.Face) + "] size=[" + (_winSize[i] == null ? "null" : _winSize[i].Text) + "]");
+                            }
+                            sb.AppendLine("AnyShellSelected=" + AnyShellSelected());
+                            try { File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "shelltest.log"), sb.ToString(), System.Text.Encoding.UTF8); } catch { }
+                        }));
+                    }
                     else if (a.StartsWith("--sizes:"))
                     {
                         string sz = a.Substring(8);
@@ -1409,10 +1429,11 @@ namespace WinFontSwap.Wpf
                 for (int i = 0; i < Win32Fonts.Names.Length && i < info.Count; i++)
                 {
                     _winInfo[i] = info[i];
-                    _winFace[i] = info[i].Face;
+                    // 已有用户选择时不要覆盖：这里只补“当前系统值”和空着的字段
+                    if (string.IsNullOrEmpty(_winFace[i])) _winFace[i] = info[i].Face;
                     double pt = Math.Abs(info[i].HeightPx) * 72.0 / 96.0;
-                    _winCur[i].Text = info[i].Face + "   " + pt.ToString("0") + " pt";
-                    _winSize[i].Text = pt.ToString("0");
+                    _winCur[i].Text = _winFace[i] + "   " + pt.ToString("0") + " pt";
+                    if (_winSize[i] != null && string.IsNullOrEmpty(_winSize[i].Text)) _winSize[i].Text = pt.ToString("0");
                     if (i == 0 && _shellAllSize != null) _shellAllSize.Text = pt.ToString("0");   // 「全部系统元素」那一行跟着走
                 }
             }
@@ -1500,7 +1521,7 @@ namespace WinFontSwap.Wpf
                     double.TryParse(_winSize[i].Text, out p);
                     pts[i] = p > 0 ? p : 9;
                 }
-                int live = ShellMetrics.Apply(faces, pts, _winOn);
+                int live = ShellMetrics.Apply(faces, pts, _winOn, _winInfo);
                 SetStatus(L.T("msg.shell.elements.applied") + live + L.T("msg.item.s"), false);
             }
             catch (Exception ex) { SetStatus(L.T("msg.write.failed") + ex.Message, true); }
@@ -1574,7 +1595,7 @@ namespace WinFontSwap.Wpf
                 pts[i] = it == null ? 9 : Math.Round(Math.Abs(it.HeightPx) * 72.0 / 96.0);
                 on[i] = it != null && !string.IsNullOrEmpty(it.Face);
             }
-            if (ShellMetrics.Apply(faces, pts, on) > 0) RefreshShell();
+            if (ShellMetrics.Apply(faces, pts, on, info.ToArray()) > 0) RefreshShell();
         }
 
         void RestoreWin32()
@@ -1599,6 +1620,25 @@ namespace WinFontSwap.Wpf
             double.TryParse(_winSize[i].Text, out pt);
             if (pt <= 0) pt = 9;
             _winCur[i].Text = dlg.Picked.Family + "   " + pt.ToString("0") + " pt";
+        }
+
+        /// <summary>把这次要改的界面元素列成一行行文字（确认框里给用户看）。</summary>
+        string ShellChangeSummary()
+        {
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < Win32Fonts.Names.Length; i++)
+            {
+                if (!_winOn[i]) continue;
+                var cur = _winInfo[i];
+                bool faceChanged = cur == null || !string.Equals(_winFace[i], cur.Face, StringComparison.OrdinalIgnoreCase);
+                double pt = 9;
+                if (_winSize[i] != null) double.TryParse(_winSize[i].Text, out pt);
+                if (pt <= 0) pt = 9;
+                bool sizeChanged = cur == null || Math.Abs(pt - Math.Round(Math.Abs(cur.HeightPx) * 72.0 / 96.0)) > 0.4;
+                if (string.IsNullOrEmpty(_winFace[i]) || (!faceChanged && !sizeChanged)) continue;
+                sb.AppendLine(Win32Fonts.Names[i] + " → " + _winFace[i] + "  " + pt.ToString("0") + " pt");
+            }
+            return sb.ToString().TrimEnd();
         }
 
         /// <summary>有没有需要写入的系统元素（开关开 且 有字体名）。</summary>
@@ -1665,12 +1705,18 @@ namespace WinFontSwap.Wpf
             if (!hasFonts)
             {
                 if (generateOnly) { var m0 = L.T("msg.pick.a.font.first.to.generate.the.font.files"); SetStatus(m0, true); ConfirmDialog.Info(this, L.T("adv.generate.only"), m0); return; }
-                if (!hasShell) { SetStatus(L.T("msg.pick.a.font.first"), true); return; }
+                if (!hasShell) { SetStatus(L.T("msg.nothing.to.apply"), true); ConfirmDialog.Info(this, L.T("font.apply"), L.T("msg.nothing.to.apply")); return; }
                 // 已打开的窗口不会自己换字体，重启资源管理器让外壳重新读一遍（电脑不用重启）
-                if (!Confirm(L.T("msg.restart.explorer.now"), L.T("font.apply"))) return;
+                string summary = ShellChangeSummary();
+                if (string.IsNullOrEmpty(summary)) { SetStatus(L.T("msg.nothing.to.apply"), true); ConfirmDialog.Info(this, L.T("font.apply"), L.T("msg.nothing.to.apply")); return; }
+                if (!Confirm(L.T("msg.restart.explorer.now") + "\n\n" + summary, L.T("font.apply"))) return;
                 ApplyWin32();          // 写注册表 + SystemParametersInfo 立即生效
                 MaybeLog("apply-shell");
-                if (RestartExplorer()) SetStatus(L.T("msg.shell.elements.applied.2") + L.T("msg.explorer.restarted"), false);   // 让已打开的窗口/菜单重新读字体
+                bool restarted = RestartExplorer();   // 让已打开的窗口/菜单重新读字体
+                string done = restarted ? L.T("msg.shell.elements.applied.2") + L.T("msg.explorer.restarted")
+                                        : L.T("msg.written.but.restarting.explorer.failed");
+                SetStatus(done, !restarted);
+                ConfirmDialog.Info(this, L.T("font.apply"), done);
                 return;
             }
 

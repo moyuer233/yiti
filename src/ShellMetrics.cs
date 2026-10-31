@@ -90,7 +90,7 @@ namespace WinFontSwap
         /// faces[i] 与 Win32Fonts.Keys 顺序一致：SmCaption / Menu / Message / Status / Icon。
         /// 返回成功写入的项数。
         /// </summary>
-        public static int Apply(string[] faces, double[] points, bool[] enabled)
+        public static int Apply(string[] faces, double[] points, bool[] enabled, Win32Fonts.Info[] infos = null)
         {
             int done = 0;
             try
@@ -117,10 +117,22 @@ namespace WinFontSwap
                     switch (i)
                     {
                         // 同步把 quality 设成 CLEARTYPE_QUALITY：注册表里若留着 0（DEFAULT），经典界面会退化成灰度抗锯齿
-                        case 0: ncm.lfSmCaptionFont.lfHeight = h; ncm.lfSmCaptionFont.lfFaceName = faces[i]; ncm.lfSmCaptionFont.lfQuality = 5; done++; break;
-                        case 1: ncm.lfMenuFont.lfHeight = h; ncm.lfMenuFont.lfFaceName = faces[i]; ncm.lfMenuFont.lfQuality = 5; done++; break;
-                        case 2: ncm.lfMessageFont.lfHeight = h; ncm.lfMessageFont.lfFaceName = faces[i]; ncm.lfMessageFont.lfQuality = 5; done++; break;
-                        case 3: ncm.lfStatusFont.lfHeight = h; ncm.lfStatusFont.lfFaceName = faces[i]; ncm.lfStatusFont.lfQuality = 5; done++; break;
+                        case 0:
+                            ncm.lfSmCaptionFont.lfHeight = h; ncm.lfSmCaptionFont.lfFaceName = faces[i]; ncm.lfSmCaptionFont.lfQuality = 5;
+                            if (infos != null && i < infos.Length && infos[i] != null) { ncm.lfSmCaptionFont.lfWeight = infos[i].Weight; ncm.lfSmCaptionFont.lfCharSet = (byte)infos[i].CharSet; ncm.lfSmCaptionFont.lfItalic = (byte)(infos[i].Italic ? 1 : 0); }
+                            done++; break;
+                        case 1:
+                            ncm.lfMenuFont.lfHeight = h; ncm.lfMenuFont.lfFaceName = faces[i]; ncm.lfMenuFont.lfQuality = 5;
+                            if (infos != null && i < infos.Length && infos[i] != null) { ncm.lfMenuFont.lfWeight = infos[i].Weight; ncm.lfMenuFont.lfCharSet = (byte)infos[i].CharSet; ncm.lfMenuFont.lfItalic = (byte)(infos[i].Italic ? 1 : 0); }
+                            done++; break;
+                        case 2:
+                            ncm.lfMessageFont.lfHeight = h; ncm.lfMessageFont.lfFaceName = faces[i]; ncm.lfMessageFont.lfQuality = 5;
+                            if (infos != null && i < infos.Length && infos[i] != null) { ncm.lfMessageFont.lfWeight = infos[i].Weight; ncm.lfMessageFont.lfCharSet = (byte)infos[i].CharSet; ncm.lfMessageFont.lfItalic = (byte)(infos[i].Italic ? 1 : 0); }
+                            done++; break;
+                        case 3:
+                            ncm.lfStatusFont.lfHeight = h; ncm.lfStatusFont.lfFaceName = faces[i]; ncm.lfStatusFont.lfQuality = 5;
+                            if (infos != null && i < infos.Length && infos[i] != null) { ncm.lfStatusFont.lfWeight = infos[i].Weight; ncm.lfStatusFont.lfCharSet = (byte)infos[i].CharSet; ncm.lfStatusFont.lfItalic = (byte)(infos[i].Italic ? 1 : 0); }
+                            done++; break;
                     }
                 }
                 // 标题栏：Win11 22H2+ 会读 lfCaptionFont（noMeiryoUI 的 set11TitlePreset 也做这件事）。

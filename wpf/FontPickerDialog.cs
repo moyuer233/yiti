@@ -125,6 +125,8 @@ namespace WinFontSwap.Wpf
                 n++;
                 if (n > 600) break;
             }
+            // 默认选中第一条：否则“确定了但没选中”会静默什么都不做，用户以为选过了
+            if (_list.Items.Count > 0) _list.SelectedIndex = 0;
         }
 
         /// <summary>一行预览：用该字体自身渲染「Aa + 字体名 + 字重」。</summary>
