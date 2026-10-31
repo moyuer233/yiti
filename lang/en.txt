@@ -71,6 +71,8 @@ adv.restore.the.font.files.from.the.latest.backu=Restore the font files from the
 adv.review.or.delete.old.backups.or.roll.back.to=Review, restore or delete old backups
 adv.they.shadow.the.system.font=They override the system font
 adv.this.windows.version.has.no.per.user.fonts=This Windows version has no per-user fonts
+adv.shell.only=Shell elements only
+adv.shell.only.desc=Leave the system font files alone; only change menus, title bars, status bars
 adv.write.a.log=Write a log
 adv.writes.yy.mm.dd.ss.log.next.to.the.exe.after=Writes yy-mm-dd-ss.log next to the exe after each action
 

@@ -213,6 +213,44 @@ namespace WinFontSwap
             return bestDiff <= 200 ? best : null;
         }
 
+        /// <summary>这个条目所在文件是不是可变字体（只看文件名像 VF 的，避免把全库字体都读一遍）。</summary>
+        public static bool IsVariableEntry(FontEntry e)
+        {
+            if (e == null) return false;
+            try { return Sfnt.IsVariable(File.ReadAllBytes(e.Path), e.FaceIndex); }
+            catch { return false; }
+        }
+
+        /// <summary>
+        /// 找同一个家族的可变字体版本：英数那个槽位（SegUIVar）在 WinUI 里会被按 400/600/700 多档请求，
+        /// 只有可变字体才能对上真实字重，静态文件会被系统合成。
+        /// </summary>
+        public static FontEntry FindVariableSibling(FontEntry picked)
+        {
+            if (picked == null) return null;
+            if (IsVariableEntry(picked)) return picked;
+            // 必须同一个家族（去掉 VF / Variable 这类后缀后比较），否则会把别的字体当成“同族可变版”
+            var baseName = NormalizeBase(picked.Family);
+            foreach (var e in All)
+            {
+                var n = (e.FileName ?? "").ToLowerInvariant();
+                var f = (e.Family ?? "").ToLowerInvariant();
+                if (n.IndexOf("vf", StringComparison.Ordinal) < 0 && f.IndexOf("vf", StringComparison.Ordinal) < 0
+                    && n.IndexOf("variable", StringComparison.Ordinal) < 0 && f.IndexOf("variable", StringComparison.Ordinal) < 0) continue;
+                if (NormalizeBase(e.Family) != baseName) continue;
+                if (IsVariableEntry(e)) return e;
+            }
+            return null;
+        }
+
+        static string NormalizeBase(string family)
+        {
+            var b = FamilyBase(family);
+            b = b.Replace(" variable", "").Replace("variable", "");
+            b = b.Replace(" vf", "").Replace("vf", "");
+            return b.Trim();
+        }
+
         public static string Label(int weight)
         {
             if (weight < 350) return "细体";
