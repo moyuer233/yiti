@@ -23,6 +23,7 @@ namespace WinFontSwap.Wpf
         bool _editMode;
         Panel _batchBar;
         Button _editBtn;
+        Button _restoreBtn;
 
         public BackupDialog()
         {
@@ -147,6 +148,7 @@ namespace WinFontSwap.Wpf
             var restore = T.Btn2(L.T("backup.restore.this.backup"), true, 13);
             restore.Margin = new Thickness(0, 0, 8, 0);
             restore.Click += delegate { RestoreSelected(); };
+            _restoreBtn = restore;
             var regBtn = T.Btn2(L.T("backup.restore.user.registry"), false, 13);
             regBtn.Margin = new Thickness(0, 0, 8, 0);
             regBtn.Click += delegate { RestoreUserRegistry(); };
@@ -296,6 +298,7 @@ namespace WinFontSwap.Wpf
             if (_batchBar != null) _batchBar.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
             if (_delBtn != null) _delBtn.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
             if (_editBtn != null) _editBtn.Content = L.T(on ? "backup.edit.done" : "backup.edit.mode");
+            if (_restoreBtn != null) _restoreBtn.Visibility = on ? Visibility.Collapsed : Visibility.Visible;
             Load();
         }
 
@@ -370,16 +373,8 @@ namespace WinFontSwap.Wpf
 
         void RestoreSelected()
         {
-            // 勾选优先：勾了多个就明确拒绝（一次只能回到一个时间点），没勾就用当前高亮的那行
-            var picked = new List<Installer.BackupEntry>();
-            for (int i = 0; i < _checks.Count && i < _entries.Count; i++)
-                if (_checks[i].IsChecked == true) picked.Add(_entries[i]);
-            if (picked.Count > 1)
-            {
-                ConfirmDialog.Info(this, L.T("backup.restore.this.backup"), L.T("backup.restore.only.one"));
-                return;
-            }
-            var e = picked.Count == 1 ? picked[0] : Selected;
+            // 编辑模式下还原按钮是隐藏的，正常模式没有勾选框，所以这里只看高亮行
+            var e = Selected;
             if (e == null)
             {
                 ConfirmDialog.Info(this, L.T("backup.restore.this.backup"), L.T("backup.restore.pick.one"));
