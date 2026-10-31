@@ -254,6 +254,8 @@ namespace WinFontSwap.Wpf
             foreach (var f in Installer.TargetFiles)
             {
                 if (!e.Families.ContainsKey(f) && !e.Shas.ContainsKey(f)) continue;
+                // 只列这份备份里真的有文件的条目：没有原文件就没法说“从哪个字体改成了哪个”
+                if (e.Files.Count > 0 && !e.Files.Contains(f)) continue;
                 total++;
                 string fam;
                 e.Families.TryGetValue(f, out fam);
@@ -280,9 +282,23 @@ namespace WinFontSwap.Wpf
                 }
                 if (used) inUse++;
                 if (changed) changedCount++;
-                sb.AppendLine("   " + f.PadRight(13) + " ← " + fam
-                    + (changed ? "  " + L.T("backup.tip.changed") : "  " + L.T("backup.tip.unchanged"))
-                    + (used ? "  " + L.T("backup.tip.inuse") : ""));
+                // 改之前是什么字体：优先按版权/字形反查备份里的原文件，认不出就退回它的内部族名
+                string before = Installer.DetectFamilyOfPath(orig, null);
+                if (string.IsNullOrEmpty(before)) before = Installer.InternalFamilyOfPath(orig);
+                if (string.IsNullOrEmpty(before)) before = "?";
+                bool same = string.Equals((before ?? "").Replace(" ", ""), (fam ?? "").Replace(" ", ""), StringComparison.OrdinalIgnoreCase);
+                string line = "   " + f.PadRight(13) + " ";
+                if (changed && !same)
+                {
+                    // ✎ 放在“改成了什么”那一侧：一眼看出和之前不一样的是新字体
+                    line += before + " → " + L.T("backup.tip.changed") + " " + fam;
+                }
+                else
+                {
+                    line += fam + "  " + L.T("backup.tip.same");
+                }
+                if (used) line += "  " + L.T("backup.tip.inuse");
+                sb.AppendLine(line);
             }
             if (total > 0)
             {
