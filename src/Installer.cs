@@ -1365,7 +1365,7 @@ namespace WinFontSwap
                 }
 
                 state["sha_" + f] = Sha256(bak);
-            state.Remove("family_" + f);
+                state.Remove("family_" + f);
             }
 
             AddQueuePairs(pairs);
@@ -1404,17 +1404,18 @@ namespace WinFontSwap
             {
                 var target = Path.Combine(FontsDir, f);
                 if (!File.Exists(target)) { rep.Missing.Add(f); continue; }
-                bool recorded = applied.Contains(f);
                 string want;
                 st.TryGetValue("sha_" + f, out want);
-                if (!recorded)
+                bool hasSha = !string.IsNullOrEmpty(want);
+                // 有 sha 记录就以 sha 为准（最可靠）；没有 sha 但 applied 里有，也认为换过；两者都没有才算“从没换过”
+                if (!hasSha && !applied.Contains(f))
                 {
                     rep.Never.Add(f);
                     continue;
                 }
                 string now = null;
                 try { now = Sha256(target); } catch { }
-                if (string.IsNullOrEmpty(want) || string.Equals(now, want, StringComparison.OrdinalIgnoreCase)) rep.AppliedOk.Add(f);
+                if (!hasSha || string.Equals(now, want, StringComparison.OrdinalIgnoreCase)) rep.AppliedOk.Add(f);
                 else rep.AppliedPending.Add(f);
             }
             return rep;
