@@ -314,14 +314,47 @@ namespace WinFontSwap
         /// </summary>
         public static string DetectSourceFamily(string fileName)
         {
+            return DetectFamilyOfPath(Path.Combine(FontsDir, fileName), fileName);
+        }
+
+        /// <summary>读文件内部的族名（nameID 1）：用于展示“这次改之前是哪个字体”。</summary>
+        public static string InternalFamilyOfPath(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return null;
+            var key = "fam:" + path;
             string cached;
-            if (_srcCache.TryGetValue(fileName, out cached)) return cached;
+            if (_srcCache.TryGetValue(key, out cached)) return cached;
             string result = null;
             try
             {
-                var target = Path.Combine(FontsDir, fileName);
-                if (!File.Exists(target)) return null;
-                var data = File.ReadAllBytes(target);
+                if (File.Exists(path))
+                {
+                    var data = File.ReadAllBytes(path);
+                    var faces = Sfnt.FaceOffsets(data);
+                    if (faces.Length > 0)
+                    {
+                        string fam, sub, ver, full; int wt;
+                        if (Sfnt.TryReadNames(data, faces[0], out fam, out sub, out ver, out full, out wt)) result = fam;
+                    }
+                }
+            }
+            catch { }
+            _srcCache[key] = result;
+            return result;
+        }
+
+        /// <summary>按版权/版本/字形哈希反查任意一个字体文件里装的是哪款字体（path 为空返回 null）。</summary>
+        public static string DetectFamilyOfPath(string path, string skipFileName)
+        {
+            if (string.IsNullOrEmpty(path)) return null;
+            var cacheKey = "src:" + path;
+            string cached;
+            if (_srcCache.TryGetValue(cacheKey, out cached)) return cached;
+            string result = null;
+            try
+            {
+                if (!File.Exists(path)) return null;
+                var data = File.ReadAllBytes(path);
                 var faces = Sfnt.FaceOffsets(data);
                 if (faces.Length == 0) return null;
                 var ids = new[] { 0, 5, 7 };
@@ -334,8 +367,9 @@ namespace WinFontSwap
                 {
                     try
                     {
+                        if (string.Equals(f.Path, path, StringComparison.OrdinalIgnoreCase)) continue;
                         var candName = Path.GetFileName(f.Path);
-                        if (string.Equals(candName, fileName, StringComparison.OrdinalIgnoreCase)) continue;
+                        if (!string.IsNullOrEmpty(skipFileName) && string.Equals(candName, skipFileName, StringComparison.OrdinalIgnoreCase)) continue;
                         // 我们自己换出来的兄弟目标文件版权字段完全一样，不能当成来源
                         bool isTarget = false;
                         foreach (var t in TargetFiles) if (string.Equals(candName, t, StringComparison.OrdinalIgnoreCase)) { isTarget = true; break; }
@@ -363,16 +397,16 @@ namespace WinFontSwap
             {
                 try
                 {
-                    var target = Path.Combine(FontsDir, fileName);
-                    if (File.Exists(target))
+                    if (File.Exists(path))
                     {
-                        var mineHash = GlyfHash(target, 0);
+                        var mineHash = GlyfHash(path, 0);
                         if (!string.IsNullOrEmpty(mineHash))
                         {
                             foreach (var f in FontLibrary.All)
                             {
+                                if (string.Equals(f.Path, path, StringComparison.OrdinalIgnoreCase)) continue;
                                 var candName = Path.GetFileName(f.Path);
-                                if (string.Equals(candName, fileName, StringComparison.OrdinalIgnoreCase)) continue;
+                                if (!string.IsNullOrEmpty(skipFileName) && string.Equals(candName, skipFileName, StringComparison.OrdinalIgnoreCase)) continue;
                                 bool isTarget = false;
                                 foreach (var t in TargetFiles) if (string.Equals(candName, t, StringComparison.OrdinalIgnoreCase)) { isTarget = true; break; }
                                 if (isTarget) continue;
@@ -389,7 +423,7 @@ namespace WinFontSwap
                 }
                 catch { }
             }
-            _srcCache[fileName] = result;
+            _srcCache[cacheKey] = result;
             return result;
         }
 
