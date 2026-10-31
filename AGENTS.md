@@ -4,7 +4,7 @@ Windows 系统字体一键替换工具。产物 `dist\YiTi.exe`（单文件、�
 
 - 源码：`src\`（Sfnt / Installer / FontLibrary / ShellMetrics / Win32Fonts）+ `wpf\`（MainWindow / Lang / ConfirmDialog / BackupDialog / FontPickerDialog / Styles / WpfApp）。
 - 构建：`build-wpf.ps1`（csc 编 WPF → 提权 `sign.ps1` 自签 → 硬断言签名 Valid），成功唯一标记 `WPF OK <path> <bytes> … sig=Valid`。所有 tracked `.ps1` 必须纯 ASCII（`check-ascii.ps1` 是闸门）。
-- 文案：`lang\zh.txt` / `lang\en.txt`，Minecraft 风格 `key=文本`，键是「界面位置.功能」语义名，编译进 exe；改文案只改等号右边并重编译。
+- 文案：`lang\zh.toml` / `lang\en.toml`，TOML（`[分节]` + `"键 = \"值\""`），键是「界面位置.功能」语义名，编译进 exe；改文案只改等号右边引号里的字并重编译。
 - 状态与备份：`C:\ProgramData\WinFontSwap\`（state.ini、backup\、stage\、ui.lang）。
 
 ## 发布说明（Release notes）怎么写 —— 长期规则，用户明确要求

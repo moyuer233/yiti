@@ -226,19 +226,19 @@ The output is always `dist\YiTi.exe`.
 
 ### Editing the UI text
 
-All UI strings live in `lang/zh.txt` and `lang/en.txt` as Minecraft-style `key=text` lines (keys are semantic; the prefix tells you which screen they belong to):
+All UI strings live in `lang/zh.toml` and `lang/en.toml` as TOML: a `[section]` names the screen and each line is `"key = value"`:
 
-```ini
-# ===== Fonts page =====
-font.apply=Apply
-font.auto.weight.matching=Auto weight matching
+```toml
+[font]
+"apply" = "Apply"
+"auto.weight.matching" = "Auto weight matching"
 
-# ===== Advanced page =====
-adv.generate=Generate only
-adv.log=Write a log
+[adv]
+"generate.only" = "Build the fonts used for replacement"
+"write.a.log" = "Write a log"
 ```
 
-**Only edit the text on the right of `=`.** The code looks strings up by key, so renaming a key makes the raw key show up in the UI. Rebuild with `build-wpf.ps1` to embed the new text.
+**Only edit the text inside the quotes.** The code looks strings up as `section.key`, so renaming a key makes the raw key show up in the UI. Escape a double quote as `\"`. Rebuild with `build-wpf.ps1` to embed the new text.
 
 ## Disclaimer
 

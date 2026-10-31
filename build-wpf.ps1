@@ -38,10 +38,10 @@ foreach ($f in @('WpfApp.cs','Lang.cs','MainWindow.cs','ConfirmDialog.cs','Backu
   $a += (Join-Path $root ('wpf\' + $f))
 }
 
-# UI strings: lang\zh.txt and lang\en.txt are embedded into the exe as resources.
+# UI strings: lang\zh.toml and lang\en.toml are embedded into the exe as resources.
 $langSrc = Join-Path $root 'lang'
-if (Test-Path (Join-Path $langSrc 'zh.txt')) { $a += ('/resource:' + (Join-Path $langSrc 'zh.txt') + ',lang.zh.txt') }
-if (Test-Path (Join-Path $langSrc 'en.txt')) { $a += ('/resource:' + (Join-Path $langSrc 'en.txt') + ',lang.en.txt') }
+if (Test-Path (Join-Path $langSrc 'zh.toml')) { $a += ('/resource:' + (Join-Path $langSrc 'zh.toml') + ',lang.zh.toml') }
+if (Test-Path (Join-Path $langSrc 'en.toml')) { $a += ('/resource:' + (Join-Path $langSrc 'en.toml') + ',lang.en.toml') }
 & $csc $a
 if ($LASTEXITCODE -ne 0) { throw ('WPF compile failed: ' + $LASTEXITCODE) }
 
