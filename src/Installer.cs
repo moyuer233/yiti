@@ -948,6 +948,8 @@ namespace WinFontSwap
 
             if (applied.Count == 0) throw new InvalidOperationException("没有可替换的目标");
 
+            try { RemoveQueueEntries(applied.ToArray()); }   // 同一批目标以本次为准，别和上一次的待执行项叠加
+            catch (Exception ex) { log("清理旧的重启队列失败（不影响本次排队）：" + ex.Message); }
             AddQueuePairs(pairs);
             if (clearCaches) ClearFontCaches(log);
             state["applied"] = string.Join(";", applied.ToArray());

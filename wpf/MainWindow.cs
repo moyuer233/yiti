@@ -1733,6 +1733,13 @@ namespace WinFontSwap.Wpf
                 bool cache = _advCache != null && _advCache.IsChecked == true;
                 bool userFonts = _advUserFonts != null && _advUserFonts.IsChecked == true;
                 var res = Installer.Apply(list, delegate (string m) { }, generateOnly, cache, userFonts);
+                // 和字体一起改的界面元素也要写：以前这条分支只排字体文件，界面元素被默默丢掉（默认预设时最明显）
+                if (!generateOnly && AnyShellSelected())
+                {
+                    Diagnostics.Append("apply-shell (with fonts): " + ShellChangeSummary().Replace("\r\n", " | "));
+                    ApplyWin32();
+                    MaybeLog("apply-shell");
+                }
                 SetStatus(generateOnly ? (L.T("msg.generated.into") + res.OutputDir) : L.T("msg.written.rebooting.now"), false);
                 MaybeLog(generateOnly ? "generate" : "apply-fonts");
                 Diagnostics.Append("apply done: " + res.Message + " queued=" + res.Queued + " out=" + res.OutputDir);
