@@ -17,7 +17,7 @@
 #   msg.     status-bar text and result messages (some are fragments around a number)
 
 # ===== Fonts page =====
-font.all.five.are.now=All five are now 
+font.all.five.are.now=Size set to 
 font.all.shell.elements=All window elements
 font.apply=Apply
 font.applying=Applying…
@@ -93,10 +93,10 @@ backup.deleted=Deleted
 backup.selected=Selected 
 backup.selected.unit=
 backup.select.all=Select all
-backup.tip.written=Written at that time:
+backup.tip.written=Written:
 backup.tip.inuse=(in use)
-backup.tip.result=Result: 
-backup.tip.still.in.use= of the files are in use now
+backup.tip.result=Stats: 
+backup.tip.still.in.use= of the files are in use
 backup.tip.nostate=(early backup: no record of what was written)
 backup.tip.restorable=Restorable: 
 backup.backups.using= backups, using 
@@ -104,6 +104,8 @@ backup.clear.staging=Clear staging
 backup.clear.the.staging.directory=Clear the staging directory?
 backup.cleared=Cleared 
 backup.close=Close
+backup.edit.mode=Edit mode
+backup.edit.done=Done
 backup.restore.user.registry=Restore user registry
 backup.restore.user.registry.desc=Import the same-name fonts the current user has installed, from this backup
 backup.restore.user.registry.prompt=Import this registry backup?
@@ -120,6 +122,12 @@ backup.queued.for.the.next.reboot=Queued for the next reboot:
 backup.refused.while.the.reboot.queue.still.holds.o=(this operation is refused while the reboot queue still holds pending entries)
 backup.restore.failed=Restore failed
 backup.restore.this.backup=Restore this backup
+backup.tip.changed=✎ changed by this backup
+backup.tip.unchanged=· unchanged
+backup.tip.changed.count=Changed by this backup: 
+backup.tip.items= file(s)
+backup.restore.only.one=Only one backup can be restored at a time; clear the extra ticks first.
+backup.restore.pick.one=Pick a backup first.
 backup.restore.this.backup.it.takes.effect.after.a.=Restore this backup? It takes effect after a reboot.
 backup.staging=Staging: 
 backup.total=Total 
@@ -140,7 +148,7 @@ dlg.no=Cancel
 # ===== Status bar and result messages (some are fragments around a number) =====
 msg.about=About
 msg.advanced=Advanced
-msg.all.five.are.now=All five are now 
+msg.all.five.are.now=Set to 
 msg.are.still.original.or.never.landed= not applied / still the original file
 msg.comes.back.after.a.reboot= comes back after a reboot.
 msg.creating.a.system.restore.point=Creating a system restore point…

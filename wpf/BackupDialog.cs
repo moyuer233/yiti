@@ -20,6 +20,9 @@ namespace WinFontSwap.Wpf
         Button _delBtn;
         Button _regBtn;
         readonly CheckBox _selectAll = new CheckBox();
+        bool _editMode;
+        Panel _batchBar;
+        Button _editBtn;
 
         public BackupDialog()
         {
@@ -52,12 +55,16 @@ namespace WinFontSwap.Wpf
             _stage.Margin = new Thickness(0, 4, 0, 0);
             info.Children.Add(_stage);
             head.Children.Add(info);
+            var headBtns = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 0, 0) };
+            _editBtn = T.Btn2(L.T("backup.edit.mode"), false, 12);
+            _editBtn.Margin = new Thickness(0, 0, 8, 0);
+            _editBtn.Click += delegate { SetEditMode(!_editMode); };
+            headBtns.Children.Add(_editBtn);
             var clear = T.Btn2(L.T("backup.clear.staging"), false, 12);
-            clear.VerticalAlignment = VerticalAlignment.Center;
-            clear.Margin = new Thickness(12, 0, 0, 0);
             clear.Click += delegate { ClearStageAction(); };
-            Grid.SetColumn(clear, 1);
-            head.Children.Add(clear);
+            headBtns.Children.Add(clear);
+            Grid.SetColumn(headBtns, 1);
+            head.Children.Add(headBtns);
             head.Margin = new Thickness(0, 0, 0, 8);
             Grid.SetRow(head, 0);
             root.Children.Add(head);
@@ -121,6 +128,7 @@ namespace WinFontSwap.Wpf
             tools.Children.Add(_selInfo);
             Grid.SetRow(tools, 2);
             root.Children.Add(tools);
+            _batchBar = tools;
 
             _list.SelectionMode = SelectionMode.Single;
             _list.HorizontalContentAlignment = HorizontalAlignment.Stretch;
@@ -155,7 +163,7 @@ namespace WinFontSwap.Wpf
 
             Content = root;
             SourceInitialized += delegate { Styles.DarkTitle(this); };
-            Load();
+            SetEditMode(false);
         }
 
         void ApplyKeep(TextBox box)
@@ -187,13 +195,16 @@ namespace WinFontSwap.Wpf
             {
                 total += e.Bytes;
                 var name = Path.GetFileName(e.Dir);
-                var row = new Grid();
+                var row = new Grid { Background = Brushes.Transparent };   // 整行可命中，悬停才稳
                 row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
                 row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                var cb = new CheckBox { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 10, 0) };
-                cb.Click += delegate { UpdateSelInfo(); };
-                row.Children.Add(cb);
-                _checks.Add(cb);
+                if (_editMode)
+                {
+                    var cb = new CheckBox { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 10, 0) };
+                    cb.Click += delegate { UpdateSelInfo(); };
+                    row.Children.Add(cb);
+                    _checks.Add(cb);
+                }
                 var txt = T.Label(e.Date.ToString("yyyy-MM-dd HH:mm") + "   " + Installer.HumanSize(e.Bytes).PadLeft(9)
                     + "   " + e.Files.Count + L.T("backup.files") + "   " + name, 12, T.Text, false);
                 txt.VerticalAlignment = VerticalAlignment.Center;
@@ -235,7 +246,7 @@ namespace WinFontSwap.Wpf
                 return sb.ToString().TrimEnd();
             }
             sb.AppendLine(L.T("backup.tip.written"));
-            int inUse = 0, total = 0;
+            int inUse = 0, total = 0, changedCount = 0;
             foreach (var f in Installer.TargetFiles)
             {
                 if (!e.Families.ContainsKey(f) && !e.Shas.ContainsKey(f)) continue;
@@ -254,13 +265,38 @@ namespace WinFontSwap.Wpf
                     }
                     catch { }
                 }
+                // 这次备份到底改没改这个文件：备份里的原文件 与 这次写进去的内容 不同才算改过
+                bool changed = true;
+                var orig = Path.Combine(e.Dir, "orig", f);
+                if (!File.Exists(orig)) orig = Path.Combine(e.Dir, f);
+                if (File.Exists(orig) && e.Shas.ContainsKey(f))
+                {
+                    try { changed = !string.Equals(Installer.Sha256(orig), want, StringComparison.OrdinalIgnoreCase); }
+                    catch { }
+                }
                 if (used) inUse++;
-                sb.AppendLine("   " + f.PadRight(13) + " ← " + fam + (used ? "  " + L.T("backup.tip.inuse") : ""));
+                if (changed) changedCount++;
+                sb.AppendLine("   " + f.PadRight(13) + " ← " + fam
+                    + (changed ? "  " + L.T("backup.tip.changed") : "  " + L.T("backup.tip.unchanged"))
+                    + (used ? "  " + L.T("backup.tip.inuse") : ""));
             }
             if (total > 0)
-                sb.AppendLine(L.T("backup.tip.result") + inUse + "/" + total + L.T("backup.tip.still.in.use"));
+            {
+                sb.AppendLine(L.T("backup.tip.result") + L.T("backup.tip.changed.count") + changedCount + L.T("backup.tip.items")
+                    + "，" + inUse + "/" + total + L.T("backup.tip.still.in.use"));
+            }
             sb.AppendLine(L.T("backup.tip.restorable") + e.Files.Count + L.T("backup.files"));
             return sb.ToString().TrimEnd();
+        }
+
+        /// <summary>编辑模式：显示勾选框、全选和删除；普通模式只留查看与还原。</summary>
+        void SetEditMode(bool on)
+        {
+            _editMode = on;
+            if (_batchBar != null) _batchBar.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+            if (_delBtn != null) _delBtn.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+            if (_editBtn != null) _editBtn.Content = L.T(on ? "backup.edit.done" : "backup.edit.mode");
+            Load();
         }
 
         void UpdateSelInfo()
@@ -334,8 +370,21 @@ namespace WinFontSwap.Wpf
 
         void RestoreSelected()
         {
-            var e = Selected;
-            if (e == null) return;
+            // 勾选优先：勾了多个就明确拒绝（一次只能回到一个时间点），没勾就用当前高亮的那行
+            var picked = new List<Installer.BackupEntry>();
+            for (int i = 0; i < _checks.Count && i < _entries.Count; i++)
+                if (_checks[i].IsChecked == true) picked.Add(_entries[i]);
+            if (picked.Count > 1)
+            {
+                ConfirmDialog.Info(this, L.T("backup.restore.this.backup"), L.T("backup.restore.only.one"));
+                return;
+            }
+            var e = picked.Count == 1 ? picked[0] : Selected;
+            if (e == null)
+            {
+                ConfirmDialog.Info(this, L.T("backup.restore.this.backup"), L.T("backup.restore.pick.one"));
+                return;
+            }
             if (!Ask(L.T("backup.restore.this.backup.it.takes.effect.after.a.") + "\n" + Path.GetFileName(e.Dir), L.T("backup.restore.this.backup"))) return;
             try
             {

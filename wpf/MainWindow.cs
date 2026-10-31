@@ -1475,7 +1475,7 @@ namespace WinFontSwap.Wpf
                 if (_winCur[i] != null) _winCur[i].Text = face + "   " + pt.ToString("0") + " pt";
             }
             if (_shellAllDesc != null) _shellAllDesc.Text = face;
-            SetStatus(L.T("msg.all.five.are.now") + face, false);
+            SetStatus(L.T("msg.all.five.are.now") + " " + face, false);
         }
 
         void ApplyWin32()

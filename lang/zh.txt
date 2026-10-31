@@ -17,7 +17,7 @@
 #   msg.     状态栏文字与结果提示（有些是拼在数字前后的片段）
 
 # ===== 字体替换页 =====
-font.all.five.are.now=这 5 项字号已设为 
+font.all.five.are.now=字号已设为 
 font.all.shell.elements=全部窗口元素
 font.apply=应用
 font.applying=应用中…
@@ -93,10 +93,10 @@ backup.deleted=已删除
 backup.selected=已选 
 backup.selected.unit= 个
 backup.select.all=全选
-backup.tip.written=当时写入：
-backup.tip.inuse=（仍在使用）
-backup.tip.result=结果：
-backup.tip.still.in.use= 个文件现用
+backup.tip.written=写入：
+backup.tip.inuse=（正在使用）
+backup.tip.result=统计：
+backup.tip.still.in.use= 个文件正在使用
 backup.tip.nostate=（早期备份，没有记录写入的字体）
 backup.tip.restorable=可还原：
 backup.backups.using= 个备份，占用 
@@ -104,6 +104,8 @@ backup.clear.staging=清理暂存目录
 backup.clear.the.staging.directory=清空暂存目录？
 backup.cleared=已清理 
 backup.close=关闭
+backup.edit.mode=编辑模式
+backup.edit.done=完成
 backup.restore.user.registry=还原用户级注册
 backup.restore.user.registry.desc=导入这次备份中当前用户已安装的同名字体
 backup.restore.user.registry.prompt=导入这个注册表备份？
@@ -120,6 +122,12 @@ backup.queued.for.the.next.reboot=已排入重启队列：
 backup.refused.while.the.reboot.queue.still.holds.o=（重启队列里还有待执行项时会拒绝此次操作）
 backup.restore.failed=还原失败
 backup.restore.this.backup=还原到此备份
+backup.tip.changed=✎ 本次有改动
+backup.tip.unchanged=· 未改动
+backup.tip.changed.count=本次改动 
+backup.tip.items= 项
+backup.restore.only.one=一次只能还原一个备份，请只勾选一个。
+backup.restore.pick.one=请先选一个备份再还原。
 backup.restore.this.backup.it.takes.effect.after.a.=还原到这个备份？重启后生效。
 backup.staging=暂存目录：
 backup.total=共 
@@ -141,7 +149,7 @@ dlg.no=取消
 # ===== 状态栏与结果提示（不少是拼在数字前后的小片段） =====
 msg.about=关于
 msg.advanced=高级
-msg.all.five.are.now=这 5 项都已设为 
+msg.all.five.are.now=已设为
 msg.are.still.original.or.never.landed= 未生效/还是原文件
 msg.comes.back.after.a.reboot= 重启后恢复。
 msg.creating.a.system.restore.point=正在创建系统还原点…
