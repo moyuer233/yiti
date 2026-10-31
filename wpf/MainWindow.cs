@@ -281,6 +281,7 @@ namespace WinFontSwap.Wpf
         bool _advCacheOn = true, _advUserFontsOn = true;
         bool _advAutoWeightOn = true;   // 自动按字重配对常规/粗体/细体
         bool _advLogOn;                 // 输出日志：默认关闭
+        bool _advShellOnly;             // 仅修改界面元素：不动系统字体文件（等同 noMeiryoUI 的做法）
         bool _fakeOld;
         FontEntry _picked;   // 用户在字体列表里实际点选的那一款（源字体行显示它，不是按字重匹配后的常规体）
         TextBlock _brandName;
@@ -1150,6 +1151,11 @@ namespace WinFontSwap.Wpf
             stack.Children.Add(T.Row("\uE777", L.T("backup.backups"), L.T("adv.review.or.delete.old.backups.or.roll.back.to"), backupBtn, out advDescBackup));
 
 
+            TextBlock advDescShellOnly;
+            var shellOnlySw = T.Switch(_advShellOnly);
+            shellOnlySw.Click += delegate { _advShellOnly = shellOnlySw.IsChecked == true; };
+            stack.Children.Add(T.Row("\uE770", L.T("adv.shell.only"), L.T("adv.shell.only.desc"), shellOnlySw, out advDescShellOnly));
+
             TextBlock advDescRestartExplorer;
             var restartExplorerBtn = T.Btn2(L.T("adv.restart.explorer"), false, 13);
             restartExplorerBtn.Click += delegate { RestartExplorerFromButton(); };
@@ -1273,6 +1279,7 @@ namespace WinFontSwap.Wpf
             if (picked == null) return;
             // 选的是可变字体时优先换用同家族的静态版本：
             // 可变字体的默认实例不一定是 400（MiSans VF 是 330），剥掉变体轴直接取默认实例会整体偏细
+            Diagnostics.Append("pick source: " + picked.Family + " / " + (picked.Subfamily ?? "") + " w" + picked.Weight + "  " + (picked.Path ?? "(no path)"));
             var use = picked;
             if (FontLibrary.IsVariableEntry(picked))
             {
@@ -1316,6 +1323,7 @@ namespace WinFontSwap.Wpf
             dlg.Owner = this;
             if (dlg.ShowDialog() != true) return;
             _slots[slot] = dlg.Picked;
+            Diagnostics.Append("pick slot " + slot + " (" + Installer.TargetFiles[slot] + "): " + dlg.Picked.Family + " / " + (dlg.Picked.Subfamily ?? "") + " w" + dlg.Picked.Weight + "  " + (dlg.Picked.Path ?? "(no path)"));
             UpdateSlotLabels();
         }
 
@@ -1691,7 +1699,11 @@ namespace WinFontSwap.Wpf
 
         void RunApply(bool generateOnly)
         {
-            var list = CollectSources();
+            // 仅修改界面元素：完全不碰系统字体文件，只写注册表 + SPI
+            var list = _advShellOnly ? new List<FontSource>() : CollectSources();
+            var trace = new System.Text.StringBuilder();
+            foreach (var s in list) trace.Append(s.TargetFile + "<-" + System.IO.Path.GetFileName(s.SourcePath) + "; ");
+            Diagnostics.Append("apply: fonts=" + list.Count + " [" + trace + "] generateOnly=" + generateOnly);
             bool hasFonts = list.Count > 0;
             bool hasShell = AnyShellSelected();
 
@@ -1704,6 +1716,7 @@ namespace WinFontSwap.Wpf
                 string summary = ShellChangeSummary();
                 if (string.IsNullOrEmpty(summary)) { SetStatus(L.T("msg.nothing.to.apply"), true); ConfirmDialog.Info(this, L.T("font.apply"), L.T("msg.nothing.to.apply")); return; }
                 if (!Confirm(L.T("msg.restart.explorer.now") + "\n\n" + summary, L.T("font.apply"))) return;
+                Diagnostics.Append("apply-shell: " + ShellChangeSummary().Replace("\r\n", " | "));
                 ApplyWin32();          // 写注册表 + SystemParametersInfo 立即生效
                 MaybeLog("apply-shell");
                 bool restarted = RestartExplorer();   // 让已打开的窗口/菜单重新读字体
@@ -1734,11 +1747,17 @@ namespace WinFontSwap.Wpf
                 if (!generateOnly) { try { FollowCurrentFont(); } catch { } }
                 SetStatus(generateOnly ? (L.T("msg.generated.into") + res.OutputDir) : L.T("msg.written.rebooting.now"), false);
                 MaybeLog(generateOnly ? "generate" : "apply-fonts");
+                Diagnostics.Append("apply done: " + res.Message + " queued=" + res.Queued + " out=" + res.OutputDir);
                 if (generateOnly) ConfirmDialog.Info(this, L.T("adv.generate.only"), L.T("msg.generated.into") + res.OutputDir);
                 RefreshTargets();
                 if (!generateOnly) RebootSoon();
             }
-            catch (Exception ex) { SetStatus(L.T("msg.failed") + ex.Message, true); ConfirmDialog.Info(this, L.T("msg.failed"), ex.Message); }
+            catch (Exception ex)
+            {
+                Diagnostics.Append("apply ERROR: " + ex);
+                SetStatus(L.T("msg.failed") + ex.Message, true);
+                ConfirmDialog.Info(this, L.T("msg.failed"), ex.Message);
+            }
         }
 
         /// <summary>
