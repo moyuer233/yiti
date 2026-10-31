@@ -290,17 +290,24 @@ namespace WinFontSwap.Wpf
         TextBlock _mixedText;
         Button _mixedRestore;
         TextBox _shellAllSize;
+        bool _loadingShell;   // LoadWin32 回填时不要触发“字号已设为”的状态栏提示
 
         /// <summary>把“全部系统元素”那一行里的字号写进 5 个元素（不写系统，等「应用」）。</summary>
         void ApplyShellSizeToAll(string text)
         {
+            if (_loadingShell) return;   // 只是回填界面，不算用户操作
             double pt;
             if (!double.TryParse(text, out pt) || pt <= 0) return;
             for (int i = 0; i < Win32Fonts.Names.Length; i++)
             {
                 if (_winSize[i] != null) _winSize[i].Text = pt.ToString("0");
-                if (_winCur[i] != null && !string.IsNullOrEmpty(_winFace[i]))
-                    _winCur[i].Text = _winFace[i] + "   " + pt.ToString("0") + " pt";
+                if (_winCur[i] != null)
+                {
+                    var face = string.IsNullOrEmpty(_winFace[i])
+                        ? (_winInfo[i] != null ? _winInfo[i].Face : "")
+                        : _winFace[i];
+                    _winCur[i].Text = face + "   " + pt.ToString("0") + " pt";
+                }
             }
             SetStatus(L.T("font.all.five.are.now") + pt.ToString("0") + " pt", false);
         }
@@ -488,6 +495,15 @@ namespace WinFontSwap.Wpf
                     {
                         // 自测：直接生成一份日志
                         try { WriteDiagnosticsLog(); } catch (Exception ex) { WpfProgram.Log("logdiag: " + ex); }
+                    }
+                    else if (a.StartsWith("--sizes:"))
+                    {
+                        string sz = a.Substring(8);
+                        Dispatcher.BeginInvoke(new Action(delegate
+                        {
+                            if (_shellAllSize != null) _shellAllSize.Text = sz;
+                            ApplyShellSizeToAll(sz);
+                        }));
                     }
                     else if (a == "--logtest")
                     {
@@ -950,7 +966,7 @@ namespace WinFontSwap.Wpf
             shellBar.Children.Add(shellSizeLabel);
             var shellSize = new TextBox
             {
-                Text = "9",
+                Text = _winSize[0] != null ? _winSize[0].Text : "9",   // 跟下面 5 行保持一致（LoadWin32 之后会再同步一次）
                 FontSize = 12,
                 Width = 66,
                 Height = 30,
@@ -964,6 +980,7 @@ namespace WinFontSwap.Wpf
                 if (e.Key == Key.Enter) { ApplyShellSizeToAll(shellSize.Text); e.Handled = true; }
             };
             shellSize.LostFocus += delegate { ApplyShellSizeToAll(shellSize.Text); };
+            shellSize.TextChanged += delegate { ApplyShellSizeToAll(shellSize.Text); };
             shellBar.Children.Add(shellSize);
             var shellPick = T.Btn2(L.T("font.select.font"), false, 13);
             shellPick.Click += delegate { PickShellFontForAll(); };
@@ -1366,6 +1383,7 @@ namespace WinFontSwap.Wpf
             try
             {
                 var info = Win32Fonts.ReadAll();
+                _loadingShell = true;
                 for (int i = 0; i < Win32Fonts.Names.Length && i < info.Count; i++)
                 {
                     _winInfo[i] = info[i];
@@ -1373,9 +1391,11 @@ namespace WinFontSwap.Wpf
                     double pt = Math.Abs(info[i].HeightPx) * 72.0 / 96.0;
                     _winCur[i].Text = info[i].Face + "   " + pt.ToString("0") + " pt";
                     _winSize[i].Text = pt.ToString("0");
+                    if (i == 0 && _shellAllSize != null) _shellAllSize.Text = pt.ToString("0");   // 「全部系统元素」那一行跟着走
                 }
             }
             catch { }
+            finally { _loadingShell = false; }
         }
 
 
@@ -1434,12 +1454,15 @@ namespace WinFontSwap.Wpf
                 for (int i = 0; i < Win32Fonts.Names.Length; i++)
                 {
                     if (!_winOn[i]) continue;
-                    if (string.IsNullOrEmpty(_winFace[i])) continue;
+                    // 只改字号也可以写：字体留空时用系统当前字体兜底
+                    var face = _winFace[i];
+                    if (string.IsNullOrEmpty(face) && _winInfo[i] != null) face = _winInfo[i].Face;
+                    if (string.IsNullOrEmpty(face)) continue;
                     double pt;
                     double.TryParse(_winSize[i].Text, out pt);
                     if (pt <= 0) pt = 9;
                     var src = _winInfo[i];
-                    Win32Fonts.Write(Win32Fonts.Keys[i], _winFace[i], pt,
+                    Win32Fonts.Write(Win32Fonts.Keys[i], face, pt,
                         src != null ? src.Weight : 400,
                         src != null ? src.CharSet : 1,
                         src != null && src.Italic);
