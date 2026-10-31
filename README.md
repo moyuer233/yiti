@@ -239,6 +239,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build-wpf.ps1
 
 **只改引号里的文字，左边的 key 不要动**——代码按「分节.键」取字，改了 key 就会退回显示 key 本身。中文写引号里可以带空格、逗号、冒号；要写双引号就写 `\"`。改完重新跑 `build-wpf.ps1`，文案会编译进 exe。
 
+## 鸣谢
+
+- [noMeiryoUI](https://github.com/Tatsu-syo/noMeiryoUI)（Tatsuhiko Syoji）：窗口字体（非客户区字体）的修改思路来自它。本项目没有复用它的代码，只沿用了同一套做法：改 `WindowMetrics` 里的 LOGFONT，再用 `SystemParametersInfo` 让改动立即生效。
 ## 免责
 
 本软件已明确说明修改风险，因使用本软件导致的系统异常、数据丢失或其他损失，程序作者不承担相关责任。

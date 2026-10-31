@@ -240,6 +240,9 @@ All UI strings live in `lang/zh.toml` and `lang/en.toml` as TOML: a `[section]` 
 
 **Only edit the text inside the quotes.** The code looks strings up as `section.key`, so renaming a key makes the raw key show up in the UI. Escape a double quote as `\"`. Rebuild with `build-wpf.ps1` to embed the new text.
 
+## Credits
+
+- [noMeiryoUI](https://github.com/Tatsu-syo/noMeiryoUI) (Tatsuhiko Syoji): the approach to changing the window (non-client) fonts comes from it. No code was reused; this project only follows the same idea — rewrite the LOGFONT values under `WindowMetrics` and apply them immediately through `SystemParametersInfo`.
 ## Disclaimer
 
 The risks of modifying the system are stated above. The author takes no responsibility for system failures, data loss or other damage caused by using this software.
