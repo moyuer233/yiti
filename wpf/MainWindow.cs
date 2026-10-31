@@ -1125,7 +1125,9 @@ namespace WinFontSwap.Wpf
             TextBlock advDescGen;
             var genBtn = T.Btn2(L.T("adv.generate"), false, 13);
             genBtn.Click += delegate { WithBusy(genBtn, L.T("adv.generating"), delegate { RunApply(true); }); };
-            stack.Children.Add(T.Row("\uE8A5", L.T("adv.generate.only"), L.T("adv.build.the.files.only.leave.the.system.alone"), genBtn, out advDescGen));
+            var genRow = T.Row("\uE8A5", L.T("adv.generate.only"), "", genBtn, out advDescGen);
+            genRow.ToolTip = L.T("adv.build.the.files.only.leave.the.system.alone");
+            stack.Children.Add(genRow);
 
 
 
@@ -1136,7 +1138,9 @@ namespace WinFontSwap.Wpf
                 var dlg = new BackupDialog { Owner = this };
                 dlg.ShowDialog();
             };
-            stack.Children.Add(T.Row("\uE777", L.T("backup.backups"), L.T("adv.review.or.delete.old.backups.or.roll.back.to"), backupBtn, out advDescBackup));
+            var backupRow = T.Row("\uE777", L.T("backup.backups"), "", backupBtn, out advDescBackup);
+            backupRow.ToolTip = L.T("adv.review.or.delete.old.backups.or.roll.back.to");
+            stack.Children.Add(backupRow);
 
 
             TextBlock advDescRestartExplorer;
@@ -1147,7 +1151,9 @@ namespace WinFontSwap.Wpf
             TextBlock advDescLog;
             var logSw = T.Switch(_advLogOn);
             logSw.Click += delegate { _advLogOn = logSw.IsChecked == true; };
-            stack.Children.Add(T.Row("\uE8A5", L.T("adv.write.a.log"), L.T("adv.writes.yy.mm.dd.ss.log.next.to.the.exe.after"), logSw, out advDescLog));
+            var logRow = T.Row("\uE8A5", L.T("adv.write.a.log"), "", logSw, out advDescLog);
+            logRow.ToolTip = L.T("adv.writes.yy.mm.dd.ss.log.next.to.the.exe.after");
+            stack.Children.Add(logRow);
 
             var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = stack, Padding = new Thickness(0, 0, 6, 12) };
             _pageScroll = scroll;
