@@ -989,11 +989,11 @@ namespace WinFontSwap.Wpf
                 Text = _winSize[0] != null ? _winSize[0].Text : "9",   // 跟下面 5 行保持一致（LoadWin32 之后会再同步一次）
                 FontSize = 12,
                 Width = 66,
-                Height = 30,
-                Padding = new Thickness(4),
+                MinHeight = 30,
+                Padding = new Thickness(6, 4, 6, 4),
                 Margin = new Thickness(0, 0, 10, 0),
                 VerticalContentAlignment = VerticalAlignment.Center,
-                HorizontalContentAlignment = HorizontalAlignment.Center
+                TextAlignment = TextAlignment.Center
             };
             shellSize.KeyDown += delegate (object s, KeyEventArgs e)
             {
@@ -1025,11 +1025,11 @@ namespace WinFontSwap.Wpf
                     Text = "9",
                     FontSize = 12,
                     Width = 66,
-                    Height = 30,
-                    Padding = new Thickness(4, 4, 4, 4),
+                    MinHeight = 30,
+                    Padding = new Thickness(6, 4, 6, 4),
                     Margin = new Thickness(0, 0, 8, 0),
                     VerticalContentAlignment = VerticalAlignment.Center,
-                    HorizontalContentAlignment = HorizontalAlignment.Center
+                    TextAlignment = TextAlignment.Center
                 };
                 right.Children.Add(size);
                 _winSize[i] = size;

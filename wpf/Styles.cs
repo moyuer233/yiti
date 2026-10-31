@@ -154,14 +154,19 @@ namespace WinFontSwap.Wpf
     <Setter Property='Background' Value='#26262B'/>
     <Setter Property='Foreground' Value='#FFFFFF'/>
     <Setter Property='BorderThickness' Value='0'/>
-    <Setter Property='Padding' Value='8,6'/>
+    <Setter Property='Padding' Value='8,3'/>
+    <!-- 文字垂直居中：默认模板没有把 VerticalContentAlignment 传给 ScrollViewer，短输入框就会上下被裁 -->
+    <Setter Property='VerticalContentAlignment' Value='Center'/>
     <Setter Property='CaretBrush' Value='#FFFFFF'/>
     <Setter Property='SelectionBrush' Value='#4CC2FF'/>
     <Setter Property='Template'>
       <Setter.Value>
         <ControlTemplate TargetType='TextBox'>
-          <Border x:Name='ring' Background='{TemplateBinding Background}' CornerRadius='4' BorderThickness='1' BorderBrush='#22FFFFFF'>
-            <ScrollViewer x:Name='PART_ContentHost' Margin='{TemplateBinding Padding}'/>
+          <Border x:Name='ring' Background='{TemplateBinding Background}' CornerRadius='4' BorderThickness='1' BorderBrush='#22FFFFFF' Padding='{TemplateBinding Padding}'>
+            <ScrollViewer x:Name='PART_ContentHost' Focusable='False'
+                        VerticalAlignment='{TemplateBinding VerticalContentAlignment}'
+                        HorizontalScrollBarVisibility='Hidden'
+                        VerticalScrollBarVisibility='Hidden'/>
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property='IsKeyboardFocused' Value='True'>

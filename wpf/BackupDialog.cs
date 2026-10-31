@@ -83,11 +83,11 @@ namespace WinFontSwap.Wpf
             {
                 Text = Installer.MaxAutoBackups.ToString(),
                 Width = 56,
-                Height = 28,
+                MinHeight = 30,
                 FontSize = 12,
-                Padding = new Thickness(4),
+                Padding = new Thickness(6, 4, 6, 4),
                 VerticalContentAlignment = VerticalAlignment.Center,
-                HorizontalContentAlignment = HorizontalAlignment.Center
+                TextAlignment = TextAlignment.Center
             };
             keepBox.LostFocus += delegate { ApplyKeep(keepBox); };
             keepBox.KeyDown += delegate (object s, KeyEventArgs e) { if (e.Key == Key.Enter) { ApplyKeep(keepBox); e.Handled = true; } };
