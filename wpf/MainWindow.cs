@@ -1281,10 +1281,13 @@ namespace WinFontSwap.Wpf
             _slots[4] = regular;
             UpdateSlotLabels();
             SyncWin32FromChoice();
-            // 说清“你点的是哪个、被分到哪一行”
+            // 说清“你点的是哪个、被分到哪一行”，缺字重也直说（可变字体常常只有一个静态档）
+            var warn = "";
+            if (bold.Weight == regular.Weight) warn += L.T("font.warn.no.bold");
+            if (light.Weight == regular.Weight) warn += L.T("font.warn.no.light");
             SetStatus(L.T("font.matched.by.weight.regular") + (regular.Subfamily ?? "")
                 + L.T("font.bold.2") + (bold.Subfamily ?? "")
-                + L.T("font.light.2") + (light.Subfamily ?? ""), false);
+                + L.T("font.light.2") + (light.Subfamily ?? "") + warn, false);
         }
 
         void PickSlot(int slot)
