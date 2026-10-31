@@ -1,4 +1,4 @@
-﻿# 构建与运行产物（dist 里的发布产物是唯一要跟仓库走的）
+# 构建与运行产物（dist 里的发布产物是唯一要跟仓库走的）
 bin/
 obj/
 *.user
@@ -33,6 +33,13 @@ _*.txt
 
 Thumbs.db
 desktop.ini
+
+# 内部协作说明（只放本地，不进公开仓库）
+AGENTS.md
+CLAUDE.md
+.cursor/
+.agent/
+_dl/
 
 # probe/experiment sources, not part of the build
 wpf/Backdrop.cs
