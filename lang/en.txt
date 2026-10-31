@@ -63,7 +63,6 @@ adv.generate.only=Generate only
 adv.generating=Generating…
 adv.import.the.latest.registry.backup=Import the latest registry backup
 adv.manage=Manage
-adv.rebuilt.by.windows.after.a.reboot=Rebuilt by Windows after a reboot
 adv.remove.per.user.same.name.fonts=Remove per-user same-name fonts
 adv.restore=Restore
 adv.restore.failed=Restore failed: 
@@ -74,7 +73,6 @@ adv.review.or.delete.old.backups.or.roll.back.to=Review, restore or delete old b
 adv.they.shadow.the.system.font=They override the system font
 adv.this.windows.version.has.no.per.user.fonts=This Windows version has no per-user fonts
 adv.restart.explorer=Restart Explorer
-adv.restart.explorer.desc=Make open windows and menus re-read the shell fonts
 adv.write.a.log=Write a log
 adv.writes.yy.mm.dd.ss.log.next.to.the.exe.after=Writes yy-mm-dd-ss.log next to the exe after each action
 

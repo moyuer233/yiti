@@ -1105,7 +1105,7 @@ namespace WinFontSwap.Wpf
             var cacheSw = T.Switch(_advCacheOn);
             cacheSw.Click += delegate { _advCacheOn = cacheSw.IsChecked == true; };
             _advCache = cacheSw;
-            stack.Children.Add(T.Row("\uE72C", L.T("adv.clear.the.font.cache.on.apply"), L.T("adv.rebuilt.by.windows.after.a.reboot"), cacheSw, out advDesc1));
+            stack.Children.Add(T.Row("\uE72C", L.T("adv.clear.the.font.cache.on.apply"), "", cacheSw, out advDesc1));
 
             // 老系统没有「按用户安装字体」：这一项显示但置灰不可点
             bool canUserFonts = Installer.SupportsUserFonts() && !_fakeOld;
@@ -1153,7 +1153,7 @@ namespace WinFontSwap.Wpf
             TextBlock advDescRestartExplorer;
             var restartExplorerBtn = T.Btn2(L.T("adv.restart.explorer"), false, 13);
             restartExplorerBtn.Click += delegate { RestartExplorerFromButton(); };
-            stack.Children.Add(T.Row("\uE777", L.T("adv.restart.explorer"), L.T("adv.restart.explorer.desc"), restartExplorerBtn, out advDescRestartExplorer));
+            stack.Children.Add(T.Row("\uE777", L.T("adv.restart.explorer"), "", restartExplorerBtn, out advDescRestartExplorer));
 
             TextBlock advDescLog;
             var logSw = T.Switch(_advLogOn);
