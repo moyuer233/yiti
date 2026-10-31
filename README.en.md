@@ -39,7 +39,7 @@ _✨ The no-brainer system-wide font replacement tool for Windows ✨_
 ## Features
 
 - **System font replacement**: fonts inside Settings, the Start menu, the taskbar, title bars and other apps
-- **Shell element font replacement**: small caption, menu, message box, status bar, icon
+- **Window font replacement**: small caption, menu, message box, status bar, icon
 - **Automatic weight matching**: pick one font and the weights are matched at 400 / 700 / 300, for example Microsoft YaHei Regular / Bold / Light are replaced together; picking a font per slot is supported too
 - **Automatic backup and rollback**: Restore rolls everything back in one click; the Default preset reads from `C:\Windows\WinSxS` first, so it still works when the backup is gone
 - **Adapts to the OS version**: fonts the system does not have (Windows 7 has no Light weight and no Segoe UI Variable) are disabled automatically
@@ -90,7 +90,7 @@ On older systems the font cache service is called `FontCache3.0.0.0`; from Windo
 
 | System | Status | What was verified |
 | --- | --- | --- |
-| Windows 11 26200 | ✅ **Tested** | Replacing all five font files, automatic weight matching, shell elements (menu / message box / status bar / small caption / icon) applying immediately, Restore and Default preset, Chinese/English UI, backup and rollback |
+| Windows 11 26200 | ✅ **Tested** | Replacing all five font files, automatic weight matching, window fonts (menu / message box / status bar / small caption / icon) applying immediately, Restore and Default preset, Chinese/English UI, backup and rollback |
 | Windows 10 1809+ | ⚠️ **Should work, not tested** | Version detection is implemented (per-user fonts, `FontCache` service name, flat grey background when Mica is unavailable), but it has not been run on a real machine |
 | Windows 7 / 8.1 | ⚠️ **Should work, not tested** | Missing fonts are greyed out with a reason; the `FontCache3.0.0.0` and no-Mica branches exist, but they have not been run on a real machine |
 
@@ -110,7 +110,7 @@ To send feedback, turn on **Advanced → Write a log** and then run one action (
 
 System font replacement flow: read the font you picked → rewrite only its internal names to `Microsoft YaHei` / `Segoe UI` and the like → build files with those names → replace the ones in the system → reboot. That is the only way Windows will recognise them.
 
-Shell element replacement flow: write the registry key `HKCU\Control Panel\Desktop\WindowMetrics` to control the font and size of the legacy UI.
+Window font replacement flow: write the registry key `HKCU\Control Panel\Desktop\WindowMetrics` to control the font and size of the legacy UI.
 
 **What cannot be changed**: programs that ship their own fonts (Office, Electron apps, games), text that specifies a font inside a web page, and font rendering parameters (ClearType and friends).
 
@@ -167,7 +167,7 @@ Why multiple faces: WinUI components ask for `Microsoft YaHei UI`, classic GDI a
 4. Clear the font cache: stop `FontCache` (called `FontCache3.0.0.0` on Windows 7), delete `FNTCACHE.DAT` and the per-user `FontCache` directory; otherwise the old outlines are still used after the reboot.
 5. Record the `applied` list and each file's new SHA-256 for the status display and the rollback decision.
 
-#### Shell element replacement
+#### Window font replacement
 
 The five values under `HKCU\Control Panel\Desktop\WindowMetrics` (`SmCaptionFont`, `MenuFont`, `MessageFont`, `StatusFont`, `IconFont`) are 92-byte `LOGFONTW` structures: offset 0 is the height (a negative value means character height) and the 32-wide-character face name starts at offset `0x1C`. The app rewrites those two fields and reads them back to verify.
 
