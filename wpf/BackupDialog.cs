@@ -33,12 +33,11 @@ namespace WinFontSwap.Wpf
             FontSize = 13;
 
             var root = new Grid { Margin = new Thickness(16) };
-            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });   // 批量工具条
-            root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });   // 0 概览
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });   // 1 设置
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });   // 2 批量工具条
+            root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });   // 3 列表（占满，出滚动条）
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });   // 4 底部按钮
 
             var head = new Grid();
             head.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
