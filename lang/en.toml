@@ -125,6 +125,12 @@
 "no" = "Cancel"
 
 [msg]
+"defaults.choose" = "Which defaults should be restored?"
+"defaults.fonts" = "System fonts"
+"defaults.shell" = "Window fonts"
+"defaults.all" = "Both"
+"defaults.fonts.done" = "System fonts switched back to the Microsoft originals"
+"defaults.shell.done" = "Window fonts switched back to Microsoft YaHei UI 9 pt"
 "about" = "About"
 "advanced" = "Advanced"
 "all.five.are.now" = "Set to "

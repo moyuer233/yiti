@@ -541,6 +541,14 @@ namespace WinFontSwap.Wpf
                     {
                         Dispatcher.BeginInvoke(new Action(delegate { RunApply(true); }));
                     }
+                    else if (a == "--defaultsdemo")
+                    {
+                        Dispatcher.BeginInvoke(new Action(delegate
+                        {
+                            ChoiceDialog.Choose(this, L.T("font.defaults"), L.T("msg.defaults.choose"),
+                                L.T("msg.defaults.fonts"), L.T("msg.defaults.shell"), L.T("msg.defaults.all"));
+                        }));
+                    }
                     else if (a == "--backupdemo" || a == "--backupdemoedit")
                     {
                         bool edit = a == "--backupdemoedit";
@@ -1924,35 +1932,50 @@ namespace WinFontSwap.Wpf
 
         void ResetToDefaults()
         {
-            if (!Confirm(L.T("font.switch.to.the.default.preset"), L.T("font.defaults"))) return;
-            for (int i = 0; i < _slots.Length; i++) _slots[i] = null;
-            int filled = LoadDefaultSources();
-            for (int i = 0; i < _on.Length; i++)
+            // 系统字体（字体文件）和窗口字体是两回事，分开恢复
+            int choice = ChoiceDialog.Choose(this, L.T("font.defaults"), L.T("msg.defaults.choose"),
+                L.T("msg.defaults.fonts"), L.T("msg.defaults.shell"), L.T("msg.defaults.all"));
+            if (choice < 0) return;
+            bool doFonts = choice == 0 || choice == 2;
+            bool doShell = choice == 1 || choice == 2;
+            var parts = new List<string>();
+            bool bad = false;
+            if (doFonts)
             {
-                _on[i] = true;
-                if (_tog[i] != null) { _tog[i].IsChecked = true; T.RefreshToggleVisual(_tog[i]); }
+                for (int i = 0; i < _slots.Length; i++) _slots[i] = null;
+                int filled = LoadDefaultSources();
+                for (int i = 0; i < _on.Length; i++)
+                {
+                    _on[i] = true;
+                    if (_tog[i] != null) { _tog[i].IsChecked = true; T.RefreshToggleVisual(_tog[i]); }
+                }
+                UpdateSlotLabels();
+                if (filled > 0) parts.Add(L.T("msg.defaults.fonts.done"));
+                else { parts.Add(L.T("msg.no.usable.backup.pick.a.font.instead")); bad = true; }
             }
-            for (int i = 0; i < _winOn.Length; i++)
+            if (doShell)
             {
-                _winOn[i] = true;
-                if (_winTog[i] != null) { _winTog[i].IsChecked = true; T.RefreshToggleVisual(_winTog[i]); }
+                for (int i = 0; i < _winOn.Length; i++)
+                {
+                    _winOn[i] = true;
+                    if (_winTog[i] != null) { _winTog[i].IsChecked = true; T.RefreshToggleVisual(_winTog[i]); }
+                }
+                // 窗口字体的默认值＝ Windows 自己的默认：微软雅黑 UI 9pt（不是我们备份里的历史值）
+                for (int i = 0; i < Win32Fonts.Names.Length; i++)
+                {
+                    const string defFace = "Microsoft YaHei UI";
+                    const int defPt = 9;
+                    _winFace[i] = defFace;
+                    _winWeight[i] = 400;
+                    _winCharSet[i] = 134;
+                    if (_winSize[i] != null) _winSize[i].Text = defPt.ToString();
+                    if (_winCur[i] != null) _winCur[i].Text = defFace + "   " + defPt + " pt";
+                }
+                parts.Add(L.T("msg.defaults.shell.done"));
             }
-            UpdateSlotLabels();
-            SyncWin32FromChoice();
-            // 系统元素的“默认值”＝ Windows 自己的默认：微软雅黑 UI 9pt（不是我们备份里的历史值）
-            for (int i = 0; i < Win32Fonts.Names.Length; i++)
-            {
-                const string defFace = "Microsoft YaHei UI";
-                const int defPt = 9;
-                _winFace[i] = defFace;
-                _winWeight[i] = 400;
-                _winCharSet[i] = 134;
-                if (_winSize[i] != null) _winSize[i].Text = defPt.ToString();
-                if (_winCur[i] != null) _winCur[i].Text = defFace + "   " + defPt + " pt";
-            }
-            string msg = filled > 0 ? L.T("msg.switched.to.the.default.fonts.press.apply.to") : L.T("msg.no.usable.backup.pick.a.font.instead");
-            if (filled > 0 && !string.IsNullOrEmpty(L.T("msg.defaults.pending"))) msg += L.T("msg.defaults.pending");   // 只改了界面，必须点「应用」才会写进系统
-            SetStatus(msg, filled == 0);
+            string msg = string.Join(L.T("msg.text97"), parts.ToArray());
+            if (!bad && !string.IsNullOrEmpty(L.T("msg.defaults.pending"))) msg += L.T("msg.defaults.pending");
+            SetStatus(msg, bad);
             ConfirmDialog.Info(this, L.T("font.defaults"), msg);
         }
 

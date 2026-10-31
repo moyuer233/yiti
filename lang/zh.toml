@@ -124,6 +124,12 @@
 "no" = "取消"
 
 [msg]
+"defaults.choose" = "要恢复哪一部分的默认值？"
+"defaults.fonts" = "系统字体"
+"defaults.shell" = "窗口字体"
+"defaults.all" = "全部"
+"defaults.fonts.done" = "系统字体已切回微软原版"
+"defaults.shell.done" = "窗口字体已切回微软雅黑 UI 9pt"
 "about" = "关于"
 "advanced" = "高级"
 "all.five.are.now" = "已设为"
