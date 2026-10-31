@@ -1121,24 +1121,7 @@ namespace WinFontSwap.Wpf
             genBtn.Click += delegate { WithBusy(genBtn, L.T("adv.generating"), delegate { RunApply(true); }); };
             stack.Children.Add(T.Row("\uE8A5", L.T("adv.generate.only"), L.T("adv.build.the.files.only.leave.the.system.alone"), genBtn, out advDescGen));
 
-            TextBlock advDescFont;
-            var fontBtn = T.Btn2(L.T("font.restore"), false, 13);
-            fontBtn.Click += delegate { WithBusy(fontBtn, L.T("font.restoring"), delegate { RunRollbackFontsOnly(); }); };
-            stack.Children.Add(T.Row("\uE777", L.T("adv.restore.font.files.only"), L.T("adv.restore.the.font.files.from.the.latest.backu"), fontBtn, out advDescFont));
 
-            TextBlock advDesc3;
-            var rb = T.Btn2(L.T("adv.restore"), false, 13);
-            rb.Click += delegate
-            {
-                string msg;
-                bool bad = false;
-                try { msg = Installer.RestoreUserFonts(); if (msg.StartsWith("导入失败") || msg.StartsWith("导入超时") || msg.StartsWith("无法启动")) bad = true; }
-                catch (Exception ex) { msg = L.T("adv.restore.failed") + ex.Message; bad = true; }
-                SetStatus(msg, bad);
-                MaybeLog("restore-userfonts");
-                ConfirmDialog.Info(this, L.T("adv.restore.per.user.registry.only"), msg);
-            };
-            stack.Children.Add(T.Row("\uE777", L.T("adv.restore.per.user.registry.only"), L.T("adv.import.the.latest.registry.backup"), rb, out advDesc3));
 
             TextBlock advDescBackup;
             var backupBtn = T.Btn2(L.T("adv.manage"), false, 13);
@@ -1947,18 +1930,6 @@ namespace WinFontSwap.Wpf
             catch (Exception ex) { SetStatus(L.T("msg.rollback.failed") + ex.Message, true); ConfirmDialog.Info(this, L.T("font.restore"), L.T("msg.rollback.failed") + ex.Message); }
         }
 
-        void RunRollbackFontsOnly()
-        {
-            try
-            {
-                if (Installer.LatestBackup() == null) { SetStatus(L.T("msg.there.is.no.backup.to.roll.back"), true); ConfirmDialog.Info(this, L.T("adv.restore.font.files.only"), L.T("msg.there.is.no.backup.to.roll.back")); return; }
-                Installer.Rollback(delegate (string m) { });
-                SetStatus(L.T("msg.font.files.restored.back.to.normal.after.a.r"), false);
-                RefreshTargets();
-                ConfirmDialog.Info(this, L.T("adv.restore.font.files.only"), L.T("msg.font.files.restored.back.to.normal.after.a.r"));
-            }
-            catch (Exception ex) { SetStatus(L.T("msg.rollback.failed") + ex.Message, true); ConfirmDialog.Info(this, L.T("adv.restore.font.files.only"), L.T("msg.rollback.failed") + ex.Message); }
-        }
 
         void RunRollback()
         {

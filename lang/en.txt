@@ -61,14 +61,14 @@ adv.clear.the.font.cache.on.apply=Clear the font cache on apply
 adv.generate=Generate
 adv.generate.only=Generate only
 adv.generating=Generating…
-adv.import.the.latest.registry.backup=Import the latest registry backup
+
 adv.manage=Manage
 adv.remove.per.user.same.name.fonts=Remove per-user same-name fonts
-adv.restore=Restore
-adv.restore.failed=Restore failed: 
-adv.restore.font.files.only=Restore font files only
-adv.restore.per.user.registry.only=Restore per-user registry only
-adv.restore.the.font.files.from.the.latest.backu=Restore the font files from the latest backup
+
+
+
+
+
 adv.review.or.delete.old.backups.or.roll.back.to=Review, restore or delete old backups
 adv.they.shadow.the.system.font=They override the system font
 adv.this.windows.version.has.no.per.user.fonts=This Windows version has no per-user fonts
@@ -146,7 +146,7 @@ msg.failed.to.read.the.font.state=Failed to read the font state:
 msg.failed.to.read.the.original.fonts=Failed to read the original fonts: 
 msg.failed.to.write.the.log=Failed to write the log: 
 msg.file.missing=File missing
-msg.font.files.restored.back.to.normal.after.a.r=Font files restored; back to normal after a reboot.
+
 msg.fonts=Fonts
 msg.generated.into=Generated into 
 msg.generating=Generating…

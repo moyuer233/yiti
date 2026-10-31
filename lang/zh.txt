@@ -61,14 +61,14 @@ adv.clear.the.font.cache.on.apply=写入时清字体缓存
 adv.generate=生成
 adv.generate.only=只执行生成操作
 adv.generating=生成中…
-adv.import.the.latest.registry.backup=导入最近一次的注册表备份
+
 adv.manage=管理
 adv.remove.per.user.same.name.fonts=写入时清除用户级同名字体
-adv.restore=恢复
-adv.restore.failed=恢复失败：
-adv.restore.font.files.only=只还原字体文件
-adv.restore.per.user.registry.only=只还原用户级注册
-adv.restore.the.font.files.from.the.latest.backu=从最近一次备份还原字体文件
+
+
+
+
+
 adv.review.or.delete.old.backups.or.roll.back.to=查看、还原、删除历史备份
 adv.they.shadow.the.system.font=会阻止替换
 adv.this.windows.version.has.no.per.user.fonts=此版本 Windows 没有用户级字体
@@ -147,7 +147,7 @@ msg.failed.to.read.the.font.state=读系统字体状态失败：
 msg.failed.to.read.the.original.fonts=读原版字体失败：
 msg.failed.to.write.the.log=输出日志失败：
 msg.file.missing=文件缺失
-msg.font.files.restored.back.to.normal.after.a.r=已还原字体文件，重启后恢复。
+
 msg.fonts=字体替换
 msg.generated.into=已生成到 
 msg.generating=正在生成…
