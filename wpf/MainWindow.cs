@@ -374,6 +374,8 @@ namespace WinFontSwap.Wpf
             }
             Loaded += delegate
             {
+                // 启动时整窗淡入，避免一亮就硬切出来
+                Styles.FadeIn(this, 0, 150);
                 WpfProgram.Log("logpath=" + WpfProgram.LogPathUsed + "  base=" + AppDomain.CurrentDomain.BaseDirectory);
                 try { DarkTitle(); } catch (Exception ex) { WpfProgram.Log("DarkTitle: " + ex.Message); }
                 try { ReloadFonts(); } catch (Exception ex) { WpfProgram.Log("ReloadFonts: " + ex.Message); }
@@ -794,6 +796,8 @@ namespace WinFontSwap.Wpf
             }
             else if (i == 1) _content.Content = BuildAdvancedPage();
             else _content.Content = BuildAboutPage();
+            // 切页时给内容一个短淡入，避免“啪”地一下换掉
+            Styles.FadeIn(_content, 8, 160);
         }
 
         // ---------------- 页面 ----------------
@@ -989,10 +993,10 @@ namespace WinFontSwap.Wpf
             var bar = new StackPanel { Orientation = Orientation.Horizontal };
             var apply = T.Btn2(L.T("应用"), true, 13);
             apply.Margin = new Thickness(0, 0, 10, 0);
-            apply.Click += delegate { RunApply(false); };
+            apply.Click += delegate { WithBusy(apply, L.T("应用中…"), delegate { RunApply(false); }); };
             var rollback = T.Btn2(L.T("还原"), false, 13);
             rollback.Margin = new Thickness(0, 0, 10, 0);
-            rollback.Click += delegate { RunRollbackAll(); };
+            rollback.Click += delegate { WithBusy(rollback, L.T("还原中…"), delegate { RunRollbackAll(); }); };
             var defaults = T.Btn2(L.T("默认值"), false, 13);
             defaults.Click += delegate { ResetToDefaults(); };
             bar.Children.Add(apply);
@@ -1045,12 +1049,12 @@ namespace WinFontSwap.Wpf
 
             TextBlock advDescGen;
             var genBtn = T.Btn2(L.T("生成"), false, 13);
-            genBtn.Click += delegate { RunApply(true); };
+            genBtn.Click += delegate { WithBusy(genBtn, L.T("生成中…"), delegate { RunApply(true); }); };
             stack.Children.Add(T.Row("\uE8A5", L.T("只生成不写入"), L.T("只生成字体文件，不动系统"), genBtn, out advDescGen));
 
             TextBlock advDescFont;
             var fontBtn = T.Btn2(L.T("还原"), false, 13);
-            fontBtn.Click += delegate { RunRollbackFontsOnly(); };
+            fontBtn.Click += delegate { WithBusy(fontBtn, L.T("还原中…"), delegate { RunRollbackFontsOnly(); }); };
             stack.Children.Add(T.Row("\uE777", L.T("只还原字体文件"), L.T("从最近一次备份还原字体文件"), fontBtn, out advDescFont));
 
             TextBlock advDesc3;
@@ -1160,6 +1164,16 @@ namespace WinFontSwap.Wpf
         void ReloadFonts()
         {
             try { FontLibrary.Scan(); } catch { }
+        }
+
+        /// <summary>把按钮切到忙碌态（文字变灰、不可点），跑完再恢复，避免长操作时界面像卡死。</summary>
+        void WithBusy(Button btn, string busyText, Action work)
+        {
+            object old = null;
+            if (btn != null) { old = btn.Content; btn.Content = busyText; btn.IsEnabled = false; }
+            try { Dispatcher.Invoke(new Action(delegate { }), System.Windows.Threading.DispatcherPriority.Render); } catch { }
+            try { work(); }
+            finally { if (btn != null) { btn.Content = old; btn.IsEnabled = true; } }
         }
 
         void SetStatus(string text, bool error)

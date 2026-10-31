@@ -62,11 +62,11 @@ namespace WinFontSwap.Wpf
             {
                 cancel = T.Btn2(cancelText, false, 13);
                 cancel.Margin = new Thickness(0, 0, 10, 0);
-                cancel.Click += delegate { Result = false; Close(); };
+                cancel.Click += delegate { Result = false; Styles.FadeOutThen(card, 110, delegate { Close(); }); };
                 bar.Children.Add(cancel);
             }
             var ok = T.Btn2(okText, true, 13);
-            ok.Click += delegate { Result = true; Close(); };
+            ok.Click += delegate { Result = true; Styles.FadeOutThen(card, 110, delegate { Close(); }); };
             bar.Children.Add(ok);
             stack.Children.Add(bar);
 
@@ -81,10 +81,10 @@ namespace WinFontSwap.Wpf
             };
             KeyDown += delegate (object s, KeyEventArgs e)
             {
-                if (e.Key == Key.Escape) { Result = false; Close(); }
-                if (e.Key == Key.Enter) { Result = true; Close(); }
+                if (e.Key == Key.Escape) { Result = false; Styles.FadeOutThen(card, 110, delegate { Close(); }); }
+                if (e.Key == Key.Enter) { Result = true; Styles.FadeOutThen(card, 110, delegate { Close(); }); }
             };
-            Loaded += delegate { if (cancel != null) cancel.Focus(); };   // 默认焦点在取消，避免误按回车
+            Loaded += delegate { Styles.FadeIn(card, 10, 170); if (cancel != null) cancel.Focus(); };   // 淡入 + 上浮，默认焦点在取消
         }
     }
 }

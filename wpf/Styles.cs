@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Markup;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace WinFontSwap.Wpf
 {
@@ -25,6 +27,45 @@ namespace WinFontSwap.Wpf
                 DwmSetWindowAttribute(h, 33, ref pref, sizeof(int));   // DWMWA_WINDOW_CORNER_PREFERENCE = ROUND
             }
             catch { }
+        }
+
+        static readonly IEasingFunction Ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+
+        /// <summary>淡入：从 opacity 0 到 1，可带一点竖直位移（offsetY>0 时向上浮起）。</summary>
+        public static void FadeIn(UIElement el, double offsetY, int ms)
+        {
+            if (el == null) return;
+            try
+            {
+                el.Opacity = 0;
+                TranslateTransform tt = null;
+                if (Math.Abs(offsetY) > 0.01)
+                {
+                    tt = new TranslateTransform(0, offsetY);
+                    el.RenderTransform = tt;
+                }
+                var fade = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = Ease };
+                el.BeginAnimation(UIElement.OpacityProperty, fade);
+                if (tt != null)
+                {
+                    var move = new DoubleAnimation(offsetY, 0, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = Ease };
+                    tt.BeginAnimation(TranslateTransform.YProperty, move);
+                }
+            }
+            catch { el.Opacity = 1; }
+        }
+
+        /// <summary>淡出后执行回调（弹窗关闭用）。</summary>
+        public static void FadeOutThen(UIElement el, int ms, Action done)
+        {
+            if (el == null) { if (done != null) done(); return; }
+            try
+            {
+                var fade = new DoubleAnimation(el.Opacity, 0, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = Ease };
+                fade.Completed += delegate { try { if (done != null) done(); } catch { } };
+                el.BeginAnimation(UIElement.OpacityProperty, fade);
+            }
+            catch { if (done != null) done(); }
         }
 
         public const string Xaml = @"
