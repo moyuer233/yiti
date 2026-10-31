@@ -169,6 +169,7 @@ msg.shell.elements.applied.2=系统元素字体修改已生效
 msg.shell.elements.applied.explorer.restarted=系统元素字体修改已生效（已重启资源管理器）
 msg.shell.elements.restored=系统元素字体已还原
 msg.switched.to.the.default.fonts.press.apply.to=已切换到默认预设
+msg.defaults.pending=（点「应用」后才会写入系统）
 msg.text27=Aa 汉字
 msg.text97=、
 msg.there.is.no.backup.to.roll.back=没有可还原的备份。

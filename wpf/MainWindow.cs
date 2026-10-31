@@ -1922,7 +1922,10 @@ namespace WinFontSwap.Wpf
                 if (_winSize[i] != null) _winSize[i].Text = defPt.ToString();
                 if (_winCur[i] != null) _winCur[i].Text = defFace + "   " + defPt + " pt";
             }
-            SetStatus(filled > 0 ? L.T("msg.switched.to.the.default.fonts.press.apply.to") : L.T("msg.no.usable.backup.pick.a.font.instead"), filled == 0);
+            string msg = filled > 0 ? L.T("msg.switched.to.the.default.fonts.press.apply.to") : L.T("msg.no.usable.backup.pick.a.font.instead");
+            if (filled > 0 && !string.IsNullOrEmpty(L.T("msg.defaults.pending"))) msg += L.T("msg.defaults.pending");   // 只改了界面，必须点「应用」才会写进系统
+            SetStatus(msg, filled == 0);
+            ConfirmDialog.Info(this, L.T("font.defaults"), msg);
         }
 
         void RunRollbackAll()

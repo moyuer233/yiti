@@ -168,6 +168,7 @@ msg.shell.elements.applied.2=Shell font change applied
 msg.shell.elements.applied.explorer.restarted=Shell font change applied (Explorer restarted)
 msg.shell.elements.restored=Shell fonts restored
 msg.switched.to.the.default.fonts.press.apply.to=Switched to the default preset — press Apply to write it back
+msg.defaults.pending=
 msg.text27=Aa 汉字
 msg.text97=, 
 msg.there.is.no.backup.to.roll.back=There is no backup to restore.
