@@ -287,6 +287,7 @@ namespace WinFontSwap.Wpf
         TextBlock _shellAllDesc;
         Border _mixedBanner;
         TextBlock _mixedText;
+        Button _mixedRestore;
         TextBox _shellAllSize;
 
         /// <summary>把“全部系统元素”那一行里的字号写进 5 个元素（不写系统，等「应用」）。</summary>
@@ -827,6 +828,24 @@ namespace WinFontSwap.Wpf
             bannerBtn.Click += delegate { RunApply(false); };
             bannerBar.Children.Add(bannerText);
             bannerBar.Children.Add(bannerBtn);
+            var restoreBtn = T.Btn2(L.T("从备份补回"), true, 12);
+            restoreBtn.Margin = new Thickness(8, 0, 0, 0);
+            restoreBtn.Visibility = Visibility.Collapsed;
+            restoreBtn.Click += delegate
+            {
+                if (!Confirm(L.T("把丢失的字体文件从备份补回来？"), L.T("从备份补回"))) return;
+                string msg = "";
+                try
+                {
+                    int n2 = Installer.RestoreMissingFromBackup(delegate (string s) { msg += s + "; "; });
+                    SetStatus(L.T("已补回 ") + n2 + L.T(" 个文件") + msg, n2 == 0);
+                    ConfirmDialog.Info(this, L.T("从备份补回"), msg);
+                }
+                catch (Exception ex) { SetStatus(L.T("补回失败：") + ex.Message, true); ConfirmDialog.Info(this, L.T("从备份补回"), ex.Message); }
+                RefreshTargets();
+            };
+            bannerBar.Children.Add(restoreBtn);
+            _mixedRestore = restoreBtn;
             _mixedBanner = new Border
             {
                 Background = T.B(Color.FromRgb(0x3A, 0x2E, 0x1F)),
@@ -1307,7 +1326,20 @@ namespace WinFontSwap.Wpf
             if (_mixedBanner == null || _mixedText == null) return;
             Installer.ConsistencyReport rep;
             try { rep = Installer.CheckConsistency(); } catch { return; }
-            if (!rep.IsMixed) { _mixedBanner.Visibility = Visibility.Collapsed; return; }
+            bool hasMissing = rep.Missing.Count > 0;
+            if (!hasMissing && !rep.IsMixed) { _mixedBanner.Visibility = Visibility.Collapsed; return; }
+
+            if (_mixedRestore != null) _mixedRestore.Visibility = hasMissing ? Visibility.Visible : Visibility.Collapsed;
+
+            if (hasMissing)
+            {
+                var names = new List<string>();
+                foreach (var f in rep.Missing) names.Add(Installer.LabelOf(f));
+                _mixedText.Text = L.T("文件丢失：") + string.Join(L.T("、"), names.ToArray())
+                    + (Installer.FindBackupCopy(rep.Missing[0]) != null ? L.T("（可从备份补回）") : L.T("（备份里也没有）"));
+                _mixedBanner.Visibility = Visibility.Visible;
+                return;
+            }
 
             var bad = new List<string>();
             foreach (var f in rep.AppliedPending) bad.Add(Installer.LabelOf(f));

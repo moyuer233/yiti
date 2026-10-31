@@ -927,6 +927,12 @@ namespace WinFontSwap
                 // 新字体直接继承系统字体的 DACL（含 UWP 需要的 ALL APPLICATION PACKAGES 读权限），再给 SYSTEM 一条完全控制
                 ApplySddl(path, WithSystemFull(sddl));
 
+                if (!File.Exists(path))
+                {
+                    log("暂存文件不见了，跳过 " + file + "（不动系统里的现有文件）");
+                    continue;
+                }
+
                 pairs.Add(new[] { target, backup });
                 pairs.Add(new[] { path, target });
 
@@ -1052,6 +1058,56 @@ namespace WinFontSwap
             catch { return null; }
         }
 
+        /// <summary>在备份里找某个目标文件的副本（优先 orig 安全副本，新的备份优先）。找不到返回 null。</summary>
+        public static string FindBackupCopy(string fileName)
+        {
+            try
+            {
+                if (!Directory.Exists(BackupRoot)) return null;
+                var dirs = new List<string>(Directory.GetDirectories(BackupRoot));
+                dirs.Sort(StringComparer.Ordinal);
+                dirs.Reverse();
+                foreach (var d in dirs)
+                {
+                    var a = Path.Combine(d, "orig", fileName);
+                    if (File.Exists(a)) return a;
+                    var b = Path.Combine(d, fileName);
+                    if (File.Exists(b)) return b;
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        /// <summary>把丢失的目标文件从备份补回系统字体目录（不需要重启，补回后通知字体库刷新）。</summary>
+        public static int RestoreMissingFromBackup(Action<string> log)
+        {
+            if (!IsAdmin) throw new InvalidOperationException("需要管理员权限");
+            int done = 0;
+            foreach (var f in TargetFiles)
+            {
+                var target = Path.Combine(FontsDir, f);
+                if (File.Exists(target)) continue;
+                var src = FindBackupCopy(f);
+                if (src == null) { log(f + " 没有可用的备份副本"); continue; }
+                try
+                {
+                    File.Copy(src, target, true);
+                    try
+                    {
+                        var psi = new ProcessStartInfo("icacls.exe", "\"" + target + "\" /inheritance:e");
+                        psi.CreateNoWindow = true; psi.UseShellExecute = false;
+                        var p = Process.Start(psi); if (p != null) p.WaitForExit(8000);
+                    }
+                    catch { }
+                    done++;
+                    log("已补回 " + f);
+                }
+                catch (Exception ex) { log("补回 " + f + " 失败：" + ex.Message); }
+            }
+            return done;
+        }
+
         public static string LatestBackup()
         {
             if (!Directory.Exists(BackupRoot)) return null;
@@ -1122,6 +1178,8 @@ namespace WinFontSwap
                 var target = Path.Combine(FontsDir, f);
                 var bak = Path.Combine(backup, f);
                 var sink = Path.Combine(stage, f);
+
+                if (!File.Exists(bak)) { log("备份里没有 " + f + "，跳过（不动现有文件）"); continue; }
 
                 if (File.Exists(target))
                 {
