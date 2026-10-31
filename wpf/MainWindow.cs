@@ -1451,7 +1451,7 @@ namespace WinFontSwap.Wpf
         /// <summary>一键：把 5 个系统元素都设成选中的字体（字号保持不变）。</summary>
         void PickShellFontForAll()
         {
-            var dlg = new FontPickerDialog();
+            var dlg = new FontPickerDialog(true);   // 界面元素：GDI 枚举，可选可变字体的命名实例
             dlg.Owner = this;
             if (dlg.ShowDialog() != true) return;
             var face = dlg.Picked.Family;
@@ -1591,7 +1591,7 @@ namespace WinFontSwap.Wpf
 
         void PickWin32Face(int i)
         {
-            var dlg = new FontPickerDialog();
+            var dlg = new FontPickerDialog(true);   // 界面元素：GDI 枚举，可选可变字体的命名实例
             dlg.Owner = this;
             if (dlg.ShowDialog() != true) return;
             _winFace[i] = dlg.Picked.Family;

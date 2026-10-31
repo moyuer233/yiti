@@ -17,9 +17,12 @@ namespace WinFontSwap.Wpf
         readonly List<FontEntry> _filtered = new List<FontEntry>();
 
         public FontEntry Picked { get; private set; }
+        readonly bool _shellMode;
 
-        public FontPickerDialog()
+        /// <param name="shellMode">true = 给「系统元素」选字体：用 GDI 枚举，能选到可变字体的命名实例（MiSans VF Bold 等），只写名字、不生成文件。</param>
+        public FontPickerDialog(bool shellMode = false)
         {
+            _shellMode = shellMode;
             Title = L.T("picker.select.a.font");
             Width = 560;
             Height = 640;
@@ -79,6 +82,23 @@ namespace WinFontSwap.Wpf
         {
             try
             {
+                if (_shellMode)
+                {
+                    _pool = new List<FontEntry>();
+                    foreach (var it in ShellFontEnum.All)
+                    {
+                        _pool.Add(new FontEntry
+                        {
+                            Family = it.Name,
+                            Subfamily = it.Italic ? "Italic" : "",
+                            Weight = it.Weight,
+                            PreviewFamily = it.BaseFamily,
+                            Path = null
+                        });
+                    }
+                    Filter();
+                    return;
+                }
                 _pool = FontLibrary.All;
                 WpfProgram.Log("picker pool=" + (_pool == null ? -1 : _pool.Count));
                 Filter();
@@ -112,7 +132,19 @@ namespace WinFontSwap.Wpf
         {
             var sp = new StackPanel { Orientation = Orientation.Horizontal };
             FontFamily ff = null;
-            try { ff = new FontFamily(f.Family); } catch { }
+            FontWeight fw = FontWeights.Normal;
+            try
+            {
+                var famName = string.IsNullOrEmpty(f.PreviewFamily) ? f.Family : f.PreviewFamily;
+                ff = new FontFamily(famName);
+                if (f.Weight >= 800) fw = FontWeights.Black;
+                else if (f.Weight >= 650) fw = FontWeights.Bold;
+                else if (f.Weight >= 550) fw = FontWeights.SemiBold;
+                else if (f.Weight >= 450) fw = FontWeights.Medium;
+                else if (f.Weight >= 350) fw = FontWeights.Normal;
+                else fw = FontWeights.Light;
+            }
+            catch { }
 
             var sample = new TextBlock
             {
@@ -122,7 +154,7 @@ namespace WinFontSwap.Wpf
                 Foreground = T.Text,
                 VerticalAlignment = VerticalAlignment.Center
             };
-            if (ff != null) sample.FontFamily = ff;
+            if (ff != null) { sample.FontFamily = ff; sample.FontWeight = fw; }
 
             var name = new TextBlock
             {
@@ -131,7 +163,7 @@ namespace WinFontSwap.Wpf
                 Foreground = T.Text,
                 VerticalAlignment = VerticalAlignment.Center
             };
-            if (ff != null) name.FontFamily = ff;
+            if (ff != null) { name.FontFamily = ff; name.FontWeight = fw; }
 
             var meta = T.Label("  w" + f.Weight + "  " + (f.Subfamily ?? ""), 11, T.TextFaint, false);
             meta.VerticalAlignment = VerticalAlignment.Center;

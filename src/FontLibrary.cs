@@ -12,6 +12,8 @@ namespace WinFontSwap
         public string Subfamily;
         public string Version;
         public int Weight;
+        /// <summary>预览用的家族名（界面元素选的是 GDI 实例名，如「MiSans VF Bold」，预览要退回基础家族）。</summary>
+        public string PreviewFamily;
 
         public string FileName { get { return Path == null ? "" : System.IO.Path.GetFileName(Path); } }
         public string Display { get { return Family + "  " + (Subfamily ?? "") + "  w" + Weight; } }
