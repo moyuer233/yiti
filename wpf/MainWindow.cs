@@ -1113,6 +1113,11 @@ namespace WinFontSwap.Wpf
             stack.Children.Add(new Border { Height = 16 });
 
 
+            TextBlock advDescAutoExplorer;
+            var autoExplorerSw = T.Switch(_advAutoExplorerOn);
+            autoExplorerSw.Click += delegate { _advAutoExplorerOn = autoExplorerSw.IsChecked == true; };
+            stack.Children.Add(T.Row("\uE777", L.T("adv.auto.restart.explorer"), "", autoExplorerSw, out advDescAutoExplorer));
+
             TextBlock advDesc1;
             var cacheSw = T.Switch(_advCacheOn);
             cacheSw.Click += delegate { _advCacheOn = cacheSw.IsChecked == true; };
@@ -1168,11 +1173,6 @@ namespace WinFontSwap.Wpf
             var restartExplorerBtn = T.Btn2(L.T("adv.restart.explorer"), false, 13);
             restartExplorerBtn.Click += delegate { RestartExplorerFromButton(); };
             stack.Children.Add(T.Row("\uE777", L.T("adv.restart.explorer"), "", restartExplorerBtn, out advDescRestartExplorer));
-
-            TextBlock advDescAutoExplorer;
-            var autoExplorerSw = T.Switch(_advAutoExplorerOn);
-            autoExplorerSw.Click += delegate { _advAutoExplorerOn = autoExplorerSw.IsChecked == true; };
-            stack.Children.Add(T.Row("\uE777", L.T("adv.auto.restart.explorer"), "", autoExplorerSw, out advDescAutoExplorer));
 
             // 所有块统一高度，避免开关行比按钮行矮一截
             foreach (var child in stack.Children)
