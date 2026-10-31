@@ -13,6 +13,7 @@ namespace WinFontSwap.Wpf
     {
         readonly ListBox _list = new ListBox();
         readonly TextBlock _summary = new TextBlock();
+        readonly TextBlock _stage = new TextBlock();
         List<Installer.BackupEntry> _entries = new List<Installer.BackupEntry>();
 
         public BackupDialog()
@@ -32,11 +33,28 @@ namespace WinFontSwap.Wpf
             root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
+            var head = new Grid();
+            head.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            var info = new StackPanel();
             _summary.FontSize = 12;
             _summary.Foreground = T.TextDim;
-            _summary.Margin = new Thickness(0, 0, 0, 10);
-            Grid.SetRow(_summary, 0);
-            root.Children.Add(_summary);
+            info.Children.Add(_summary);
+            _stage.Text = "";
+            _stage.FontSize = 12;
+            _stage.Foreground = T.TextFaint;
+            _stage.Margin = new Thickness(0, 4, 0, 0);
+            info.Children.Add(_stage);
+            head.Children.Add(info);
+            var clear = T.Btn2(L.T("清理暂存目录"), false, 12);
+            clear.VerticalAlignment = VerticalAlignment.Center;
+            clear.Margin = new Thickness(12, 0, 0, 0);
+            clear.Click += delegate { ClearStageAction(); };
+            Grid.SetColumn(clear, 1);
+            head.Children.Add(clear);
+            head.Margin = new Thickness(0, 0, 0, 10);
+            Grid.SetRow(head, 0);
+            root.Children.Add(head);
 
             _list.HorizontalContentAlignment = HorizontalAlignment.Left;
             _list.Padding = new Thickness(4, 4, 4, 4);
@@ -89,6 +107,9 @@ namespace WinFontSwap.Wpf
             _summary.Text = _entries.Count == 0
                 ? L.T("还没有备份")
                 : L.T("共 ") + _entries.Count + L.T(" 个备份，占用 ") + Installer.HumanSize(total);
+            int sdirs; long sbytes;
+            Installer.StageUsage(out sdirs, out sbytes);
+            _stage.Text = L.T("暂存目录：") + sdirs + L.T(" 个，占用 ") + Installer.HumanSize(sbytes);
         }
 
         void OpenDir()
@@ -99,6 +120,19 @@ namespace WinFontSwap.Wpf
                 System.Diagnostics.Process.Start("explorer.exe", "\"" + Installer.BackupRoot + "\"");
             }
             catch { }
+        }
+
+        void ClearStageAction()
+        {
+            var m = MessageBox.Show(this, L.T("清空暂存目录？") + "\n" + L.T("（重启队列里还有待执行项时会拒绝）"), L.T("清理暂存目录"),
+                MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+            if (m != MessageBoxResult.Yes) return;
+            string log = "";
+            int n = 0;
+            try { n = Installer.ClearStage(delegate (string s) { log += s + "; "; }); }
+            catch (Exception ex) { log += ex.Message; }
+            MessageBox.Show(this, L.T("已清理 ") + n + L.T(" 个目录") + (string.IsNullOrEmpty(log) ? "" : "\n" + log), L.T("清理暂存目录"));
+            Load();
         }
 
         void DeleteSelected()

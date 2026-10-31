@@ -286,6 +286,7 @@ namespace WinFontSwap.Wpf
         TextBlock _brandName;
         TextBlock _shellAllDesc;
         Border _mixedBanner;
+        bool _switchingLang;
         TextBlock _mixedText;
         Button _mixedRestore;
         TextBox _shellAllSize;
@@ -487,6 +488,16 @@ namespace WinFontSwap.Wpf
                     {
                         // 自测：直接生成一份日志
                         try { WriteDiagnosticsLog(); } catch (Exception ex) { WpfProgram.Log("logdiag: " + ex); }
+                    }
+                    else if (a == "--logtest")
+                    {
+                        // 自测：打开输出日志开关并写一条，验证开关真的会产出日志
+                        _advLogOn = true;
+                        MaybeLog("selftest");
+                    }
+                    else if (a == "--togglelang")
+                    {
+                        Dispatcher.BeginInvoke(new Action(delegate { ApplyLanguage(!L.En); }));
                     }
                     else if (a == "--advgen")
                     {
@@ -786,7 +797,9 @@ namespace WinFontSwap.Wpf
 
         void ShowPage()
         {
+            if (_switchingLang) return;   // 语言切换过程中不要重建页面
             int i = _nav.SelectedIndex;
+            if (i < 0) i = 0;
             if (i == 0)
             {
                 _content.Content = BuildFontPage();
@@ -1660,10 +1673,18 @@ namespace WinFontSwap.Wpf
             if (_brandName != null) _brandName.Text = L.T("易体");
             if (_nav != null)
             {
-                _nav.Items.Clear();
-                _nav.Items.Add(NavItem("\uE8D2", L.T("字体替换")));
-                _nav.Items.Add(NavItem("\uE713", L.T("高级")));
-                _nav.Items.Add(NavItem("\uE8A5", L.T("关于")));
+                // 重建导航项会把 SelectedIndex 清成 -1；先记下来，重建后恢复，否则会莫名跳到「关于」页
+                int keep = _nav.SelectedIndex < 0 ? 0 : _nav.SelectedIndex;
+                _switchingLang = true;
+                try
+                {
+                    _nav.Items.Clear();
+                    _nav.Items.Add(NavItem("\uE8D2", L.T("字体替换")));
+                    _nav.Items.Add(NavItem("\uE713", L.T("高级")));
+                    _nav.Items.Add(NavItem("\uE8A5", L.T("关于")));
+                    _nav.SelectedIndex = keep;
+                }
+                finally { _switchingLang = false; }
             }
             ShowPage();
             SetStatus(L.En ? "Language switched to English" : "已切换为中文", false);

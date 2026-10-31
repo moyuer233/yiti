@@ -1108,6 +1108,51 @@ namespace WinFontSwap
             return done;
         }
 
+        /// <summary>暂存目录占用：返回 目录数 与 总字节数。</summary>
+        public static void StageUsage(out int dirs, out long bytes)
+        {
+            dirs = 0; bytes = 0;
+            try
+            {
+                if (!Directory.Exists(StageRoot)) return;
+                dirs = Directory.GetDirectories(StageRoot).Length;
+                foreach (var f in Directory.GetFiles(StageRoot, "*", SearchOption.AllDirectories))
+                {
+                    try { bytes += new FileInfo(f).Length; } catch { }
+                }
+            }
+            catch { }
+        }
+
+        /// <summary>清空暂存目录。队列里还有本工具的待执行项时拒绝清理（那是重启要用的源文件）。</summary>
+        public static int ClearStage(Action<string> log)
+        {
+            var all = ReadQueueOrDefault();
+            foreach (var p in all)
+            {
+                foreach (var s in p)
+                {
+                    if (!string.IsNullOrEmpty(s) && s.IndexOf("WinFontSwap", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        log("重启队列里还有待执行的替换，先不要清暂存目录");
+                        return 0;
+                    }
+                }
+            }
+            int n = 0;
+            try
+            {
+                if (!Directory.Exists(StageRoot)) return 0;
+                foreach (var d in Directory.GetDirectories(StageRoot))
+                {
+                    try { Directory.Delete(d, true); n++; }
+                    catch (Exception ex) { log("删除 " + Path.GetFileName(d) + " 失败：" + ex.Message); }
+                }
+            }
+            catch (Exception ex) { log("清空暂存目录失败：" + ex.Message); }
+            return n;
+        }
+
         public static string LatestBackup()
         {
             if (!Directory.Exists(BackupRoot)) return null;
