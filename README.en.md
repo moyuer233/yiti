@@ -47,7 +47,6 @@ _✨ The no-brainer system-wide font replacement tool for Windows ✨_
 - **Half-replaced detection**: on launch it verifies that all five files were really replaced; if only part of them changed, the font page shows a banner with a one-click **Re-apply**
 - **Backup manager**: lists every backup taken before a swap (date, size, files inside) and lets you delete one or roll back to any of them; it also shows how much the staging folder uses and clears it in one click
 - **Missing files can be restored**: if one of the system font files is gone at startup (for example a queued rename was interrupted), the font page shows a banner with a one-click **Restore from backup**
-- **Shell elements only**: a switch on the advanced page changes menus, title bars and status bars only, without touching the system font files
 
 ## How it differs from noMeiryoUI
 

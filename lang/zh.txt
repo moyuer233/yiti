@@ -75,8 +75,6 @@ adv.they.shadow.the.system.font=会阻止替换
 adv.this.windows.version.has.no.per.user.fonts=此版本 Windows 没有用户级字体
 adv.restart.explorer=重启资源管理器
 adv.restart.explorer.desc=让已打开的窗口和菜单重新读取界面字体
-adv.shell.only=仅修改界面元素
-adv.shell.only.desc=不动系统字体文件，只改菜单/标题栏/状态栏这些界面字体
 adv.write.a.log=输出日志
 adv.writes.yy.mm.dd.ss.log.next.to.the.exe.after=开启后每次操作在软件目录生成 yy-mm-dd-ss.log
 

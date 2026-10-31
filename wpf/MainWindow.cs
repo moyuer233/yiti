@@ -281,7 +281,6 @@ namespace WinFontSwap.Wpf
         bool _advCacheOn = true, _advUserFontsOn = true;
         bool _advAutoWeightOn = true;   // 自动按字重配对常规/粗体/细体
         bool _advLogOn;                 // 输出日志：默认关闭
-        bool _advShellOnly;             // 仅修改界面元素：不动系统字体文件（等同 noMeiryoUI 的做法）
         bool _fakeOld;
         FontEntry _picked;   // 用户在字体列表里实际点选的那一款（源字体行显示它，不是按字重匹配后的常规体）
         TextBlock _brandName;
@@ -1150,10 +1149,6 @@ namespace WinFontSwap.Wpf
             };
             stack.Children.Add(T.Row("\uE777", L.T("backup.backups"), L.T("adv.review.or.delete.old.backups.or.roll.back.to"), backupBtn, out advDescBackup));
 
-            TextBlock advDescShellOnly;
-            var shellOnlySw = T.Switch(_advShellOnly);
-            shellOnlySw.Click += delegate { _advShellOnly = shellOnlySw.IsChecked == true; };
-            stack.Children.Add(T.Row("\uE770", L.T("adv.shell.only"), L.T("adv.shell.only.desc"), shellOnlySw, out advDescShellOnly));
 
             TextBlock advDescRestartExplorer;
             var restartExplorerBtn = T.Btn2(L.T("adv.restart.explorer"), false, 13);
@@ -1696,8 +1691,7 @@ namespace WinFontSwap.Wpf
 
         void RunApply(bool generateOnly)
         {
-            // 仅修改界面元素：完全不碰系统字体文件，只写注册表 + SPI（相当于内置 noMeiryoUI）
-            var list = _advShellOnly ? new List<FontSource>() : CollectSources();
+            var list = CollectSources();
             bool hasFonts = list.Count > 0;
             bool hasShell = AnyShellSelected();
 
