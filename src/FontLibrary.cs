@@ -222,6 +222,38 @@ namespace WinFontSwap
         }
 
         /// <summary>
+        /// 可变字体是否带 HVAR（每个字重有自己的字宽表）。没有 HVAR 的可变字体，系统按 600 之类的字重变形时
+        /// 字宽仍是默认那一档，墨迹会超出格子 —— 资源管理器里英文右侧被截断就是这个原因。
+        /// </summary>
+        public static bool HasWidthVariation(FontEntry e)
+        {
+            if (e == null) return false;
+            try
+            {
+                var data = File.ReadAllBytes(e.Path);
+                return Sfnt.IsVariable(data, e.FaceIndex) && Sfnt.HasTable(data, e.FaceIndex, "HVAR");
+            }
+            catch { return false; }
+        }
+
+        /// <summary>同一个家族的静态字重文件（用户选了可变字体时优先用它：可变字体的默认实例未必是 400）。</summary>
+        public static FontEntry FindStaticSibling(FontEntry picked, int weight)
+        {
+            if (picked == null) return null;
+            var baseName = NormalizeBase(picked.Family);
+            FontEntry best = null;
+            int bestDiff = int.MaxValue;
+            foreach (var e in All)
+            {
+                if (NormalizeBase(e.Family) != baseName) continue;
+                if (IsVariableEntry(e)) continue;
+                var diff = Math.Abs(e.Weight - weight);
+                if (diff < bestDiff) { best = e; bestDiff = diff; }
+            }
+            return bestDiff <= 200 ? best : null;
+        }
+
+        /// <summary>
         /// 找同一个家族的可变字体版本：英数那个槽位（SegUIVar）在 WinUI 里会被按 400/600/700 多档请求，
         /// 只有可变字体才能对上真实字重，静态文件会被系统合成。
         /// </summary>
@@ -238,7 +270,7 @@ namespace WinFontSwap
                 if (n.IndexOf("vf", StringComparison.Ordinal) < 0 && f.IndexOf("vf", StringComparison.Ordinal) < 0
                     && n.IndexOf("variable", StringComparison.Ordinal) < 0 && f.IndexOf("variable", StringComparison.Ordinal) < 0) continue;
                 if (NormalizeBase(e.Family) != baseName) continue;
-                if (IsVariableEntry(e)) return e;
+                if (HasWidthVariation(e)) return e;   // 没有 HVAR 的可变字体会截断，宁可退回静态
             }
             return null;
         }

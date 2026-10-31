@@ -1251,18 +1251,26 @@ namespace WinFontSwap.Wpf
         void ApplyPicked(FontEntry picked)
         {
             if (picked == null) return;
+            // 选的是可变字体时优先换用同家族的静态版本：
+            // 可变字体的默认实例不一定是 400（MiSans VF 是 330），剥掉变体轴直接取默认实例会整体偏细
+            var use = picked;
+            if (FontLibrary.IsVariableEntry(picked))
+            {
+                var s400 = FontLibrary.FindStaticSibling(picked, 400);
+                if (s400 != null) use = s400;
+            }
             if (!_advAutoWeightOn)
             {
                 // 关掉自动匹配：五档全部用你点的那一款
                 _picked = picked;
-                for (int i = 0; i < _slots.Length; i++) _slots[i] = picked;
+                for (int i = 0; i < _slots.Length; i++) _slots[i] = use;
                 UpdateSlotLabels();
                 SyncWin32FromChoice();
-                SetStatus(L.T("font.auto.matching.off.all.five.slots.use") + picked.Family + " " + (picked.Subfamily ?? ""), false);
+                SetStatus(L.T("font.auto.matching.off.all.five.slots.use") + use.Family + " " + (use.Subfamily ?? ""), false);
                 return;
             }
-            var pool = FontLibrary.CandidatesForBase(picked);
-            var regular = FontLibrary.Match(pool, 400) ?? picked;
+            var pool = FontLibrary.CandidatesForBase(use);
+            var regular = FontLibrary.Match(pool, 400) ?? use;
             var bold = FontLibrary.Match(pool, 700) ?? regular;
             var light = FontLibrary.Match(pool, 300) ?? regular;
             _picked = picked;

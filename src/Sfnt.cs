@@ -70,6 +70,20 @@ namespace WinFontSwap
             return list;
         }
 
+        /// <summary>这个 face 有没有某张表（用于判断可变字体是否带 HVAR 这类关键表）。</summary>
+        public static bool HasTable(byte[] file, int faceIndex, string tag)
+        {
+            try
+            {
+                var offsets = FaceOffsets(file);
+                if (offsets == null || faceIndex < 0 || faceIndex >= offsets.Length) return false;
+                foreach (var t in ReadTables(file, offsets[faceIndex]))
+                    if (string.Equals(t.Tag, tag, StringComparison.Ordinal)) return true;
+            }
+            catch { }
+            return false;
+        }
+
         public static bool TryReadNames(byte[] file, int faceOff, out string family, out string subfamily,
                                         out string version, out string fullName, out int weightClass)
         {
