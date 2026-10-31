@@ -123,6 +123,27 @@ namespace WinFontSwap
                         case 3: ncm.lfStatusFont.lfHeight = h; ncm.lfStatusFont.lfFaceName = faces[i]; ncm.lfStatusFont.lfQuality = 5; done++; break;
                     }
                 }
+                // 标题栏：Win11 22H2+ 会读 lfCaptionFont（noMeiryoUI 的 set11TitlePreset 也做这件事）。
+                // 我们没有单独的「标题栏」行，跟随「小标题栏」的字体/字号，避免两处不一致。
+                bool smOn = enabled == null || (enabled.Length > 0 && enabled[0]);
+                if (smOn && faces != null && faces.Length > 0 && !string.IsNullOrEmpty(faces[0]))
+                {
+                    ncm.lfCaptionFont.lfHeight = PtToHeight(points != null && points.Length > 0 ? points[0] : 9);
+                    ncm.lfCaptionFont.lfFaceName = faces[0];
+                    ncm.lfCaptionFont.lfQuality = 5;
+                }
+
+                // 标题栏高度跟着字号走；Win11 的窗口边框宽度从 0 补成 1 个逻辑像素（同 noMeiryoUI 的 setFontAdjusted）
+                try
+                {
+                    int dpi = SystemDpi();
+                    int captionPx = Math.Abs(ncm.lfCaptionFont.lfHeight);
+                    if (captionPx > 0) ncm.iCaptionHeight = captionPx + (10 * (int)Math.Round(dpi / 96.0));
+                    if (Environment.OSVersion.Version.Major > 10 && ncm.iPaddedBorderWidth == 0)
+                        ncm.iPaddedBorderWidth = 1 + (int)Math.Round(dpi / 96.0);
+                }
+                catch { }
+
                 bool setOk = SystemParametersInfoW(SPI_SETNONCLIENTMETRICS, (uint)ncm.cbSize, ref ncm, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
                 if (!setOk) done = 0;   // 写失败就不报“已生效 N 项”
 

@@ -17,6 +17,9 @@ namespace WinFontSwap
             "SmCaptionFont", "MenuFont", "MessageFont", "StatusFont", "IconFont"
         };
 
+        /// <summary>界面里没有单独一行、但写入时会跟着改的项：标题栏字体（Win11 22H2+ 生效）。</summary>
+        public static readonly string[] ExtraKeys = { "CaptionFont" };
+
         public static readonly string[] Names =
         {
             "小标题栏", "菜单", "消息框", "状态栏", "图标"
@@ -113,7 +116,9 @@ namespace WinFontSwap
                 using (var k = Registry.CurrentUser.OpenSubKey(RegPath, false))
                 {
                     if (k == null) return;
-                    foreach (var key in Keys)
+                    var all = new List<string>(Keys);
+                    all.AddRange(ExtraKeys);
+                    foreach (var key in all)
                     {
                         var raw = k.GetValue(key) as byte[];
                         if (raw == null) continue;
@@ -133,6 +138,7 @@ namespace WinFontSwap
         {
             if (!File.Exists(BackupPath)) return 0;
             int n = 0;
+            var restored = new List<string>();
             using (var k = Registry.CurrentUser.CreateSubKey(RegPath))
             {
                 foreach (var line in File.ReadAllLines(BackupPath, Encoding.UTF8))
@@ -143,9 +149,16 @@ namespace WinFontSwap
                     try
                     {
                         k.SetValue(name, Convert.FromBase64String(line.Substring(eq + 1)), RegistryValueKind.Binary);
+                        restored.Add(name);
                         n++;
                     }
                     catch { }
+                }
+                // 旧备份文件里没有的追加项（例如标题栏字体）：删掉，让系统回到自己的默认，而不是留着我们改过的值
+                foreach (var extra in ExtraKeys)
+                {
+                    if (restored.Contains(extra)) continue;
+                    try { k.DeleteValue(extra, false); n++; } catch { }
                 }
             }
             return n;
