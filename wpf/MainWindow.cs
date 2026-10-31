@@ -1459,18 +1459,7 @@ namespace WinFontSwap.Wpf
             }
         }
 
-        void FollowCurrentFont()
-        {
-            var src = _slots[0];
-            if (src == null) { SetStatus(L.T("msg.pick.a.font.first"), true); return; }
-            for (int i = 0; i < Win32Fonts.Names.Length; i++)
-            {
-                if (!_winOn[i]) continue;
-                _winFace[i] = src.Family;
-                _winCur[i].Text = src.Family + "   " + _winSize[i].Text + " pt";
-            }
-            ApplyWin32();
-        }
+
 
         /// <summary>一键：把 5 个系统元素都设成选中的字体（字号保持不变）。</summary>
         void PickShellFontForAll()
@@ -1744,7 +1733,6 @@ namespace WinFontSwap.Wpf
                 bool cache = _advCache != null && _advCache.IsChecked == true;
                 bool userFonts = _advUserFonts != null && _advUserFonts.IsChecked == true;
                 var res = Installer.Apply(list, delegate (string m) { }, generateOnly, cache, userFonts);
-                if (!generateOnly) { try { FollowCurrentFont(); } catch { } }
                 SetStatus(generateOnly ? (L.T("msg.generated.into") + res.OutputDir) : L.T("msg.written.rebooting.now"), false);
                 MaybeLog(generateOnly ? "generate" : "apply-fonts");
                 Diagnostics.Append("apply done: " + res.Message + " queued=" + res.Queued + " out=" + res.OutputDir);
