@@ -56,6 +56,8 @@
 "author" = "Author"
 "language" = "Language"
 "project.home" = "Project home"
+"thanks" = "Credits"
+"thanks.desc" = "The idea of changing the window-element fonts comes from noMeiryoUI (Tatsuhiko Syoji)"
 "source.code.and.issue.tracker" = "Source code and issue tracker"
 
 [backup]

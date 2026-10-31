@@ -93,6 +93,7 @@ namespace WinFontSwap.Wpf
                             Subfamily = it.Italic ? "Italic" : "",
                             Weight = it.Weight,
                             PreviewFamily = it.BaseFamily,
+                            CharSet = it.CharSet,
                             Path = null
                         });
                     }

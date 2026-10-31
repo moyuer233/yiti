@@ -56,6 +56,8 @@
 "author" = "作者"
 "language" = "界面语言"
 "project.home" = "项目主页"
+"thanks" = "致谢"
+"thanks.desc" = "窗口元素字体修改的思路来自 noMeiryoUI（Tatsuhiko Syoji）"
 "source.code.and.issue.tracker" = "源码与问题反馈"
 
 [backup]

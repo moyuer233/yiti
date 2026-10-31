@@ -276,6 +276,8 @@ namespace WinFontSwap.Wpf
         Win32Fonts.Info[] _winInfo = new Win32Fonts.Info[Win32Fonts.Names.Length];
         string[] _winFace = new string[Win32Fonts.Names.Length];
         bool[] _winOn = new bool[Win32Fonts.Names.Length];
+        int[] _winWeight = new int[Win32Fonts.Names.Length];    // 选中 face 自己的字重，写 LOGFONT 时不再沿用旧字体的值
+        int[] _winCharSet = new int[Win32Fonts.Names.Length];   // 同上，字符集
         ToggleButton[] _winTog = new ToggleButton[Win32Fonts.Names.Length];
         ToggleButton _advCache, _advUserFonts, _advAutoWeight;
         bool _advCacheOn = true, _advUserFontsOn = true;
@@ -1233,6 +1235,15 @@ namespace WinFontSwap.Wpf
             };
             stack.Children.Add(T.Row("\uE774", L.T("about.project.home"), L.T("about.source.code.and.issue.tracker"), repo, out d6));
 
+            TextBlock d7;
+            var thanks = T.Label("github.com/Tatsu-syo/noMeiryoUI", 13, T.Accent, false);
+            thanks.Cursor = Cursors.Hand;
+            thanks.MouseLeftButtonUp += delegate
+            {
+                try { System.Diagnostics.Process.Start("https://github.com/Tatsu-syo/noMeiryoUI"); } catch { }
+            };
+            stack.Children.Add(T.Row("\uE8A5", L.T("about.thanks"), L.T("about.thanks.desc"), thanks, out d7));
+
 
             var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = stack, Padding = new Thickness(0, 0, 6, 12) };
             _pageScroll = scroll;
@@ -1433,6 +1444,8 @@ namespace WinFontSwap.Wpf
                     _winInfo[i] = info[i];
                     // 已有用户选择时不要覆盖：这里只补“当前系统值”和空着的字段
                     if (string.IsNullOrEmpty(_winFace[i])) _winFace[i] = info[i].Face;
+                    if (_winWeight[i] <= 0) _winWeight[i] = info[i].Weight;
+                    if (_winCharSet[i] <= 0) _winCharSet[i] = info[i].CharSet;
                     double pt = Math.Abs(info[i].HeightPx) * 72.0 / 96.0;
                     _winCur[i].Text = _winFace[i] + "   " + pt.ToString("0") + " pt";
                     if (_winSize[i] != null && string.IsNullOrEmpty(_winSize[i].Text)) _winSize[i].Text = pt.ToString("0");
@@ -1453,6 +1466,8 @@ namespace WinFontSwap.Wpf
             {
                 if (!_winOn[i]) continue;
                 _winFace[i] = src.Family;
+                _winWeight[i] = 400;
+                _winCharSet[i] = 1;   // DEFAULT_CHARSET：让 GDI 按 face 名字自己挑，不再沿用旧字体的字符集
                 if (_winCur[i] != null && _winSize[i] != null)
                     _winCur[i].Text = src.Family + "   " + _winSize[i].Text + " pt";
             }
@@ -1467,9 +1482,13 @@ namespace WinFontSwap.Wpf
             dlg.Owner = this;
             if (dlg.ShowDialog() != true) return;
             var face = dlg.Picked.Family;
+            int weight = dlg.Picked.Weight > 0 ? dlg.Picked.Weight : 400;
+            int charset = dlg.Picked.CharSet > 0 ? dlg.Picked.CharSet : 1;
             for (int i = 0; i < Win32Fonts.Names.Length; i++)
             {
                 _winFace[i] = face;
+                _winWeight[i] = weight;
+                _winCharSet[i] = charset;
                 double pt;
                 double.TryParse(_winSize[i].Text, out pt);
                 if (pt <= 0) pt = 9;
@@ -1496,10 +1515,10 @@ namespace WinFontSwap.Wpf
                     double.TryParse(_winSize[i].Text, out pt);
                     if (pt <= 0) pt = 9;
                     var src = _winInfo[i];
-                    Win32Fonts.Write(Win32Fonts.Keys[i], face, pt,
-                        src != null ? src.Weight : 400,
-                        src != null ? src.CharSet : 1,
-                        src != null && src.Italic);
+                    // 字重用选中 face 自己的：沿用旧字体的 400 会让 GDI 对 600 的实例做“模拟加粗”（只描粗不改字宽，右边缘会被裁）
+                    int weight = _winWeight[i] > 0 ? _winWeight[i] : (src != null ? src.Weight : 400);
+                    int charset = _winCharSet[i] > 0 ? _winCharSet[i] : (src != null ? src.CharSet : 1);
+                    Win32Fonts.Write(Win32Fonts.Keys[i], face, pt, weight, charset, src != null && src.Italic);
                     done++;
                 }
                 // 关键：只写注册表要重新登录才生效；这里调 SystemParametersInfo 立即应用（和 noMeiryoUI 一致）
@@ -1512,7 +1531,7 @@ namespace WinFontSwap.Wpf
                     double.TryParse(_winSize[i].Text, out p);
                     pts[i] = p > 0 ? p : 9;
                 }
-                int live = ShellMetrics.Apply(faces, pts, _winOn, _winInfo);
+                int live = ShellMetrics.Apply(faces, pts, _winOn, _winInfo, _winWeight, _winCharSet);
                 SetStatus(L.T("msg.shell.elements.applied") + live + L.T("msg.item.s"), false);
             }
             catch (Exception ex) { SetStatus(L.T("msg.write.failed") + ex.Message, true); }
@@ -1607,6 +1626,8 @@ namespace WinFontSwap.Wpf
             dlg.Owner = this;
             if (dlg.ShowDialog() != true) return;
             _winFace[i] = dlg.Picked.Family;
+            _winWeight[i] = dlg.Picked.Weight > 0 ? dlg.Picked.Weight : 400;
+            _winCharSet[i] = dlg.Picked.CharSet > 0 ? dlg.Picked.CharSet : 1;
             double pt;
             double.TryParse(_winSize[i].Text, out pt);
             if (pt <= 0) pt = 9;
@@ -1924,6 +1945,8 @@ namespace WinFontSwap.Wpf
                 const string defFace = "Microsoft YaHei UI";
                 const int defPt = 9;
                 _winFace[i] = defFace;
+                _winWeight[i] = 400;
+                _winCharSet[i] = 134;
                 if (_winSize[i] != null) _winSize[i].Text = defPt.ToString();
                 if (_winCur[i] != null) _winCur[i].Text = defFace + "   " + defPt + " pt";
             }

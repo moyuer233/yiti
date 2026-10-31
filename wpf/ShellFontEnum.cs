@@ -17,6 +17,7 @@ namespace WinFontSwap.Wpf
             public int Weight;
             public bool Italic;
             public string BaseFamily;   // 去掉尾部字重词后的家族名，用于预览
+            public byte CharSet;
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
@@ -93,6 +94,7 @@ namespace WinFontSwap.Wpf
                             Name = lf.lfFaceName,
                             Weight = lf.lfWeight,
                             Italic = lf.lfItalic != 0,
+                            CharSet = lf.lfCharSet,
                             BaseFamily = BaseOf(lf.lfFaceName)
                         });
                         return 1;

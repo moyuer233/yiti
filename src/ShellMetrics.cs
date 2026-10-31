@@ -90,7 +90,8 @@ namespace WinFontSwap
         /// faces[i] 与 Win32Fonts.Keys 顺序一致：SmCaption / Menu / Message / Status / Icon。
         /// 返回成功写入的项数。
         /// </summary>
-        public static int Apply(string[] faces, double[] points, bool[] enabled, Win32Fonts.Info[] infos = null)
+        public static int Apply(string[] faces, double[] points, bool[] enabled, Win32Fonts.Info[] infos = null,
+                                int[] weights = null, int[] charsets = null)
         {
             int done = 0;
             try
@@ -114,24 +115,30 @@ namespace WinFontSwap
                     if (enabled != null && i < enabled.Length && !enabled[i]) continue;
                     if (string.IsNullOrEmpty(faces[i])) continue;
                     int h = PtToHeight(points != null && i < points.Length ? points[i] : 9);
+                    // 字重/字符集要和 faces[i] 这个 face 自洽：沿用旧字体的值会让 GDI 做模拟加粗，字宽不变、墨迹变宽，右边会被裁
+                    int weight = weights != null && i < weights.Length && weights[i] > 0 ? weights[i]
+                               : (infos != null && i < infos.Length && infos[i] != null ? infos[i].Weight : 400);
+                    int charset = charsets != null && i < charsets.Length && charsets[i] > 0 ? charsets[i]
+                                : (infos != null && i < infos.Length && infos[i] != null ? infos[i].CharSet : 1);
+                    byte italic = (byte)(infos != null && i < infos.Length && infos[i] != null && infos[i].Italic ? 1 : 0);
                     switch (i)
                     {
                         // 同步把 quality 设成 CLEARTYPE_QUALITY：注册表里若留着 0（DEFAULT），经典界面会退化成灰度抗锯齿
                         case 0:
                             ncm.lfSmCaptionFont.lfHeight = h; ncm.lfSmCaptionFont.lfFaceName = faces[i]; ncm.lfSmCaptionFont.lfQuality = 5;
-                            if (infos != null && i < infos.Length && infos[i] != null) { ncm.lfSmCaptionFont.lfWeight = infos[i].Weight; ncm.lfSmCaptionFont.lfCharSet = (byte)infos[i].CharSet; ncm.lfSmCaptionFont.lfItalic = (byte)(infos[i].Italic ? 1 : 0); }
+                            ncm.lfSmCaptionFont.lfWeight = weight; ncm.lfSmCaptionFont.lfCharSet = (byte)charset; ncm.lfSmCaptionFont.lfItalic = italic;
                             done++; break;
                         case 1:
                             ncm.lfMenuFont.lfHeight = h; ncm.lfMenuFont.lfFaceName = faces[i]; ncm.lfMenuFont.lfQuality = 5;
-                            if (infos != null && i < infos.Length && infos[i] != null) { ncm.lfMenuFont.lfWeight = infos[i].Weight; ncm.lfMenuFont.lfCharSet = (byte)infos[i].CharSet; ncm.lfMenuFont.lfItalic = (byte)(infos[i].Italic ? 1 : 0); }
+                            ncm.lfMenuFont.lfWeight = weight; ncm.lfMenuFont.lfCharSet = (byte)charset; ncm.lfMenuFont.lfItalic = italic;
                             done++; break;
                         case 2:
                             ncm.lfMessageFont.lfHeight = h; ncm.lfMessageFont.lfFaceName = faces[i]; ncm.lfMessageFont.lfQuality = 5;
-                            if (infos != null && i < infos.Length && infos[i] != null) { ncm.lfMessageFont.lfWeight = infos[i].Weight; ncm.lfMessageFont.lfCharSet = (byte)infos[i].CharSet; ncm.lfMessageFont.lfItalic = (byte)(infos[i].Italic ? 1 : 0); }
+                            ncm.lfMessageFont.lfWeight = weight; ncm.lfMessageFont.lfCharSet = (byte)charset; ncm.lfMessageFont.lfItalic = italic;
                             done++; break;
                         case 3:
                             ncm.lfStatusFont.lfHeight = h; ncm.lfStatusFont.lfFaceName = faces[i]; ncm.lfStatusFont.lfQuality = 5;
-                            if (infos != null && i < infos.Length && infos[i] != null) { ncm.lfStatusFont.lfWeight = infos[i].Weight; ncm.lfStatusFont.lfCharSet = (byte)infos[i].CharSet; ncm.lfStatusFont.lfItalic = (byte)(infos[i].Italic ? 1 : 0); }
+                            ncm.lfStatusFont.lfWeight = weight; ncm.lfStatusFont.lfCharSet = (byte)charset; ncm.lfStatusFont.lfItalic = italic;
                             done++; break;
                     }
                 }
@@ -143,6 +150,13 @@ namespace WinFontSwap
                     ncm.lfCaptionFont.lfHeight = PtToHeight(points != null && points.Length > 0 ? points[0] : 9);
                     ncm.lfCaptionFont.lfFaceName = faces[0];
                     ncm.lfCaptionFont.lfQuality = 5;
+                    int cw = weights != null && weights.Length > 0 && weights[0] > 0 ? weights[0]
+                           : (infos != null && infos.Length > 0 && infos[0] != null ? infos[0].Weight : 400);
+                    int cc = charsets != null && charsets.Length > 0 && charsets[0] > 0 ? charsets[0]
+                           : (infos != null && infos.Length > 0 && infos[0] != null ? infos[0].CharSet : 1);
+                    ncm.lfCaptionFont.lfWeight = cw;
+                    ncm.lfCaptionFont.lfCharSet = (byte)cc;
+                    ncm.lfCaptionFont.lfItalic = (byte)(infos != null && infos.Length > 0 && infos[0] != null && infos[0].Italic ? 1 : 0);
                 }
 
                 // 标题栏高度跟着字号走；Win11 的窗口边框宽度从 0 补成 1 个逻辑像素（同 noMeiryoUI 的 setFontAdjusted）
@@ -171,6 +185,13 @@ namespace WinFontSwap
                         lf.lfHeight = PtToHeight(points != null && iconIdx < points.Length ? points[iconIdx] : 9);
                         lf.lfFaceName = faces[iconIdx];
                         lf.lfQuality = 5;
+                        int iw = weights != null && iconIdx < weights.Length && weights[iconIdx] > 0 ? weights[iconIdx]
+                               : (infos != null && iconIdx < infos.Length && infos[iconIdx] != null ? infos[iconIdx].Weight : 400);
+                        int ic = charsets != null && iconIdx < charsets.Length && charsets[iconIdx] > 0 ? charsets[iconIdx]
+                               : (infos != null && iconIdx < infos.Length && infos[iconIdx] != null ? infos[iconIdx].CharSet : 1);
+                        lf.lfWeight = iw;
+                        lf.lfCharSet = (byte)ic;
+                        lf.lfItalic = (byte)(infos != null && iconIdx < infos.Length && infos[iconIdx] != null && infos[iconIdx].Italic ? 1 : 0);
                         if (SystemParametersInfoW(SPI_SETICONTITLELOGFONT, (uint)Marshal.SizeOf(typeof(LOGFONT)), ref lf, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE))
                             done++;
                     }
