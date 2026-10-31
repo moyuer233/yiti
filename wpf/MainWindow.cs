@@ -1135,6 +1135,11 @@ namespace WinFontSwap.Wpf
             shellOnlySw.Click += delegate { _advShellOnly = shellOnlySw.IsChecked == true; };
             stack.Children.Add(T.Row("\uE770", L.T("adv.shell.only"), L.T("adv.shell.only.desc"), shellOnlySw, out advDescShellOnly));
 
+            TextBlock advDescRestartExplorer;
+            var restartExplorerBtn = T.Btn2(L.T("adv.restart.explorer"), false, 13);
+            restartExplorerBtn.Click += delegate { RestartExplorerFromButton(); };
+            stack.Children.Add(T.Row("\uE777", L.T("adv.restart.explorer"), L.T("adv.restart.explorer.desc"), restartExplorerBtn, out advDescRestartExplorer));
+
             TextBlock advDescLog;
             var logSw = T.Switch(_advLogOn);
             logSw.Click += delegate { _advLogOn = logSw.IsChecked == true; };
@@ -1665,7 +1670,7 @@ namespace WinFontSwap.Wpf
                 if (!Confirm(L.T("msg.restart.explorer.now"), L.T("font.apply"))) return;
                 ApplyWin32();          // 写注册表 + SystemParametersInfo 立即生效
                 MaybeLog("apply-shell");
-                RestartExplorer();     // 让已打开的窗口/菜单重新读字体
+                if (RestartExplorer()) SetStatus(L.T("msg.shell.elements.applied.2") + L.T("msg.explorer.restarted"), false);   // 让已打开的窗口/菜单重新读字体
                 return;
             }
 
@@ -1791,7 +1796,8 @@ namespace WinFontSwap.Wpf
         }
 
         /// <summary>重启资源管理器（外壳 UI 会重新读系统字体；电脑本身不用重启）。</summary>
-        void RestartExplorer()
+        /// <summary>重启资源管理器：让已打开的窗口/菜单重新读一遍界面字体。返回是否成功。</summary>
+        bool RestartExplorer()
         {
             try
             {
@@ -1800,9 +1806,24 @@ namespace WinFontSwap.Wpf
                 if (kill != null) kill.WaitForExit(5000);
                 System.Threading.Thread.Sleep(500);
                 System.Diagnostics.Process.Start("explorer.exe");
-                SetStatus(L.T("msg.shell.elements.applied.2") + L.T("msg.explorer.restarted"), false);
+                return true;
             }
-            catch (Exception ex) { SetStatus(L.T("msg.written.but.restarting.explorer.failed") + ex.Message, true); }
+            catch (Exception ex)
+            {
+                SetStatus(L.T("msg.written.but.restarting.explorer.failed") + ex.Message, true);
+                return false;
+            }
+        }
+
+        /// <summary>高级页那个按钮：手动重启资源管理器（和改完系统元素后应用时做的事一样）。</summary>
+        void RestartExplorerFromButton()
+        {
+            if (!Confirm(L.T("msg.restart.explorer.now"), L.T("adv.restart.explorer"))) return;
+            bool ok = RestartExplorer();
+            string msg = ok ? L.T("msg.explorer.restarted") : L.T("msg.written.but.restarting.explorer.failed");
+            SetStatus(msg, !ok);
+            MaybeLog("restart-explorer");
+            ConfirmDialog.Info(this, L.T("adv.restart.explorer"), msg);
         }
 
         /// <summary>确认后立即重启（不给取消窗口）。</summary>
