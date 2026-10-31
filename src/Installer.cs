@@ -813,9 +813,25 @@ namespace WinFontSwap
         }
 
         /// <summary>把最近一次导出过的 HKCU 字体注册备份导回去（恢复用户级字体）。</summary>
-        public static string RestoreUserFonts()
+        /// <summary>某个备份目录里的 HKCU-Fonts*.reg（没有返回 null）。</summary>
+        public static string FindUserFontRegIn(string backupDir)
         {
-            if (!Directory.Exists(BackupRoot)) return "没有备份";
+            try
+            {
+                if (!string.IsNullOrEmpty(backupDir) && Directory.Exists(backupDir))
+                {
+                    foreach (var f in Directory.GetFiles(backupDir, "HKCU-Fonts*.reg", SearchOption.AllDirectories))
+                        return f;
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        /// <summary>最近一次的用户级字体注册备份（没有返回 null）。</summary>
+        public static string FindNewestUserFontReg()
+        {
+            if (!Directory.Exists(BackupRoot)) return null;
             string newest = null;
             DateTime newestTime = DateTime.MinValue;
             foreach (var f in Directory.GetFiles(BackupRoot, "HKCU-Fonts*.reg", SearchOption.AllDirectories))
@@ -823,7 +839,26 @@ namespace WinFontSwap
                 var t = File.GetLastWriteTime(f);
                 if (t > newestTime) { newestTime = t; newest = f; }
             }
+            return newest;
+        }
+
+        /// <summary>从指定备份目录导入用户级字体注册；目录里没有就退回“最近一次”。</summary>
+        public static string RestoreUserFontsFrom(string backupDir)
+        {
+            var reg = FindUserFontRegIn(backupDir) ?? FindNewestUserFontReg();
+            if (reg == null) return "没有备份";
+            return ImportUserFontReg(reg);
+        }
+
+        public static string RestoreUserFonts()
+        {
+            var newest = FindNewestUserFontReg();
             if (newest == null) return "没有备份";
+            return ImportUserFontReg(newest);
+        }
+
+        static string ImportUserFontReg(string newest)
+        {
             var psi = new ProcessStartInfo("reg.exe", "import \"" + newest + "\"") { CreateNoWindow = true, UseShellExecute = false };
             var p = Process.Start(psi);
             if (p == null) return "无法启动 reg.exe";

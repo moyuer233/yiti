@@ -18,6 +18,7 @@ namespace WinFontSwap.Wpf
         readonly List<CheckBox> _checks = new List<CheckBox>();
         readonly TextBlock _selInfo = new TextBlock();
         Button _delBtn;
+        Button _regBtn;
         readonly CheckBox _selectAll = new CheckBox();
 
         public BackupDialog()
@@ -138,11 +139,16 @@ namespace WinFontSwap.Wpf
             var restore = T.Btn2(L.T("backup.restore.this.backup"), true, 13);
             restore.Margin = new Thickness(0, 0, 8, 0);
             restore.Click += delegate { RestoreSelected(); };
+            var regBtn = T.Btn2(L.T("backup.restore.user.registry"), false, 13);
+            regBtn.Margin = new Thickness(0, 0, 8, 0);
+            regBtn.Click += delegate { RestoreUserRegistry(); };
+            _regBtn = regBtn;
             var close = T.Btn2(L.T("backup.close"), false, 13);
             close.Click += delegate { Close(); };
             bar.Children.Add(open);
             bar.Children.Add(del);
             bar.Children.Add(restore);
+            bar.Children.Add(regBtn);
             bar.Children.Add(close);
             Grid.SetRow(bar, 4);
             root.Children.Add(bar);
@@ -200,6 +206,14 @@ namespace WinFontSwap.Wpf
                 _list.Items.Add(row);
             }
             UpdateSelInfo();
+            if (_regBtn != null)
+            {
+                bool hasReg = Installer.FindNewestUserFontReg() != null;
+                _regBtn.IsEnabled = hasReg;
+                _regBtn.Opacity = hasReg ? 1.0 : 0.45;
+                _regBtn.ToolTip = hasReg ? L.T("backup.restore.user.registry.desc") : L.T("backup.no.user.registry.backup");
+                ToolTipService.SetShowOnDisabled(_regBtn, true);
+            }
             _summary.Text = _entries.Count == 0
                 ? L.T("backup.no.backups.yet")
                 : L.T("backup.total") + _entries.Count + L.T("backup.backups.using") + Installer.HumanSize(total);
@@ -281,6 +295,19 @@ namespace WinFontSwap.Wpf
             catch (Exception ex) { log += ex.Message; }
             ConfirmDialog.Info(this, L.T("backup.clear.staging"), L.T("backup.cleared") + n + L.T("backup.folders") + (string.IsNullOrEmpty(log) ? "" : "\n" + log));
             Load();
+        }
+
+        void RestoreUserRegistry()
+        {
+            var e = Selected;
+            string from = e == null ? null : e.Dir;
+            string reg = Installer.FindUserFontRegIn(from) ?? Installer.FindNewestUserFontReg();
+            if (reg == null) return;
+            if (!Ask(L.T("backup.restore.user.registry.prompt") + "\n" + Path.GetFileName(reg), L.T("backup.restore.user.registry"))) return;
+            string msg;
+            try { msg = Installer.RestoreUserFontsFrom(from); }
+            catch (Exception ex) { msg = ex.Message; }
+            ConfirmDialog.Info(this, L.T("backup.restore.user.registry"), msg);
         }
 
         void DeleteSelected()

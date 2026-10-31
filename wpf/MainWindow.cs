@@ -1063,13 +1063,13 @@ namespace WinFontSwap.Wpf
             var apply = T.Btn2(L.T("font.apply"), true, 13);
             apply.Margin = new Thickness(0, 0, 10, 0);
             apply.Click += delegate { WithBusy(apply, L.T("font.applying"), delegate { RunApply(false); }); };
-            var rollback = T.Btn2(L.T("font.restore"), false, 13);
-            rollback.Margin = new Thickness(0, 0, 10, 0);
-            rollback.Click += delegate { WithBusy(rollback, L.T("font.restoring"), delegate { RunRollbackAll(); }); };
+            var backupEntry = T.Btn2(L.T("backup.backups"), false, 13);   // 还原/删备份都收进这里
+            backupEntry.Margin = new Thickness(0, 0, 10, 0);
+            backupEntry.Click += delegate { var dlg = new BackupDialog { Owner = this }; dlg.ShowDialog(); RefreshTargets(); };
             var defaults = T.Btn2(L.T("font.defaults"), false, 13);
             defaults.Click += delegate { ResetToDefaults(); };
             bar.Children.Add(apply);
-            bar.Children.Add(rollback);
+            bar.Children.Add(backupEntry);
             bar.Children.Add(defaults);
             bottom.Children.Add(bar);
             Grid.SetRow(bottom, 1);
@@ -1911,24 +1911,6 @@ namespace WinFontSwap.Wpf
             ConfirmDialog.Info(this, L.T("font.defaults"), msg);
         }
 
-        void RunRollbackAll()
-        {
-            try
-            {
-                if (!Confirm(L.T("msg.restore.now"), L.T("font.restore"))) return;
-                string log1 = "";
-                if (Installer.LatestBackup() != null) Installer.Rollback(delegate (string m) { log1 += m + "; "; });
-                else log1 = L.T("msg.no.font.backup");
-                try { Win32Fonts.Restore(); } catch { }
-                string log2 = Installer.RestoreUserFonts();
-                var msg = L.T("msg.rolled.back.everything") + log1 + log2 + L.T("msg.comes.back.after.a.reboot");
-                SetStatus(msg, false);
-                MaybeLog("rollback");
-                RefreshTargets();
-                ConfirmDialog.Info(this, L.T("font.restore"), msg);
-            }
-            catch (Exception ex) { SetStatus(L.T("msg.rollback.failed") + ex.Message, true); ConfirmDialog.Info(this, L.T("font.restore"), L.T("msg.rollback.failed") + ex.Message); }
-        }
 
 
         void RunRollback()
