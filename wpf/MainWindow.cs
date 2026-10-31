@@ -1155,6 +1155,13 @@ namespace WinFontSwap.Wpf
             restartExplorerBtn.Click += delegate { RestartExplorerFromButton(); };
             stack.Children.Add(T.Row("\uE777", L.T("adv.restart.explorer"), "", restartExplorerBtn, out advDescRestartExplorer));
 
+            // 所有块统一高度，避免开关行比按钮行矮一截
+            foreach (var child in stack.Children)
+            {
+                var card = child as Border;
+                if (card != null) card.MinHeight = 60;
+            }
+
             var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = stack, Padding = new Thickness(0, 0, 6, 12) };
             _pageScroll = scroll;
             return scroll;
