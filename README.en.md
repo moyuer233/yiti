@@ -45,7 +45,7 @@ _✨ The no-brainer system-wide font replacement tool for Windows ✨_
 - **Adapts to the OS version**: fonts the system does not have (Windows 7 has no Light weight and no Segoe UI Variable) are disabled automatically
 - **Creates a system restore point before applying**: taken right before anything is written; if it cannot be created the status bar says why (it does not block the swap)
 - **Half-replaced detection**: on launch it verifies that all five files were really replaced; if only part of them changed, the font page shows a banner with a one-click **Re-apply**
-- **Backup manager**: lists every backup taken before a swap (date, size, files inside), supports multi-select delete and rolling back to any of them; you can turn auto-backup on/off, cap how many are kept, and see/clear the staging folder usage
+- **Backup manager**: lists every backup taken before a swap (date, size, files inside), supports multi-select delete and rolling back to any of them; you can turn auto-backup on/off, cap how many are kept, and see/clear the staging folder usage; hovering a backup shows which fonts it wrote and how many are still in use
 - **Missing files can be restored**: if one of the system font files is gone at startup (for example a queued rename was interrupted), the font page shows a banner with a one-click **Restore from backup**
 
 ## How it differs from noMeiryoUI

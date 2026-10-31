@@ -193,6 +193,10 @@ namespace WinFontSwap.Wpf
                 txt.VerticalAlignment = VerticalAlignment.Center;
                 Grid.SetColumn(txt, 1);
                 row.Children.Add(txt);
+                row.ToolTip = BuildTip(e);        // 悬停看“当时改了什么、结果如何”
+                ToolTipService.SetInitialShowDelay(row, 350);
+                ToolTipService.SetShowDuration(row, 60000);
+                ToolTipService.SetPlacement(row, System.Windows.Controls.Primitives.PlacementMode.Right);
                 _list.Items.Add(row);
             }
             UpdateSelInfo();
@@ -202,6 +206,45 @@ namespace WinFontSwap.Wpf
             int sdirs; long sbytes;
             Installer.StageUsage(out sdirs, out sbytes);
             _stage.Text = L.T("backup.staging") + sdirs + L.T("backup.using") + Installer.HumanSize(sbytes);
+        }
+
+        /// <summary>备份悬停提示：当时写入了哪些字体、现在还有几个文件在用、备份里能还原什么。</summary>
+        string BuildTip(Installer.BackupEntry e)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine(e.Date.ToString("yyyy-MM-dd HH:mm") + "   " + Installer.HumanSize(e.Bytes) + "   " + Path.GetFileName(e.Dir));
+            if (!e.HasState)
+            {
+                sb.AppendLine(L.T("backup.tip.nostate"));
+                return sb.ToString().TrimEnd();
+            }
+            sb.AppendLine(L.T("backup.tip.written"));
+            int inUse = 0, total = 0;
+            foreach (var f in Installer.TargetFiles)
+            {
+                if (!e.Families.ContainsKey(f) && !e.Shas.ContainsKey(f)) continue;
+                total++;
+                string fam;
+                e.Families.TryGetValue(f, out fam);
+                if (string.IsNullOrEmpty(fam)) fam = "—";
+                string want;
+                bool used = false;
+                if (e.Shas.TryGetValue(f, out want) && !string.IsNullOrEmpty(want))
+                {
+                    try
+                    {
+                        var now = Installer.Sha256(Path.Combine(Installer.FontsDir, f));
+                        used = string.Equals(now, want, StringComparison.OrdinalIgnoreCase);
+                    }
+                    catch { }
+                }
+                if (used) inUse++;
+                sb.AppendLine("   " + f.PadRight(13) + " ← " + fam + (used ? "  " + L.T("backup.tip.inuse") : ""));
+            }
+            if (total > 0)
+                sb.AppendLine(L.T("backup.tip.result") + inUse + "/" + total + L.T("backup.tip.still.in.use"));
+            sb.AppendLine(L.T("backup.tip.restorable") + e.Files.Count + L.T("backup.files"));
+            return sb.ToString().TrimEnd();
         }
 
         void UpdateSelInfo()

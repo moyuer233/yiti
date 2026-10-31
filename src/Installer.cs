@@ -1428,6 +1428,11 @@ namespace WinFontSwap
             public long Bytes;
             public readonly List<string> Files = new List<string>();
             public string Family;
+            /// <summary>每个目标文件当时写入的字体族（来自备份目录里的 state.ini）。</summary>
+            public readonly Dictionary<string, string> Families = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            /// <summary>每个目标文件当时写入内容的 SHA-256，用来判断“现在还在不在用”。</summary>
+            public readonly Dictionary<string, string> Shas = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            public bool HasState;
         }
 
         /// <summary>列出所有备份目录（新的在前），带体积、包含的文件与被替换的字体族。</summary>
@@ -1456,13 +1461,25 @@ namespace WinFontSwap
                     var st = Path.Combine(dir, "state.ini");
                     if (File.Exists(st))
                     {
+                        e.HasState = true;
                         try
                         {
                             foreach (var line in File.ReadAllLines(st, Encoding.UTF8))
                             {
-                                if (!line.StartsWith("family_", StringComparison.OrdinalIgnoreCase)) continue;
-                                var v = line.Substring(line.IndexOf('=') + 1).Trim();
-                                if (!string.IsNullOrEmpty(v)) { e.Family = v; break; }
+                                int eq = line.IndexOf('=');
+                                if (eq <= 0) continue;
+                                var key = line.Substring(0, eq).Trim();
+                                var val = line.Substring(eq + 1).Trim();
+                                if (val.Length == 0) continue;
+                                if (key.StartsWith("family_", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    e.Families[key.Substring(7)] = val;
+                                    if (string.IsNullOrEmpty(e.Family)) e.Family = val;   // 兼容旧字段
+                                }
+                                else if (key.StartsWith("sha_", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    e.Shas[key.Substring(4)] = val;
+                                }
                             }
                         }
                         catch { }
