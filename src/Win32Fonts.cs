@@ -66,17 +66,34 @@ namespace WinFontSwap
             return list;
         }
 
-        /// <summary>按点数写入某个元素：lfHeight 用负的像素高度（= 字号 × 96/72）。</summary>
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        static extern uint GetDpiForSystem();
+
+        /// <summary>当前系统 DPI（Win10+ 有 GetDpiForSystem，取不到退回 96）。</summary>
+        static int SystemDpi()
+        {
+            try
+            {
+                uint dpi = GetDpiForSystem();
+                if (dpi >= 72 && dpi <= 480) return (int)dpi;
+            }
+            catch { }
+            return 96;
+        }
+
+        /// <summary>按点数写入某个元素：lfHeight 用负的像素高度（= 字号 × DPI/72，和 noMeiryoUI 的 MulDiv 一致）。</summary>
         public static void Write(string valueName, string face, double points, int weight, int charSet, bool italic)
         {
             var raw = new byte[92];
-            int px = (int)Math.Round(points * 96.0 / 72.0);
+            int px = (int)Math.Round(points * SystemDpi() / 72.0);
             Array.Copy(BitConverter.GetBytes(-px), 0, raw, 0, 4);
             Array.Copy(BitConverter.GetBytes(weight), 0, raw, 16, 4);
             raw[20] = (byte)(italic ? 1 : 0);
             raw[21] = 0; raw[22] = 0;
             raw[23] = (byte)(charSet == 0 ? 1 : charSet);
-            raw[24] = 0; raw[25] = 0; raw[26] = 0; raw[27] = 0;
+            raw[24] = 0; raw[25] = 0;
+            raw[26] = 5;   // CLEARTYPE_QUALITY：不写这条，经典界面会退化成灰度抗锯齿，看着更糊
+            raw[27] = 0;
             var name = Encoding.Unicode.GetBytes(face);
             int n = Math.Min(name.Length, 62);
             Array.Copy(name, 0, raw, 28, n);

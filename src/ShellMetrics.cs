@@ -66,10 +66,24 @@ namespace WinFontSwap
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         static extern IntPtr SendMessageTimeoutW(IntPtr hWnd, uint msg, IntPtr wParam, string lParam, uint flags, uint timeout, out IntPtr result);
 
+        [DllImport("user32.dll")]
+        static extern uint GetDpiForSystem();
+
+        static int SystemDpi()
+        {
+            try
+            {
+                uint dpi = GetDpiForSystem();
+                if (dpi >= 72 && dpi <= 480) return (int)dpi;
+            }
+            catch { }
+            return 96;
+        }
+
         static int PtToHeight(double pt)
         {
             if (pt <= 0) pt = 9;
-            return -(int)Math.Round(pt * 96.0 / 72.0);
+            return -(int)Math.Round(pt * SystemDpi() / 72.0);
         }
 
         /// <summary>
@@ -102,10 +116,11 @@ namespace WinFontSwap
                     int h = PtToHeight(points != null && i < points.Length ? points[i] : 9);
                     switch (i)
                     {
-                        case 0: ncm.lfSmCaptionFont.lfHeight = h; ncm.lfSmCaptionFont.lfFaceName = faces[i]; done++; break;
-                        case 1: ncm.lfMenuFont.lfHeight = h; ncm.lfMenuFont.lfFaceName = faces[i]; done++; break;
-                        case 2: ncm.lfMessageFont.lfHeight = h; ncm.lfMessageFont.lfFaceName = faces[i]; done++; break;
-                        case 3: ncm.lfStatusFont.lfHeight = h; ncm.lfStatusFont.lfFaceName = faces[i]; done++; break;
+                        // 同步把 quality 设成 CLEARTYPE_QUALITY：注册表里若留着 0（DEFAULT），经典界面会退化成灰度抗锯齿
+                        case 0: ncm.lfSmCaptionFont.lfHeight = h; ncm.lfSmCaptionFont.lfFaceName = faces[i]; ncm.lfSmCaptionFont.lfQuality = 5; done++; break;
+                        case 1: ncm.lfMenuFont.lfHeight = h; ncm.lfMenuFont.lfFaceName = faces[i]; ncm.lfMenuFont.lfQuality = 5; done++; break;
+                        case 2: ncm.lfMessageFont.lfHeight = h; ncm.lfMessageFont.lfFaceName = faces[i]; ncm.lfMessageFont.lfQuality = 5; done++; break;
+                        case 3: ncm.lfStatusFont.lfHeight = h; ncm.lfStatusFont.lfFaceName = faces[i]; ncm.lfStatusFont.lfQuality = 5; done++; break;
                     }
                 }
                 bool setOk = SystemParametersInfoW(SPI_SETNONCLIENTMETRICS, (uint)ncm.cbSize, ref ncm, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
@@ -122,6 +137,7 @@ namespace WinFontSwap
                     {
                         lf.lfHeight = PtToHeight(points != null && iconIdx < points.Length ? points[iconIdx] : 9);
                         lf.lfFaceName = faces[iconIdx];
+                        lf.lfQuality = 5;
                         if (SystemParametersInfoW(SPI_SETICONTITLELOGFONT, (uint)Marshal.SizeOf(typeof(LOGFONT)), ref lf, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE))
                             done++;
                     }
