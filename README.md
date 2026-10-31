@@ -200,6 +200,22 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build-wpf.ps1
 
 产物固定在 `dist\YiTi.exe`。
 
+### 改界面文案
+
+界面文字全部在 `lang/zh.txt` 与 `lang/en.txt`，格式就是 Minecraft 那种 `key=文本`（键是语义化的，前缀表示界面位置）：
+
+```ini
+# ===== 字体替换页 =====
+font.apply=应用
+font.auto.weight.matching=自动匹配字重
+
+# ===== 高级页 =====
+adv.generate=只生成不写入
+adv.log=输出日志
+```
+
+**只改等号右边的文字，左边的 key 不要动**——代码按 key 取字，改了 key 就会退回显示 key 本身。改完重新跑 `build-wpf.ps1`，文案会编译进 exe。
+
 ## 免责
 
 本软件已明确说明修改风险，因使用本软件导致的系统异常、数据丢失或其他损失，程序作者不承担相关责任。

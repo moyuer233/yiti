@@ -201,6 +201,22 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build-wpf.ps1
 
 The output is always `dist\YiTi.exe`.
 
+### Editing the UI text
+
+All UI strings live in `lang/zh.txt` and `lang/en.txt` as Minecraft-style `key=text` lines (keys are semantic; the prefix tells you which screen they belong to):
+
+```ini
+# ===== Fonts page =====
+font.apply=Apply
+font.auto.weight.matching=Auto weight matching
+
+# ===== Advanced page =====
+adv.generate=Generate only
+adv.log=Write a log
+```
+
+**Only edit the text on the right of `=`.** The code looks strings up by key, so renaming a key makes the raw key show up in the UI. Rebuild with `build-wpf.ps1` to embed the new text.
+
 ## Disclaimer
 
 The risks of modifying the system are stated above. The author takes no responsibility for system failures, data loss or other damage caused by using this software.
