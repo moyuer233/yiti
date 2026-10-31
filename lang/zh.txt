@@ -1,199 +1,168 @@
-# 左边是代码里用的原文（不要改），右边是界面实际显示的文字（随便改）
-# 格式：原文=显示文本   # 开头是注释，空行忽略，\\n 表示换行
-未选择=未选择
-回滚失败：=回滚失败：
-易体=易体
-易体 V=易体 V
-字体替换=字体替换
-高级=高级
-关于=关于
-读取中=读取中
-选择=选择
-全部回滚=还原
-先选一个字体。=请选择一个字体。
-没有可回滚的备份。=没有可回滚的备份。
-不支持当前系统=不支持当前系统
-替换目标=替换目标
-选择字体…=选择字体…
-源字体=源字体
-常规=常规
-粗体=粗体
-细体=细体
-英文数字=英文/数字
-当前状态：=当前状态：
-此版本 Windows 没有这个字体=此版本 Windows 没有这个字体
-系统元素=系统元素
-字号=字号
-应用=应用
-默认值=默认值
-写入时清字体缓存=写入时清字体缓存
-重启后由系统重建=
-写入时清用户级同名字体=写入时清除用户级同名字体
-会挡住替换=同名的用户级字体应用优先级高于系统字体
-此版本 Windows 没有用户级字体=此版本 Windows 没有用户级字体
-生成=生成
-只生成不写入=生成系统字体文件
-只生成字体文件，不动系统=把替换用的字体文件生成到暂存目录 C:\ProgramData\WinFontSwap\stage
-还原=还原
-只还原字体文件=还原到最近的备份
-从最近一次备份还原字体文件=把最近一次备份里的原版字体文件替换回 C:\Windows\Fonts
-恢复=恢复
-恢复失败：=恢复失败：
-只还原用户级注册=还原用户级字体注册表项
-导入最近一次的注册表备份=把 HKCU 下当前用户的字体注册表项（Fonts、FontSubstitutes 等）恢复成备份时的样子
-把 Windows 系统字体换成你喜欢的字体。=把 Windows 系统字体换成你喜欢的字体。
-版本=版本
-当前版本号=当前版本号
-能换什么=能换什么
-雅黑常规/粗体/细体、Segoe UI，以及标题栏等老式界面元素=雅黑常规/粗体/细体、Segoe UI，以及标题栏等老式界面元素
-支持系统=支持系统
-Windows 7 / 8 / 10 / 11（老系统没有的字体不会显示）=Windows 7 / 8 / 10 / 11（老系统没有的字体不会显示）
-作者=作者
-还原方式=还原方式
-随时可用「全部回滚」或「默认值」取回系统原版字体=随时可用「全部回滚」或「默认值」取回系统原版字体
-项目主页=项目主页
-源码与问题反馈=源码与问题反馈
-替换前会自动备份原版字体，第一次应用后需要重启一次才会全局生效。=替换前会自动备份原版字体，第一次应用后需要重启一次才会全局生效。
-文件缺失=文件缺失
-缺文件=缺文件
-未识别=未识别
-待重启=待重启
-读系统字体状态失败：=读系统字体状态失败：
-系统元素已写入 =系统元素已写入 
- 项= 项
-写入失败：=写入失败：
-系统元素已还原=系统元素已还原
-还原失败：=还原失败：
-正在生成…=正在生成…
-正在生成并写入…=正在生成并写入…
-已生成到 =已生成到 
-已写入，重启后生效。=已写入，重启后生效。
-失败：=失败：
-读原版字体失败：=读原版字体失败：
-已切到默认字体，点「应用」写回=已切到默认字体，点「应用」写回
-没有可用备份，只能选字体=没有可用备份，只能选字体
-把字体文件、用户级字体注册都还原到替换前？\r\n重启后生效。=把字体文件、用户级字体注册都还原到替换前？\r\n重启后生效。
-没有字体备份; =没有字体备份; 
-已全部回滚：=已全部回滚：
- 重启后恢复。= 重启后恢复。
-已还原字体文件，重启后恢复。=已还原字体文件，重启后恢复。
-已回滚，重启后恢复。=已回滚，重启后恢复。
-选择字体=选择字体
-系统已安装字体=系统已安装字体
-确定=确定
-取消=取消
-读取字体失败：=读取字体失败：
-界面语言=界面语言
-小标题栏=小标题栏
-菜单=菜单
-消息框=消息框
-状态栏=状态栏
-图标=图标
-已切换为中文=已切换为中文
-重启后生效。=重启后生效。
-# 关于页（按 README 分节）
-sec.features=主要功能
-about.f1=换掉系统字体：设置、开始菜单、任务栏、标题栏一起变
-about.f2=字重自动匹配：选一个字体，常规/粗体/细体按 400/700/300 自动配对
-about.f3=界面元素：小标题栏、菜单、消息框、状态栏、图标
-about.f4=自动备份与回滚，原版还能从 Windows 组件存储取回
-about.f5=按系统自动裁剪：老系统没有的字体显示为灰色并说明原因
-sec.diff=和 noMeiryoUI 有什么不同
-about.diff=noMeiryoUI 改的是界面字体设置，管不到任务栏、预装应用和 Win11 标题栏；易体替换的是字体文件本身，这些地方一起变。
-sec.systems=支持的系统
-about.sys1=Windows 7：雅黑常规/粗体 + Segoe UI（没有细体和英数可变字体）
-about.sys2=Windows 10 1809+：五个文件都能换
-about.sys3=Windows 11 22000+：五个文件都能换，界面用云母背景
-sec.files=换的是哪些文件
-about.file1=msyh.ttc 微软雅黑 常规
-about.file2=msyhbd.ttc 微软雅黑 粗体
-about.file3=msyhl.ttc 微软雅黑 细体（Win8 起才有）
-about.file4=SegUIVar.ttf Segoe UI Variable（英数、任务栏）
-about.file5=segoeui.ttf Segoe UI（经典英文界面）
-sec.how=原理
-about.how1=生成：读你的字体，把内部的族名改成 Microsoft YaHei / Segoe UI，字形数据一个字节不动
-about.how2=替换：备份原版 → 改文件权限 → 把新文件排进重启改名队列
-about.how3=生效：重启时系统换掉字体文件，并重建字体缓存
-sec.risks=风险
-about.r1=字体汉字不全或缺字重时，界面可能缺字或糊字
-about.r2=会影响 Office / WPS 的排版、导出与打印
-about.r3=系统大版本更新会重置字体，需要重新应用一次
-about.r4=动手前建议自己建一个还原点
-# 二次确认
-把源字体和系统元素都恢复成 Windows 默认？\n这只改界面，点「应用」才会写入。=把源字体和系统元素都恢复成 Windows 默认？\n这只改界面，点「应用」才会写入。
-现在把字体写入系统？\n会先备份原版，重启后生效。=现在把字体写入系统？\n会先备份原版，重启后生效。
-是否还原？=是否还原？
-是否确定重启？=是否确定重启？
-是否切换为默认预设？=是否切换为默认预设？
-已写入，正在重启…=已写入，正在重启…
-重启失败：=重启失败：
-# 自动匹配字重开关
-自动匹配字重=自动匹配字重
-按 400 / 700 / 300 配对常规、粗体、细体=按 400 / 700 / 300 配对常规、粗体、细体
-生成字体文件需要先选一个字体。=生成字体文件需要先选一个字体。
-已关闭自动匹配：五档都用 =已关闭自动匹配：五档都用 
-# 系统元素一键设置
-全部系统元素=全部系统元素
-统一指定这 5 项的字体=统一指定这 5 项的字体
-统一指定这 5 项的字体和字号=统一指定这 5 项的字体和字号
-这 5 项字号已设为 =这 5 项字号已设为 
-这 5 项都已设为 =这 5 项都已设为 
-# 系统元素生效方式
-系统元素已生效（已重启资源管理器）=系统元素已生效（已重启资源管理器）
-写入成功，但重启资源管理器失败：=写入成功，但重启资源管理器失败：
-是否确定重启资源管理器？=是否确定重启资源管理器？
-系统元素已生效=系统元素已生效
-（已重启资源管理器）=（已重启资源管理器）
-输出日志=输出日志
-在软件目录下生成 yy-mm-dd-ss.log=开启后每次操作在软件目录生成 yy-mm-dd-ss.log
-已输出日志：=已输出日志：
-输出日志失败：=输出日志失败：
+# ===== 易体 / Yiti 界面文案（中文） =====
+#
+# 格式：key=文本            （# 开头是注释，空行忽略）
+#       \n 表示换行（就写反斜杠 + n 两个字符）
+#
+# 怎么改：**只改等号右边的文字，左边的 key 不要动**——代码是按 key 取字的。
+# 改完重新编译（build-wpf.ps1）就会打进 exe。
+#
+# key 前缀对应界面位置：
+#   app.     应用名 / 左侧导航 / 窗口标题
+#   font.    字体替换页（源字体、五个目标、系统元素、底部按钮、顶部提示条）
+#   adv.     高级页（清缓存、用户级字体、生成、还原、备份管理、输出日志）
+#   about.   关于页（作者、界面语言、项目主页）
+#   backup.  备份管理窗口（列表、删除、还原、清理暂存）
+#   picker.  选择字体窗口
+#   dlg.     确认框 / 信息框里的按钮
+#   msg.     状态栏文字与结果提示（有些是拼在数字前后的片段）
 
-# 补充词条
-已按字重匹配：常规 =已按字重匹配：常规 
-，粗体 =，粗体 
-，细体 =，细体 
-系统元素已生效：=系统元素已生效：
-开启后每次操作在软件目录生成 yy-mm-dd-ss.log=开启后每次操作在软件目录生成 yy-mm-dd-ss.log
+# ===== 字体替换页 =====
+font.all.five.are.now=这 5 项字号已设为 
+font.all.shell.elements=全部系统元素
+font.apply=应用
+font.applying=应用中…
+font.auto.matching.off.all.five.slots.use=已关闭自动匹配：五档都用 
+font.auto.weight.matching=自动匹配字重
+font.bold=粗体
+font.bold.2=，粗体 
+font.defaults=默认值
+font.latin.digits=英文数字
+font.light=细体
+font.light.2=，细体 
+font.match.regular.bold.light.at.400.700.300=按 400 / 700 / 300 配对常规、粗体、细体
+font.matched.by.weight.regular=已按字重匹配：常规 
+font.not.selected=未选择
+font.now=当前状态：
+font.re.apply=重新应用
+font.reading=读取中
+font.regular=常规
+font.restore=还原
+font.restore.failed=补回失败：
+font.restore.from.backup=从备份补回
+font.restore.the.missing.font.files.from.a.backup=把丢失的字体文件从备份补回来？
+font.restored=已补回 
+font.restoring=还原中…
+font.select=选择
+font.select.font=选择字体…
+font.set.the.font.and.size.for.all.five=统一指定这 5 项的字体和字号
+font.shell.elements=系统元素
+font.size=字号
+font.source.font=源字体
+font.switch.to.the.default.preset=是否切换为默认预设？
+font.targets=替换目标
+font.this.windows.version.has.no.such.font=此版本 Windows 没有这个字体
+font.yiti.v=易体 V
 
-# 备份管理 / 半替换 / 还原点
-备份管理=备份管理
-查看、删除历史备份，或还原到其中某一次=查看、删除历史备份，或还原到其中某一次
-管理=管理
-打开目录=打开目录
-删除选中=删除选中
-还原到此备份=还原到此备份
-关闭=关闭
-删除这个备份？=删除这个备份？
-删除失败=删除失败
-还原到这个备份？重启后生效。=还原到这个备份？重启后生效。
-还原失败=还原失败
-已排入重启队列：=已排入重启队列：
- 个文件= 个文件
-还没有备份=还没有备份
-共 =共 
- 个备份，占用 = 个备份，占用 
-半替换：=半替换：
- 还是原版或没生效= 还是原版或没生效
-重新应用=重新应用
-、=、
-正在创建系统还原点…=正在创建系统还原点…
-还原点未创建：=还原点未创建：
-好=好
-应用中…=应用中…
-生成中…=生成中…
-还原中…=还原中…
-文件丢失：=文件丢失：
-（可从备份补回）=（可从备份补回）
-（备份里也没有）=（备份里也没有）
-从备份补回=从备份补回
-把丢失的字体文件从备份补回来？=把丢失的字体文件从备份补回来？
-已补回 =已补回 
-补回失败：=补回失败：
-清理暂存目录=清理暂存目录
-暂存目录：=暂存目录：
- 个，占用 = 个，占用 
-清空暂存目录？=清空暂存目录？
-（重启队列里还有待执行项时会拒绝）=（重启队列里还有待执行项时会拒绝）
-已清理 =已清理 
- 个目录= 个目录
+# ===== 高级页 =====
+adv.build.the.files.only.leave.the.system.alone=只生成字体文件，不动系统
+adv.clear.the.font.cache.on.apply=写入时清字体缓存
+adv.generate=生成
+adv.generate.only=只生成不写入
+adv.generating=生成中…
+adv.import.the.latest.registry.backup=导入最近一次的注册表备份
+adv.manage=管理
+adv.rebuilt.by.windows.after.a.reboot=重启后由系统重建
+adv.remove.per.user.same.name.fonts=写入时清用户级同名字体
+adv.restore=恢复
+adv.restore.failed=恢复失败：
+adv.restore.font.files.only=只还原字体文件
+adv.restore.per.user.registry.only=只还原用户级注册
+adv.restore.the.font.files.from.the.latest.backu=从最近一次备份还原字体文件
+adv.review.or.delete.old.backups.or.roll.back.to=查看、删除历史备份，或还原到其中某一次
+adv.they.shadow.the.system.font=会挡住替换
+adv.this.windows.version.has.no.per.user.fonts=此版本 Windows 没有用户级字体
+adv.write.a.log=输出日志
+adv.writes.yy.mm.dd.ss.log.next.to.the.exe.after=开启后每次操作在软件目录生成 yy-mm-dd-ss.log
+
+# ===== 关于页 =====
+about.author=作者
+about.language=界面语言
+about.project.home=项目主页
+about.source.code.and.issue.tracker=源码与问题反馈
+
+# ===== 备份管理窗口 =====
+backup.backups=备份管理
+backup.backups.using= 个备份，占用 
+backup.clear.staging=清理暂存目录
+backup.clear.the.staging.directory=清空暂存目录？
+backup.cleared=已清理 
+backup.close=关闭
+backup.delete=删除选中
+backup.delete.failed=删除失败
+backup.delete.this.backup=删除这个备份？
+backup.failed.to.read.the.font=读取字体失败：
+backup.files= 个文件
+backup.folders= 个目录
+backup.no.backups.yet=还没有备份
+backup.open.folder=打开目录
+backup.queued.for.the.next.reboot=已排入重启队列：
+backup.refused.while.the.reboot.queue.still.holds.o=（重启队列里还有待执行项时会拒绝）
+backup.restore.failed=还原失败
+backup.restore.this.backup=还原到此备份
+backup.restore.this.backup.it.takes.effect.after.a.=还原到这个备份？重启后生效。
+backup.staging=暂存目录：
+backup.total=共 
+backup.using= 个，占用 
+
+# ===== 选择字体窗口 =====
+picker.cancel=取消
+picker.installed.fonts=系统已安装字体
+picker.ok=确定
+picker.select.a.font=选择字体
+
+# ===== 确认框 / 信息框按钮 =====
+dlg.ok=好
+
+# ===== 状态栏与结果提示（不少是拼在数字前后的小片段） =====
+msg.about=关于
+msg.advanced=高级
+msg.all.five.are.now=这 5 项都已设为 
+msg.are.still.original.or.never.landed= 还是原版或没生效
+msg.comes.back.after.a.reboot= 重启后恢复。
+msg.creating.a.system.restore.point=正在创建系统还原点…
+msg.explorer.restarted=（已重启资源管理器）
+msg.failed=失败：
+msg.failed.to.read.the.font.state=读系统字体状态失败：
+msg.failed.to.read.the.original.fonts=读原版字体失败：
+msg.failed.to.write.the.log=输出日志失败：
+msg.file.missing=文件缺失
+msg.font.files.restored.back.to.normal.after.a.r=已还原字体文件，重启后恢复。
+msg.fonts=字体替换
+msg.generated.into=已生成到 
+msg.generating=正在生成…
+msg.generating.and.writing=正在生成并写入…
+msg.half.replaced=半替换：
+msg.item.s= 项
+msg.log.written=已输出日志：
+msg.missing=缺文件
+msg.missing.2=文件丢失：
+msg.no.font.backup=没有字体备份; 
+msg.no.usable.backup.pick.a.font.instead=没有可用备份，只能选字体
+msg.not.in.any.backup=（备份里也没有）
+msg.not.supported.on.this.windows.version=不支持当前系统
+msg.pick.a.font.first=先选一个字体。
+msg.pick.a.font.first.to.generate.the.font.files=生成字体文件需要先选一个字体。
+msg.reboot.failed=重启失败：
+msg.reboot.pending=待重启
+msg.restart.explorer.now=是否确定重启资源管理器？
+msg.restart.now=是否确定重启？
+msg.restorable.from.backup=（可从备份补回）
+msg.restore.failed=还原失败：
+msg.restore.now=是否还原？
+msg.restore.point.not.created=还原点未创建：
+msg.rollback.failed=回滚失败：
+msg.rolled.back.back.to.normal.after.a.reboot=已回滚，重启后恢复。
+msg.rolled.back.everything=已全部回滚：
+msg.shell.elements.applied=系统元素已生效：
+msg.shell.elements.applied.2=系统元素已生效
+msg.shell.elements.applied.explorer.restarted=系统元素已生效（已重启资源管理器）
+msg.shell.elements.restored=系统元素已还原
+msg.switched.to.the.default.fonts.press.apply.to=已切到默认字体，点「应用」写回
+msg.text27=Aa 汉字
+msg.text97=、
+msg.there.is.no.backup.to.roll.back=没有可回滚的备份。
+msg.unknown=未识别
+msg.write.failed=写入失败：
+msg.written.but.restarting.explorer.failed=写入成功，但重启资源管理器失败：
+msg.written.rebooting.now=已写入，正在重启…
+msg.yiti=易体

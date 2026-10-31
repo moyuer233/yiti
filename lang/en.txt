@@ -1,199 +1,168 @@
-# 左边是代码里用的中文原文（不要改），右边是英文显示文本（随便改）
-# 格式：原文=English text   # 开头是注释，\\n 表示换行
-未选择=Not selected
-回滚失败：=Rollback failed: 
-易体=Yiti
-易体 V=Yiti V
-字体替换=Fonts
-高级=Advanced
-关于=About
-读取中=Reading…
-选择=Select
-全部回滚=Restore
-先选一个字体。=Pick a font first.
-没有可回滚的备份。=There is no backup to roll back.
-不支持当前系统=Not supported on this Windows version
-替换目标=Targets
-选择字体…=Select font…
-源字体=Source font
-常规=Regular
-粗体=Bold
-细体=Light
-英文数字=Latin & digits
-当前状态：=Now: 
-此版本 Windows 没有这个字体=This Windows version has no such font
-系统元素=Shell elements
-字号=Size
-应用=Apply
-默认值=Defaults
-写入时清字体缓存=Clear the font cache on apply
-重启后由系统重建=Rebuilt by Windows after a reboot
-写入时清用户级同名字体=Remove per-user same-name fonts
-会挡住替换=They shadow the system font
-此版本 Windows 没有用户级字体=This Windows version has no per-user fonts
-生成=Generate
-只生成不写入=Generate only
-只生成字体文件，不动系统=Build the files only; leave the system alone
-还原=Restore
-只还原字体文件=Restore font files only
-从最近一次备份还原字体文件=Restore the font files from the latest backup
-恢复=Restore
-恢复失败：=Restore failed: 
-只还原用户级注册=Restore per-user registry only
-导入最近一次的注册表备份=Import the latest registry backup
-把 Windows 系统字体换成你喜欢的字体。=Swap the Windows system fonts for any font you like.
-版本=Version
-当前版本号=Current version
-能换什么=What it replaces
-雅黑常规/粗体/细体、Segoe UI，以及标题栏等老式界面元素=YaHei regular/bold/light, Segoe UI, and legacy shell elements
-支持系统=Supported systems
-Windows 7 / 8 / 10 / 11（老系统没有的字体不会显示）=Windows 7 / 8 / 10 / 11 (fonts missing on older systems are not shown)
-作者=Author
-还原方式=How to undo
-随时可用「全部回滚」或「默认值」取回系统原版字体="Roll back all" or "Defaults" brings back the Microsoft originals at any time
-项目主页=Project home
-源码与问题反馈=Source code and issue tracker
-替换前会自动备份原版字体，第一次应用后需要重启一次才会全局生效。=Originals are backed up automatically; the first apply takes effect system-wide after a reboot.
-文件缺失=File missing
-缺文件=missing
-未识别=Unknown
-待重启=reboot pending
-读系统字体状态失败：=Failed to read the font state: 
-系统元素已写入 =Shell elements written: 
- 项= item(s)
-写入失败：=Write failed: 
-系统元素已还原=Shell elements restored
-还原失败：=Restore failed: 
-正在生成…=Generating…
-正在生成并写入…=Generating and writing…
-已生成到 =Generated into 
-已写入，重启后生效。=Written; takes effect after a reboot.
-失败：=Failed: 
-读原版字体失败：=Failed to read the original fonts: 
-已切到默认字体，点「应用」写回=Switched to the default fonts — press Apply to write them back
-没有可用备份，只能选字体=No usable backup; pick a font instead
-把字体文件、用户级字体注册都还原到替换前？\r\n重启后生效。=Restore both the font files and the per-user font registration?\nTakes effect after a reboot.
-没有字体备份; =No font backup; 
-已全部回滚：=Rolled back everything: 
- 重启后恢复。= comes back after a reboot.
-已还原字体文件，重启后恢复。=Font files restored; back to normal after a reboot.
-已回滚，重启后恢复。=Rolled back; back to normal after a reboot.
-选择字体=Select a font
-系统已安装字体=Installed fonts
-确定=OK
-取消=Cancel
-读取字体失败：=Failed to read the font: 
-界面语言=Language
-小标题栏=Small caption
-菜单=Menu
-消息框=Message box
-状态栏=Status bar
-图标=Icon
-已切换为中文=Switched to Chinese
-重启后生效。=Takes effect after a reboot.
-# About page, mirroring the README
-sec.features=Features
-about.f1=Replaces the system fonts: Settings, Start menu, taskbar and title bars all follow
-about.f2=Weight matching: pick one font, regular/bold/light match 400/700/300 automatically
-about.f3=Shell elements: small caption, menu, message box, status bar, icon
-about.f4=Automatic backup and rollback; originals can also be taken from the Windows component store
-about.f5=Adapts to the OS: fonts missing on older systems are greyed out with a reason
-sec.diff=How it differs from noMeiryoUI
-about.diff=noMeiryoUI changes the UI font setting and cannot reach the taskbar, preinstalled apps or the Windows 11 title bar; Yiti replaces the font files themselves, so all of those change.
-sec.systems=Supported systems
-about.sys1=Windows 7: YaHei regular/bold + Segoe UI (no Light, no Segoe UI Variable)
-about.sys2=Windows 10 1809+: all five files
-about.sys3=Windows 11 22000+: all five files, Mica window background
-sec.files=Files replaced
-about.file1=msyh.ttc Microsoft YaHei Regular
-about.file2=msyhbd.ttc Microsoft YaHei Bold
-about.file3=msyhl.ttc Microsoft YaHei Light (Windows 8 and newer)
-about.file4=SegUIVar.ttf Segoe UI Variable (Latin, taskbar)
-about.file5=segoeui.ttf Segoe UI (classic English UI)
-sec.how=How it works
-about.how1=Build: read your font, rewrite the internal family names to Microsoft YaHei / Segoe UI, glyph data untouched
-about.how2=Replace: back up the originals, fix permissions, queue the new files for a boot-time rename
-about.how3=Apply: Windows swaps the files at boot and rebuilds the font cache
-sec.risks=Risks
-about.r1=A font with incomplete coverage or missing weights can leave boxes or blurry text
-about.r2=Office / WPS layout, export and printing can change
-about.r3=Feature updates reset the system fonts; apply again afterwards
-about.r4=Create a restore point before the first run
-# Confirmations
-把源字体和系统元素都恢复成 Windows 默认？\n这只改界面，点「应用」才会写入。=Reset the source fonts and shell elements to the Windows defaults?\nThis only changes the UI; press Apply to write it.
-现在把字体写入系统？\n会先备份原版，重启后生效。=Write the fonts into the system now?\nThe originals are backed up first; a reboot applies it.
-是否还原？=Restore now?
-是否确定重启？=Restart now?
-是否切换为默认预设？=Switch to the default preset?
-已写入，正在重启…=Written. Rebooting now…
-重启失败：=Reboot failed: 
-# Auto weight matching switch
-自动匹配字重=Auto weight matching
-按 400 / 700 / 300 配对常规、粗体、细体=Match regular/bold/light at 400 / 700 / 300
-生成字体文件需要先选一个字体。=Pick a font first to generate the font files.
-已关闭自动匹配：五档都用 =Auto matching off: all five slots use 
-# Set all shell elements at once
-全部系统元素=All shell elements
-统一指定这 5 项的字体=Use one font for all five
-统一指定这 5 项的字体和字号=Set the font and size for all five
-这 5 项字号已设为 =All five are now 
-这 5 项都已设为 =All five are now 
-# How shell element changes take effect
-系统元素已生效（已重启资源管理器）=Shell elements applied (Explorer restarted)
-写入成功，但重启资源管理器失败：=Written, but restarting Explorer failed: 
-是否确定重启资源管理器？=Restart Explorer now?
-系统元素已生效=Shell elements applied
-（已重启资源管理器）= (Explorer restarted)
-输出日志=Write a log
-在软件目录下生成 yy-mm-dd-ss.log=Writes yy-mm-dd-ss.log next to the exe after each action
-已输出日志：=Log written: 
-输出日志失败：=Failed to write the log: 
+# ===== Yiti UI strings (English) =====
+#
+# Format: key=text             (# starts a comment, blank lines are ignored)
+#         \n means a line break (backslash + n as two characters)
+#
+# Only edit the text on the right of '='. Keys are looked up by the code - do not rename them.
+# Rebuild with build-wpf.ps1 to embed the text into the exe.
+#
+# Key prefixes tell you where the string appears:
+#   app.     app name / left navigation / window title
+#   font.    font replacement page (source font, five targets, shell elements, bottom buttons, banner)
+#   adv.     advanced page (cache, per-user fonts, generate, restore, backups, log)
+#   about.   about page (author, UI language, project home)
+#   backup.  backup manager window (list, delete, restore, clear staging)
+#   picker.  font picker window
+#   dlg.     buttons inside confirm / info dialogs
+#   msg.     status-bar text and result messages (some are fragments around a number)
 
-# 补充：由代码扫描补上的词条
-已按字重匹配：常规 =Matched by weight: regular 
-，粗体 =, bold 
-，细体 =, light 
-系统元素已生效：=Shell elements applied: 
-开启后每次操作在软件目录生成 yy-mm-dd-ss.log=Writes yy-mm-dd-ss.log next to the exe after each action
+# ===== 字体替换页 =====
+font.all.five.are.now=All five are now 
+font.all.shell.elements=All shell elements
+font.apply=Apply
+font.applying=Applying…
+font.auto.matching.off.all.five.slots.use=Auto matching off: all five slots use 
+font.auto.weight.matching=Auto weight matching
+font.bold=Bold
+font.bold.2=, bold 
+font.defaults=Defaults
+font.latin.digits=Latin & digits
+font.light=Light
+font.light.2=, light 
+font.match.regular.bold.light.at.400.700.300=Match regular/bold/light at 400 / 700 / 300
+font.matched.by.weight.regular=Matched by weight: regular 
+font.not.selected=Not selected
+font.now=Now: 
+font.re.apply=Re-apply
+font.reading=Reading…
+font.regular=Regular
+font.restore=Restore
+font.restore.failed=Restore failed: 
+font.restore.from.backup=Restore from backup
+font.restore.the.missing.font.files.from.a.backup=Restore the missing font files from a backup?
+font.restored=Restored 
+font.restoring=Restoring…
+font.select=Select
+font.select.font=Select font…
+font.set.the.font.and.size.for.all.five=Set the font and size for all five
+font.shell.elements=Shell elements
+font.size=Size
+font.source.font=Source font
+font.switch.to.the.default.preset=Switch to the default preset?
+font.targets=Targets
+font.this.windows.version.has.no.such.font=This Windows version has no such font
+font.yiti.v=Yiti V
 
-# Backups / half-replaced / restore point
-备份管理=Backups
-查看、删除历史备份，或还原到其中某一次=Review or delete old backups, or roll back to one of them
-管理=Manage
-打开目录=Open folder
-删除选中=Delete
-还原到此备份=Restore this backup
-关闭=Close
-删除这个备份？=Delete this backup?
-删除失败=Delete failed
-还原到这个备份？重启后生效。=Restore this backup? It takes effect after a reboot.
-还原失败=Restore failed
-已排入重启队列：=Queued for the next reboot: 
- 个文件= files
-还没有备份=No backups yet
-共 =Total 
- 个备份，占用 = backups, using 
-半替换：=Half-replaced: 
- 还是原版或没生效= are still original or never landed
-重新应用=Re-apply
-、=, 
-正在创建系统还原点…=Creating a system restore point…
-还原点未创建：=Restore point not created: 
-好=OK
-应用中…=Applying…
-生成中…=Generating…
-还原中…=Restoring…
-文件丢失：=Missing: 
-（可从备份补回）=(restorable from backup)
-（备份里也没有）=(not in any backup)
-从备份补回=Restore from backup
-把丢失的字体文件从备份补回来？=Restore the missing font files from a backup?
-已补回 =Restored 
-补回失败：=Restore failed: 
-清理暂存目录=Clear staging
-暂存目录：=Staging: 
- 个，占用 = , using 
-清空暂存目录？=Clear the staging directory?
-（重启队列里还有待执行项时会拒绝）=(refused while the reboot queue still holds our entries)
-已清理 =Cleared 
- 个目录= folders
+# ===== 高级页 =====
+adv.build.the.files.only.leave.the.system.alone=Build the files only; leave the system alone
+adv.clear.the.font.cache.on.apply=Clear the font cache on apply
+adv.generate=Generate
+adv.generate.only=Generate only
+adv.generating=Generating…
+adv.import.the.latest.registry.backup=Import the latest registry backup
+adv.manage=Manage
+adv.rebuilt.by.windows.after.a.reboot=Rebuilt by Windows after a reboot
+adv.remove.per.user.same.name.fonts=Remove per-user same-name fonts
+adv.restore=Restore
+adv.restore.failed=Restore failed: 
+adv.restore.font.files.only=Restore font files only
+adv.restore.per.user.registry.only=Restore per-user registry only
+adv.restore.the.font.files.from.the.latest.backu=Restore the font files from the latest backup
+adv.review.or.delete.old.backups.or.roll.back.to=Review or delete old backups, or roll back to one of them
+adv.they.shadow.the.system.font=They shadow the system font
+adv.this.windows.version.has.no.per.user.fonts=This Windows version has no per-user fonts
+adv.write.a.log=Write a log
+adv.writes.yy.mm.dd.ss.log.next.to.the.exe.after=Writes yy-mm-dd-ss.log next to the exe after each action
+
+# ===== 关于页 =====
+about.author=Author
+about.language=Language
+about.project.home=Project home
+about.source.code.and.issue.tracker=Source code and issue tracker
+
+# ===== 备份管理窗口 =====
+backup.backups=Backups
+backup.backups.using= backups, using 
+backup.clear.staging=Clear staging
+backup.clear.the.staging.directory=Clear the staging directory?
+backup.cleared=Cleared 
+backup.close=Close
+backup.delete=Delete
+backup.delete.failed=Delete failed
+backup.delete.this.backup=Delete this backup?
+backup.failed.to.read.the.font=Failed to read the font: 
+backup.files= files
+backup.folders= folders
+backup.no.backups.yet=No backups yet
+backup.open.folder=Open folder
+backup.queued.for.the.next.reboot=Queued for the next reboot: 
+backup.refused.while.the.reboot.queue.still.holds.o=(refused while the reboot queue still holds our entries)
+backup.restore.failed=Restore failed
+backup.restore.this.backup=Restore this backup
+backup.restore.this.backup.it.takes.effect.after.a.=Restore this backup? It takes effect after a reboot.
+backup.staging=Staging: 
+backup.total=Total 
+backup.using= , using 
+
+# ===== 选择字体窗口 =====
+picker.cancel=Cancel
+picker.installed.fonts=Installed fonts
+picker.ok=OK
+picker.select.a.font=Select a font
+
+# ===== 确认框 / 信息框按钮 =====
+dlg.ok=OK
+
+# ===== 状态栏与结果提示（不少是拼在数字前后的小片段） =====
+msg.about=About
+msg.advanced=Advanced
+msg.all.five.are.now=All five are now 
+msg.are.still.original.or.never.landed= are still original or never landed
+msg.comes.back.after.a.reboot= comes back after a reboot.
+msg.creating.a.system.restore.point=Creating a system restore point…
+msg.explorer.restarted= (Explorer restarted)
+msg.failed=Failed: 
+msg.failed.to.read.the.font.state=Failed to read the font state: 
+msg.failed.to.read.the.original.fonts=Failed to read the original fonts: 
+msg.failed.to.write.the.log=Failed to write the log: 
+msg.file.missing=File missing
+msg.font.files.restored.back.to.normal.after.a.r=Font files restored; back to normal after a reboot.
+msg.fonts=Fonts
+msg.generated.into=Generated into 
+msg.generating=Generating…
+msg.generating.and.writing=Generating and writing…
+msg.half.replaced=Half-replaced: 
+msg.item.s= item(s)
+msg.log.written=Log written: 
+msg.missing=missing
+msg.missing.2=Missing: 
+msg.no.font.backup=No font backup; 
+msg.no.usable.backup.pick.a.font.instead=No usable backup; pick a font instead
+msg.not.in.any.backup=(not in any backup)
+msg.not.supported.on.this.windows.version=Not supported on this Windows version
+msg.pick.a.font.first=Pick a font first.
+msg.pick.a.font.first.to.generate.the.font.files=Pick a font first to generate the font files.
+msg.reboot.failed=Reboot failed: 
+msg.reboot.pending=reboot pending
+msg.restart.explorer.now=Restart Explorer now?
+msg.restart.now=Restart now?
+msg.restorable.from.backup=(restorable from backup)
+msg.restore.failed=Restore failed: 
+msg.restore.now=Restore now?
+msg.restore.point.not.created=Restore point not created: 
+msg.rollback.failed=Rollback failed: 
+msg.rolled.back.back.to.normal.after.a.reboot=Rolled back; back to normal after a reboot.
+msg.rolled.back.everything=Rolled back everything: 
+msg.shell.elements.applied=Shell elements applied: 
+msg.shell.elements.applied.2=Shell elements applied
+msg.shell.elements.applied.explorer.restarted=Shell elements applied (Explorer restarted)
+msg.shell.elements.restored=Shell elements restored
+msg.switched.to.the.default.fonts.press.apply.to=Switched to the default fonts — press Apply to write them back
+msg.text27=picker.text27
+msg.text97=, 
+msg.there.is.no.backup.to.roll.back=There is no backup to roll back.
+msg.unknown=Unknown
+msg.write.failed=Write failed: 
+msg.written.but.restarting.explorer.failed=Written, but restarting Explorer failed: 
+msg.written.rebooting.now=Written. Rebooting now…
+msg.yiti=Yiti

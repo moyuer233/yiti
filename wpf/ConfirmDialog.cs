@@ -16,7 +16,7 @@ namespace WinFontSwap.Wpf
         /// <summary>只有「好」的信息框：用于告诉用户操作结果（和应用同风格，不用系统 MessageBox）。</summary>
         public static void Info(Window owner, string title, string message)
         {
-            var dlg = new ConfirmDialog(title, message, L.T("好"), null);
+            var dlg = new ConfirmDialog(title, message, L.T("dlg.ok"), null);
             if (owner != null) dlg.Owner = owner;
             dlg.ShowDialog();
         }

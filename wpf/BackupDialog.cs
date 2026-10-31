@@ -18,7 +18,7 @@ namespace WinFontSwap.Wpf
 
         public BackupDialog()
         {
-            Title = L.T("备份管理");
+            Title = L.T("backup.backups");
             Width = 720;
             Height = 560;
             MinWidth = 720; MinHeight = 560; MaxWidth = 720; MaxHeight = 560;
@@ -46,7 +46,7 @@ namespace WinFontSwap.Wpf
             _stage.Margin = new Thickness(0, 4, 0, 0);
             info.Children.Add(_stage);
             head.Children.Add(info);
-            var clear = T.Btn2(L.T("清理暂存目录"), false, 12);
+            var clear = T.Btn2(L.T("backup.clear.staging"), false, 12);
             clear.VerticalAlignment = VerticalAlignment.Center;
             clear.Margin = new Thickness(12, 0, 0, 0);
             clear.Click += delegate { ClearStageAction(); };
@@ -62,16 +62,16 @@ namespace WinFontSwap.Wpf
             root.Children.Add(_list);
 
             var bar = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
-            var open = T.Btn2(L.T("打开目录"), false, 13);
+            var open = T.Btn2(L.T("backup.open.folder"), false, 13);
             open.Margin = new Thickness(0, 0, 8, 0);
             open.Click += delegate { OpenDir(); };
-            var del = T.Btn2(L.T("删除选中"), false, 13);
+            var del = T.Btn2(L.T("backup.delete"), false, 13);
             del.Margin = new Thickness(0, 0, 8, 0);
             del.Click += delegate { DeleteSelected(); };
-            var restore = T.Btn2(L.T("还原到此备份"), true, 13);
+            var restore = T.Btn2(L.T("backup.restore.this.backup"), true, 13);
             restore.Margin = new Thickness(0, 0, 8, 0);
             restore.Click += delegate { RestoreSelected(); };
-            var close = T.Btn2(L.T("关闭"), false, 13);
+            var close = T.Btn2(L.T("backup.close"), false, 13);
             close.Click += delegate { Close(); };
             bar.Children.Add(open);
             bar.Children.Add(del);
@@ -100,16 +100,16 @@ namespace WinFontSwap.Wpf
                 total += e.Bytes;
                 var name = Path.GetFileName(e.Dir);
                 var line = e.Date.ToString("yyyy-MM-dd HH:mm") + "   " + Installer.HumanSize(e.Bytes).PadLeft(9)
-                    + "   " + e.Files.Count + L.T(" 个文件")
+                    + "   " + e.Files.Count + L.T("backup.files")
                     + "   " + name;
                 _list.Items.Add(line);
             }
             _summary.Text = _entries.Count == 0
-                ? L.T("还没有备份")
-                : L.T("共 ") + _entries.Count + L.T(" 个备份，占用 ") + Installer.HumanSize(total);
+                ? L.T("backup.no.backups.yet")
+                : L.T("backup.total") + _entries.Count + L.T("backup.backups.using") + Installer.HumanSize(total);
             int sdirs; long sbytes;
             Installer.StageUsage(out sdirs, out sbytes);
-            _stage.Text = L.T("暂存目录：") + sdirs + L.T(" 个，占用 ") + Installer.HumanSize(sbytes);
+            _stage.Text = L.T("backup.staging") + sdirs + L.T("backup.using") + Installer.HumanSize(sbytes);
         }
 
         void OpenDir()
@@ -124,14 +124,14 @@ namespace WinFontSwap.Wpf
 
         void ClearStageAction()
         {
-            var m = MessageBox.Show(this, L.T("清空暂存目录？") + "\n" + L.T("（重启队列里还有待执行项时会拒绝）"), L.T("清理暂存目录"),
+            var m = MessageBox.Show(this, L.T("backup.clear.the.staging.directory") + "\n" + L.T("backup.refused.while.the.reboot.queue.still.holds.o"), L.T("backup.clear.staging"),
                 MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
             if (m != MessageBoxResult.Yes) return;
             string log = "";
             int n = 0;
             try { n = Installer.ClearStage(delegate (string s) { log += s + "; "; }); }
             catch (Exception ex) { log += ex.Message; }
-            MessageBox.Show(this, L.T("已清理 ") + n + L.T(" 个目录") + (string.IsNullOrEmpty(log) ? "" : "\n" + log), L.T("清理暂存目录"));
+            MessageBox.Show(this, L.T("backup.cleared") + n + L.T("backup.folders") + (string.IsNullOrEmpty(log) ? "" : "\n" + log), L.T("backup.clear.staging"));
             Load();
         }
 
@@ -139,28 +139,28 @@ namespace WinFontSwap.Wpf
         {
             var e = Selected;
             if (e == null) return;
-            var m = MessageBox.Show(this, L.T("删除这个备份？") + "\n" + Path.GetFileName(e.Dir), L.T("删除选中"),
+            var m = MessageBox.Show(this, L.T("backup.delete.this.backup") + "\n" + Path.GetFileName(e.Dir), L.T("backup.delete"),
                 MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
             if (m != MessageBoxResult.Yes) return;
             try { Installer.DeleteBackup(e.Dir); Load(); }
-            catch (Exception ex) { MessageBox.Show(this, ex.Message, L.T("删除失败")); }
+            catch (Exception ex) { MessageBox.Show(this, ex.Message, L.T("backup.delete.failed")); }
         }
 
         void RestoreSelected()
         {
             var e = Selected;
             if (e == null) return;
-            var m = MessageBox.Show(this, L.T("还原到这个备份？重启后生效。") + "\n" + Path.GetFileName(e.Dir), L.T("还原到此备份"),
+            var m = MessageBox.Show(this, L.T("backup.restore.this.backup.it.takes.effect.after.a.") + "\n" + Path.GetFileName(e.Dir), L.T("backup.restore.this.backup"),
                 MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
             if (m != MessageBoxResult.Yes) return;
             try
             {
                 string log = "";
                 Installer.RollbackFrom(e.Dir, delegate (string s) { log += s + "; "; });
-                MessageBox.Show(this, L.T("已排入重启队列：") + log, L.T("还原到此备份"));
+                MessageBox.Show(this, L.T("backup.queued.for.the.next.reboot") + log, L.T("backup.restore.this.backup"));
                 Close();
             }
-            catch (Exception ex) { MessageBox.Show(this, ex.Message, L.T("还原失败")); }
+            catch (Exception ex) { MessageBox.Show(this, ex.Message, L.T("backup.restore.failed")); }
         }
     }
 }

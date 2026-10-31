@@ -20,7 +20,7 @@ namespace WinFontSwap.Wpf
 
         public FontPickerDialog()
         {
-            Title = L.T("选择字体");
+            Title = L.T("picker.select.a.font");
             Width = 560;
             Height = 640;
             MinWidth = 560;
@@ -40,7 +40,7 @@ namespace WinFontSwap.Wpf
             root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            var title = T.Label(L.T("系统已安装字体"), 15, T.Text, true);
+            var title = T.Label(L.T("picker.installed.fonts"), 15, T.Text, true);
             title.Margin = new Thickness(0, 0, 0, 10);
             Grid.SetRow(title, 0);
             root.Children.Add(title);
@@ -57,10 +57,10 @@ namespace WinFontSwap.Wpf
             root.Children.Add(_list);
 
             var bar = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
-            var ok = T.Btn2(L.T("确定"), true, 13);
+            var ok = T.Btn2(L.T("picker.ok"), true, 13);
             ok.Margin = new Thickness(0, 0, 8, 0);
             ok.Click += delegate { Accept(); };
-            var cancel = T.Btn2(L.T("取消"), false, 13);
+            var cancel = T.Btn2(L.T("picker.cancel"), false, 13);
             cancel.Click += delegate { DialogResult = false; };
             bar.Children.Add(ok);
             bar.Children.Add(cancel);
@@ -87,7 +87,7 @@ namespace WinFontSwap.Wpf
             catch (Exception ex)
             {
                 WpfProgram.Log("picker load failed: " + ex.Message);
-                _list.Items.Add(L.T("读取字体失败：") + ex.Message);
+                _list.Items.Add(L.T("backup.failed.to.read.the.font") + ex.Message);
             }
         }
 
@@ -116,7 +116,7 @@ namespace WinFontSwap.Wpf
 
             var sample = new TextBlock
             {
-                Text = L.T("Aa 汉字"),
+                Text = L.T("msg.text27"),
                 FontSize = 16,
                 Width = 92,
                 Foreground = T.Text,
