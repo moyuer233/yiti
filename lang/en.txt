@@ -16,7 +16,7 @@
 #   dlg.     buttons inside confirm / info dialogs
 #   msg.     status-bar text and result messages (some are fragments around a number)
 
-# ===== 字体替换页 =====
+# ===== Fonts page =====
 font.all.five.are.now=All five are now 
 font.all.shell.elements=All shell elements
 font.apply=Apply
@@ -53,7 +53,7 @@ font.targets=Targets
 font.this.windows.version.has.no.such.font=This Windows version has no such font
 font.yiti.v=Yiti V
 
-# ===== 高级页 =====
+# ===== Advanced page =====
 adv.build.the.files.only.leave.the.system.alone=Build the files only; leave the system alone
 adv.clear.the.font.cache.on.apply=Clear the font cache on apply
 adv.generate=Generate
@@ -74,13 +74,13 @@ adv.this.windows.version.has.no.per.user.fonts=This Windows version has no per-u
 adv.write.a.log=Write a log
 adv.writes.yy.mm.dd.ss.log.next.to.the.exe.after=Writes yy-mm-dd-ss.log next to the exe after each action
 
-# ===== 关于页 =====
+# ===== About page =====
 about.author=Author
 about.language=Language
 about.project.home=Project home
 about.source.code.and.issue.tracker=Source code and issue tracker
 
-# ===== 备份管理窗口 =====
+# ===== Backup manager =====
 backup.backups=Backups
 backup.backups.using= backups, using 
 backup.clear.staging=Clear staging
@@ -104,16 +104,19 @@ backup.staging=Staging:
 backup.total=Total 
 backup.using= , using 
 
-# ===== 选择字体窗口 =====
+# ===== Font picker =====
 picker.cancel=Cancel
 picker.installed.fonts=Installed fonts
 picker.ok=OK
 picker.select.a.font=Select a font
+picker.failed.to.read.the.font=Failed to read the font: 
 
-# ===== 确认框 / 信息框按钮 =====
+# ===== Confirm / info dialog buttons =====
 dlg.ok=OK
+dlg.yes=Yes
+dlg.no=No
 
-# ===== 状态栏与结果提示（不少是拼在数字前后的小片段） =====
+# ===== Status bar and result messages (some are fragments around a number) =====
 msg.about=About
 msg.advanced=Advanced
 msg.all.five.are.now=All five are now 
@@ -158,7 +161,7 @@ msg.shell.elements.applied.2=Shell font change applied
 msg.shell.elements.applied.explorer.restarted=Shell font change applied (Explorer restarted)
 msg.shell.elements.restored=Shell fonts restored
 msg.switched.to.the.default.fonts.press.apply.to=Switched to the default preset — press Apply to write it back
-msg.text27=picker.text27
+msg.text27=Aa 汉字
 msg.text97=, 
 msg.there.is.no.backup.to.roll.back=There is no backup to restore.
 msg.unknown=Unknown

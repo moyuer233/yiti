@@ -12,14 +12,12 @@ namespace WinFontSwap.Wpf
 
         /// <summary>编译进 exe 的 lang\zh.txt / lang\en.txt 覆盖内建表（改文案要重新编译）。</summary>
         static readonly Dictionary<string, string> Override = new Dictionary<string, string>(StringComparer.Ordinal);
-        static string _loadedFor;
 
         /// <summary>读编译进 exe 的资源 lang.zh.txt / lang.en.txt；每行「原文=显示文本」，# 开头为注释。</summary>
         public static void LoadFile()
         {
             Override.Clear();
             var name = En ? "lang.en.txt" : "lang.zh.txt";
-            _loadedFor = name;
             try
             {
                 var asm = System.Reflection.Assembly.GetExecutingAssembly();
@@ -35,12 +33,14 @@ namespace WinFontSwap.Wpf
                     text = sr.ReadToEnd();
                 foreach (var raw in text.Replace("\r\n", "\n").Split('\n'))
                 {
-                    var line = raw.Trim();
-                    if (line.Length == 0 || line.StartsWith("#")) continue;
+                    var line = raw;
+                    if (line.Length == 0) continue;
+                    var head = line.TrimStart();
+                    if (head.Length == 0 || head[0] == '#') continue;
                     var eq = line.IndexOf('=');
                     if (eq <= 0) continue;
-                    var k = Unescape(line.Substring(0, eq));
-                    var v = Unescape(line.Substring(eq + 1));
+                    var k = Unescape(line.Substring(0, eq).Trim());   // key 不吃空格
+                    var v = Unescape(line.Substring(eq + 1));         // 值必须原样保留：不少文案是拼在数字前后的片段
                     if (k.Length > 0) Override[k] = v;
                 }
             }
@@ -70,9 +70,12 @@ namespace WinFontSwap.Wpf
         {
             try
             {
-                if (!File.Exists(SettingsPath)) return;
-                var s = File.ReadAllText(SettingsPath).Trim();
-                En = string.Equals(s, "en", StringComparison.OrdinalIgnoreCase);
+                // 注意：ui.lang 不存在时也必须往下走 —— 否则文案表是空的，界面会显示成原始 key
+                if (File.Exists(SettingsPath))
+                {
+                    var s = File.ReadAllText(SettingsPath).Trim();
+                    En = string.Equals(s, "en", StringComparison.OrdinalIgnoreCase);
+                }
             }
             catch { }
             LoadFile();

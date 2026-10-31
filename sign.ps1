@@ -8,10 +8,7 @@ Set-Content -Path $log -Value '=== sign+trust+unblock ===' -Encoding UTF8
 $subject = 'CN=moyuer233'
 taskkill /F /IM YiTi.exe 2>&1 | Out-Null
 
-$exes = @(
-  (Join-Path $root 'dist\YiTi.exe'),
-  (Join-Path $root 'build\WinFontSwap.exe'),
-  (Join-Path $root 'build\WinFontSwap.console.exe')) | Where-Object { Test-Path $_ }
+$exes = @((Join-Path $root 'dist\YiTi.exe')) | Where-Object { Test-Path $_ }
 
 try {
   $cert = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.Subject -eq $subject } | Select-Object -First 1

@@ -90,7 +90,8 @@ namespace WinFontSwap
                     ncm = new NONCLIENTMETRICS();
                     ncm.cbSize = fullSize - 4;
                     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, (uint)ncm.cbSize, ref ncm, 0);
-                    ncm.cbSize = fullSize;
+                    // 老系统只认「结构 - 4」这个尺寸：SET 也必须用同一个 cbSize，否则写入会被拒绝
+                    ncm.cbSize = fullSize - 4;
                 }
 
                 for (int i = 0; i < Win32Fonts.Keys.Length; i++)

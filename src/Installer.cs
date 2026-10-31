@@ -533,7 +533,10 @@ namespace WinFontSwap
             if (pair == null || pair.Length < 2) return false;
             string src = pair[0] ?? "";
             string dst = pair[1] ?? "";
-            if (src.IndexOf("WinFontSwap", StringComparison.OrdinalIgnoreCase) < 0) return false;
+            // 应用时是「暂存→字体目录」，回滚时是「字体目录→暂存」：两侧任一侧来自本工具都算我们写的
+            bool ours = src.IndexOf("WinFontSwap", StringComparison.OrdinalIgnoreCase) >= 0
+                     || dst.IndexOf("WinFontSwap", StringComparison.OrdinalIgnoreCase) >= 0;
+            if (!ours) return false;
             var name = Path.GetFileName(dst.Replace("/", "\\"));
             if (string.IsNullOrEmpty(name)) return false;
             foreach (var f in want) if (string.Equals(name, f, StringComparison.OrdinalIgnoreCase)) return true;
@@ -951,6 +954,14 @@ namespace WinFontSwap
             state["aclPending"] = "1";
             state["date"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
             WriteState(state);
+            // 这次应用的状态也留一份在备份目录里：还原/备份列表都按「目录里有 state.ini」找最近一次
+            try
+            {
+                var snap = new List<string>();
+                foreach (var kv in state) snap.Add(kv.Key + "=" + kv.Value);
+                File.WriteAllLines(Path.Combine(result.BackupDir, "state.ini"), snap.ToArray(), Encoding.UTF8);
+            }
+            catch (Exception ex) { log("写备份状态快照失败（不影响本次替换）：" + ex.Message); }
 
             log("已写入重启替换队列：" + string.Join("、", applied.ToArray()));
             result.Queued = true;

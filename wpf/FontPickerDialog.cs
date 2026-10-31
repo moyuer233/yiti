@@ -87,7 +87,7 @@ namespace WinFontSwap.Wpf
             catch (Exception ex)
             {
                 WpfProgram.Log("picker load failed: " + ex.Message);
-                _list.Items.Add(L.T("backup.failed.to.read.the.font") + ex.Message);
+                _list.Items.Add(L.T("picker.failed.to.read.the.font") + ex.Message);
             }
         }
 

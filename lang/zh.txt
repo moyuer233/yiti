@@ -110,8 +110,12 @@ picker.installed.fonts=系统已安装字体
 picker.ok=确定
 picker.select.a.font=选择字体
 
+picker.failed.to.read.the.font=读取字体失败：
+
 # ===== 确认框 / 信息框按钮 =====
 dlg.ok=好
+dlg.yes=是
+dlg.no=否
 
 # ===== 状态栏与结果提示（不少是拼在数字前后的小片段） =====
 msg.about=关于

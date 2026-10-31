@@ -515,7 +515,7 @@ namespace WinFontSwap.Wpf
                     {
                         Dispatcher.BeginInvoke(new Action(delegate
                         {
-                            var dlg = new ConfirmDialog(L.T("font.defaults"), L.T("font.switch.to.the.default.preset"), "是", "否") { Owner = this };
+                            var dlg = new ConfirmDialog(L.T("font.defaults"), L.T("font.switch.to.the.default.preset"), L.T("dlg.yes"), L.T("dlg.no")) { Owner = this };
                             dlg.ShowDialog();
                         }));
                     }
@@ -1515,9 +1515,32 @@ namespace WinFontSwap.Wpf
             catch (Exception ex) { WpfProgram.Log("logdiag: " + ex); SetStatus(L.T("msg.failed.to.write.the.log") + ex.Message, true); }
         }
 
+        /// <summary>把注册表里当前（刚还原的）值实时打给系统：不调 SPI 的话要重新登录才看得到变化。</summary>
+        void ApplyShellFromRegistry()
+        {
+            var info = Win32Fonts.ReadAll();
+            var faces = new string[info.Count];
+            var pts = new double[info.Count];
+            var on = new bool[info.Count];
+            for (int i = 0; i < info.Count; i++)
+            {
+                var it = info[i];
+                faces[i] = it == null ? "" : it.Face;
+                pts[i] = it == null ? 9 : Math.Round(Math.Abs(it.HeightPx) * 72.0 / 96.0);
+                on[i] = it != null && !string.IsNullOrEmpty(it.Face);
+            }
+            if (ShellMetrics.Apply(faces, pts, on) > 0) RefreshShell();
+        }
+
         void RestoreWin32()
         {
-            try { Win32Fonts.Restore(); SetStatus(L.T("msg.shell.elements.restored"), false); MaybeLog("restore-shell"); }
+            try
+            {
+                Win32Fonts.Restore();
+                try { ApplyShellFromRegistry(); } catch { }
+                SetStatus(L.T("msg.shell.elements.restored"), false);
+                MaybeLog("restore-shell");
+            }
             catch (Exception ex) { SetStatus(L.T("msg.restore.failed") + ex.Message, true); }
         }
 
@@ -1748,7 +1771,7 @@ namespace WinFontSwap.Wpf
         bool Confirm(string question, string title)
         {
             foreach (var a in Environment.GetCommandLineArgs()) if (a == "--yes") return true;   // 自测用：跳过确认
-            var dlg = new ConfirmDialog(title, question, "是", "否") { Owner = this };
+            var dlg = new ConfirmDialog(title, question, L.T("dlg.yes"), L.T("dlg.no")) { Owner = this };
             dlg.ShowDialog();
             return dlg.Result;
         }
