@@ -1289,7 +1289,7 @@ namespace WinFontSwap.Wpf
                 for (int i = 0; i < _slots.Length; i++) _slots[i] = use;
                 UpdateSlotLabels();
                 SyncWin32FromChoice();
-                SetStatus(L.T("font.auto.matching.off.all.five.slots.use") + use.Family + " " + (use.Subfamily ?? ""), false);
+                SetStatus(L.T("font.auto.matching.off.all.five.slots.use") + " " + use.Family + " " + (use.Subfamily ?? ""), false);
                 return;
             }
             var pool = FontLibrary.CandidatesForBase(use);

@@ -18,10 +18,10 @@
 
 # ===== 字体替换页 =====
 font.all.five.are.now=这 5 项字号已设为 
-font.all.shell.elements=全部系统元素
+font.all.shell.elements=全部窗口元素
 font.apply=应用
 font.applying=应用中…
-font.auto.matching.off.all.five.slots.use=已关闭自动匹配：五档都用 
+font.auto.matching.off.all.five.slots.use=已关闭自动匹配
 font.auto.weight.matching=自动匹配字重
 font.bold=粗体
 font.bold.2=，粗体 
@@ -29,10 +29,10 @@ font.defaults=默认值
 font.latin.digits=英文数字
 font.light=细体
 font.light.2=，细体 
-font.match.regular.bold.light.at.400.700.300=按 400 / 700 / 300 配对常规、粗体、细体
+font.match.regular.bold.light.at.400.700.300=自动匹配常规、粗体、细体
 font.matched.by.weight.regular=已按字重匹配：常规
 font.warn.no.bold=（这个字体没有粗体，粗体会用常规）
-font.warn.no.light=（没有细体，细体会用常规） 
+font.warn.no.light=（这个字体没有细体，细体会用常规） 
 font.not.selected=未选择
 font.now=当前状态：
 font.re.apply=重新应用
@@ -46,8 +46,8 @@ font.restored=已还原
 font.restoring=还原中…
 font.select=选择
 font.select.font=选择字体…
-font.set.the.font.and.size.for.all.five=一键设置系统元素字体和字号
-font.shell.elements=系统元素
+font.set.the.font.and.size.for.all.five=一键设置系统窗口元素和字号
+font.shell.elements=窗口元素
 font.size=字号
 font.source.font=源字体
 font.switch.to.the.default.preset=是否切换为默认预设？
@@ -56,21 +56,21 @@ font.this.windows.version.has.no.such.font=此版本 Windows 没有这个字体
 font.yiti.v=易体 V
 
 # ===== 高级页 =====
-adv.build.the.files.only.leave.the.system.alone=只生成字体文件，不动系统
+adv.build.the.files.only.leave.the.system.alone=只生成用于替换字体文件，不执行替换操作
 adv.clear.the.font.cache.on.apply=写入时清字体缓存
 adv.generate=生成
-adv.generate.only=只执行生成操作
+adv.generate.only=生成用于替换的字体
 adv.generating=生成中…
 
 adv.manage=管理
-adv.remove.per.user.same.name.fonts=写入时清除用户级同名字体
+adv.remove.per.user.same.name.fonts=写入时清除用户字体
 
 
 
 
 
 adv.review.or.delete.old.backups.or.roll.back.to=查看、还原、删除历史备份
-adv.user.fonts.tip=如果你以前把「微软雅黑」用「为当前用户安装」的方式装过一份（文件名常是 msyh_0.ttc、msyhbd_0.ttc 这种），那么 DirectWrite 会优先读用户级那份。这时我们替换 C:\Windows\Fonts\msyh.ttc 再重启，界面依然显示用户级那份 —— 表现就是「替换成功但看不出变化」。
+adv.user.fonts.tip=写入时清除当前用户已安装的同名字体
 adv.this.windows.version.has.no.per.user.fonts=此版本 Windows 没有用户级字体
 adv.restart.explorer=重启资源管理器
 adv.write.a.log=输出日志
@@ -96,7 +96,7 @@ backup.select.all=全选
 backup.tip.written=当时写入：
 backup.tip.inuse=（仍在使用）
 backup.tip.result=结果：
-backup.tip.still.in.use= 个文件现在仍在用
+backup.tip.still.in.use= 个文件现用
 backup.tip.nostate=（早期备份，没有记录写入的字体）
 backup.tip.restorable=可还原：
 backup.backups.using= 个备份，占用 
@@ -105,9 +105,9 @@ backup.clear.the.staging.directory=清空暂存目录？
 backup.cleared=已清理 
 backup.close=关闭
 backup.restore.user.registry=还原用户级注册
-backup.restore.user.registry.desc=导入这次备份里的 HKCU-Fonts*.reg（用户自己装的同名字体注册）
+backup.restore.user.registry.desc=导入这次备份中当前用户已安装的同名字体
 backup.restore.user.registry.prompt=导入这个注册表备份？
-backup.no.user.registry.backup=没有找到 HKCU-Fonts*.reg 备份（只有清过用户级字体时才会生成）
+backup.no.user.registry.backup=没有找到 HKCU-Fonts*.reg 备份（只有清除过当前用户已安装的同名字体才会生成）
 backup.delete=删除选中
 backup.delete.failed=删除失败
 backup.delete.this.backup=删除这个备份？
@@ -117,7 +117,7 @@ backup.folders= 个目录
 backup.no.backups.yet=还没有备份
 backup.open.folder=打开目录
 backup.queued.for.the.next.reboot=已排入重启队列：
-backup.refused.while.the.reboot.queue.still.holds.o=（重启队列里还有待执行项时会拒绝）
+backup.refused.while.the.reboot.queue.still.holds.o=（重启队列里还有待执行项时会拒绝此次操作）
 backup.restore.failed=还原失败
 backup.restore.this.backup=还原到此备份
 backup.restore.this.backup.it.takes.effect.after.a.=还原到这个备份？重启后生效。
@@ -134,9 +134,9 @@ picker.select.a.font=选择字体
 picker.failed.to.read.the.font=读取字体失败：
 
 # ===== 确认框 / 信息框按钮 =====
-dlg.ok=好
-dlg.yes=是
-dlg.no=否
+dlg.ok=确定
+dlg.yes=确定
+dlg.no=取消
 
 # ===== 状态栏与结果提示（不少是拼在数字前后的小片段） =====
 msg.about=关于
@@ -172,19 +172,19 @@ msg.reboot.failed=重启失败：
 msg.reboot.pending=待重启
 msg.restart.explorer.now=是否确定重启资源管理器？
 msg.restart.now=是否确定重启？
-msg.restorable.from.backup=（可从备份补回）
+msg.restorable.from.backup=（可从备份还原）
 msg.restore.failed=还原失败：
 msg.restore.now=是否还原？
 msg.restore.point.not.created=还原点未创建：
 msg.rollback.failed=还原失败：
 msg.rolled.back.back.to.normal.after.a.reboot=已还原，重启后恢复。
 msg.rolled.back.everything=已全部还原：
-msg.shell.elements.applied=系统元素字体修改已生效：
-msg.shell.elements.applied.2=系统元素字体修改已生效
-msg.shell.elements.applied.explorer.restarted=系统元素字体修改已生效（已重启资源管理器）
-msg.shell.elements.restored=系统元素字体已还原
+msg.shell.elements.applied=窗口元素字体修改已生效：
+msg.shell.elements.applied.2=窗口元素字体修改已生效
+msg.shell.elements.applied.explorer.restarted=窗口元素字体修改已生效（已重启资源管理器）
+msg.shell.elements.restored=窗口元素字体已还原
 msg.switched.to.the.default.fonts.press.apply.to=已切换到默认预设
-msg.defaults.pending=（点「应用」后才会写入系统）
+msg.defaults.pending=点击「应用」以应用操作
 msg.text27=Aa 汉字
 msg.text97=、
 msg.there.is.no.backup.to.roll.back=没有可还原的备份。

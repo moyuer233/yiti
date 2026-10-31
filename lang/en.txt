@@ -18,10 +18,10 @@
 
 # ===== Fonts page =====
 font.all.five.are.now=All five are now 
-font.all.shell.elements=All shell elements
+font.all.shell.elements=All window elements
 font.apply=Apply
 font.applying=Applying…
-font.auto.matching.off.all.five.slots.use=Auto matching off: all five slots use 
+font.auto.matching.off.all.five.slots.use=Auto matching off
 font.auto.weight.matching=Auto weight matching
 font.bold=Bold
 font.bold.2=, bold 
@@ -29,10 +29,10 @@ font.defaults=Defaults
 font.latin.digits=Latin & digits
 font.light=Light
 font.light.2=, light 
-font.match.regular.bold.light.at.400.700.300=Match regular/bold/light at 400 / 700 / 300
+font.match.regular.bold.light.at.400.700.300=Match regular, bold and light automatically
 font.matched.by.weight.regular=Matched by weight: regular 
 font.warn.no.bold=(this font has no bold; bold will use regular)
-font.warn.no.light=(no light weight; light will use regular)
+font.warn.no.light= (this font has no light, regular is used)
 font.not.selected=Not selected
 font.now=Now: 
 font.re.apply=Re-apply
@@ -46,8 +46,8 @@ font.restored=Restored
 font.restoring=Restoring…
 font.select=Select
 font.select.font=Select font…
-font.set.the.font.and.size.for.all.five=Set the font and size for all shell elements at once
-font.shell.elements=Shell elements
+font.set.the.font.and.size.for.all.five=Set one font and size for all window elements
+font.shell.elements=Window elements
 font.size=Size
 font.source.font=Source font
 font.switch.to.the.default.preset=Switch to the default preset?
@@ -56,21 +56,21 @@ font.this.windows.version.has.no.such.font=This Windows version has no such font
 font.yiti.v=Yiti V
 
 # ===== Advanced page =====
-adv.build.the.files.only.leave.the.system.alone=Build the files only; leave the system alone
+adv.build.the.files.only.leave.the.system.alone=Build the font files for replacement only; leave the system alone
 adv.clear.the.font.cache.on.apply=Clear the font cache on apply
 adv.generate=Generate
-adv.generate.only=Generate only
+adv.generate.only=Build the fonts used for replacement
 adv.generating=Generating…
 
 adv.manage=Manage
-adv.remove.per.user.same.name.fonts=Remove per-user same-name fonts
+adv.remove.per.user.same.name.fonts=Clear user fonts on apply
 
 
 
 
 
 adv.review.or.delete.old.backups.or.roll.back.to=Review, restore or delete old backups
-adv.user.fonts.tip=If Microsoft YaHei was once installed "for the current user" (the files are usually msyh_0.ttc and msyhbd_0.ttc), DirectWrite reads that per-user copy first. Replacing C:\Windows\Fonts\msyh.ttc and rebooting then leaves the UI on the per-user copy, so the swap looks like it succeeded but nothing changed.
+adv.user.fonts.tip=Clear the same-name fonts installed by the current user on apply
 adv.this.windows.version.has.no.per.user.fonts=This Windows version has no per-user fonts
 adv.restart.explorer=Restart Explorer
 adv.write.a.log=Write a log
@@ -96,7 +96,7 @@ backup.select.all=Select all
 backup.tip.written=Written at that time:
 backup.tip.inuse=(in use)
 backup.tip.result=Result: 
-backup.tip.still.in.use= of them are still in use
+backup.tip.still.in.use= of the files are in use now
 backup.tip.nostate=(early backup: no record of what was written)
 backup.tip.restorable=Restorable: 
 backup.backups.using= backups, using 
@@ -105,9 +105,9 @@ backup.clear.the.staging.directory=Clear the staging directory?
 backup.cleared=Cleared 
 backup.close=Close
 backup.restore.user.registry=Restore user registry
-backup.restore.user.registry.desc=Import HKCU-Fonts*.reg from this backup (the per-user same-name font registrations)
+backup.restore.user.registry.desc=Import the same-name fonts the current user has installed, from this backup
 backup.restore.user.registry.prompt=Import this registry backup?
-backup.no.user.registry.backup=No HKCU-Fonts*.reg backup found (only created when the per-user fonts were cleared)
+backup.no.user.registry.backup=No HKCU-Fonts*.reg backup found (only created when same-name fonts installed by the current user were cleared)
 backup.delete=Delete
 backup.delete.failed=Delete failed
 backup.delete.this.backup=Delete this backup?
@@ -117,7 +117,7 @@ backup.folders= folders
 backup.no.backups.yet=No backups yet
 backup.open.folder=Open folder
 backup.queued.for.the.next.reboot=Queued for the next reboot: 
-backup.refused.while.the.reboot.queue.still.holds.o=(refused while the reboot queue still holds our entries)
+backup.refused.while.the.reboot.queue.still.holds.o=(this operation is refused while the reboot queue still holds pending entries)
 backup.restore.failed=Restore failed
 backup.restore.this.backup=Restore this backup
 backup.restore.this.backup.it.takes.effect.after.a.=Restore this backup? It takes effect after a reboot.
@@ -134,8 +134,8 @@ picker.failed.to.read.the.font=Failed to read the font:
 
 # ===== Confirm / info dialog buttons =====
 dlg.ok=OK
-dlg.yes=Yes
-dlg.no=No
+dlg.yes=OK
+dlg.no=Cancel
 
 # ===== Status bar and result messages (some are fragments around a number) =====
 msg.about=About
@@ -171,19 +171,19 @@ msg.reboot.failed=Reboot failed:
 msg.reboot.pending=reboot pending
 msg.restart.explorer.now=Restart Explorer now?
 msg.restart.now=Restart now?
-msg.restorable.from.backup=(restorable from backup)
+msg.restorable.from.backup= (can be restored from a backup)
 msg.restore.failed=Restore failed: 
 msg.restore.now=Restore now?
 msg.restore.point.not.created=Restore point not created: 
 msg.rollback.failed=Restore failed: 
 msg.rolled.back.back.to.normal.after.a.reboot=Restored; the originals come back after a reboot.
 msg.rolled.back.everything=Restored everything: 
-msg.shell.elements.applied=Shell font change applied: 
-msg.shell.elements.applied.2=Shell font change applied
-msg.shell.elements.applied.explorer.restarted=Shell font change applied (Explorer restarted)
-msg.shell.elements.restored=Shell fonts restored
+msg.shell.elements.applied=Window element fonts applied: 
+msg.shell.elements.applied.2=Window element fonts applied
+msg.shell.elements.applied.explorer.restarted=Window element fonts applied (Explorer restarted)
+msg.shell.elements.restored=Window element fonts restored
 msg.switched.to.the.default.fonts.press.apply.to=Switched to the default preset — press Apply to write it back
-msg.defaults.pending=
+msg.defaults.pending=Click Apply to apply the change
 msg.text27=Aa 汉字
 msg.text97=, 
 msg.there.is.no.backup.to.roll.back=There is no backup to restore.

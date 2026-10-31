@@ -90,7 +90,7 @@ _✨ 傻瓜式Windows全局字体替换工具 ✨_
 
 | 系统 | 状态 | 实测内容 |
 | --- | --- | --- |
-| Windows 11 26200 | ✅ **实测通过** | 五个字体文件替换、字重自动配对、系统元素（菜单/消息框/状态栏/小标题栏/图标）立即生效、还原与默认值、中英双语界面、备份与回滚 |
+| Windows 11 26200 | ✅ **实测通过** | 五个字体文件替换、字重自动配对、窗口元素（菜单/消息框/状态栏/小标题栏/图标）立即生效、还原与默认值、中英双语界面、备份与回滚 |
 | Windows 10 1809+ | ⚠️ **理论可用，未实测** | 按系统探测实现（用户级字体、`FontCache` 服务名、无 Mica 时用纯灰底），但没有实测 |
 | Windows 7 / 8.1 | ⚠️ **理论可用，未实测** | 缺的字体自动置灰并说明原因；`FontCache3.0.0.0`、无 Mica 的分支都有实现，但没有实测 |
 
@@ -110,7 +110,7 @@ _✨ 傻瓜式Windows全局字体替换工具 ✨_
 
 系统字体替换流程：读取你的所选字体 → 只把字体里的名字改成 `Microsoft YaHei` / `Segoe UI` 此类 → 生成同名字体文件 → 替换系统内的 → 重启生效。只有这样系统才会识别。
 
-系统元素字体替换流程：修改注册表 `HKCU\Control Panel\Desktop\WindowMetrics`，以控制老式界面的字体和字号。
+窗口元素字体替换流程：修改注册表 `HKCU\Control Panel\Desktop\WindowMetrics`，以控制老式界面的字体和字号。
 
 **无法更换的**：自带字体的程序（Office、Electron 应用、游戏）、网页内指定字体的文字、字体渲染参数（ClearType 类）。
 
@@ -174,18 +174,18 @@ Windows **找字体不看文件名，看字体内部的 `name` 表**（OpenType 
 ### 三、回滚
 
 读 `state.ini` 里的 SHA 判断当前文件是不是我们写进去的；是则把备份里的原版排进同一套重启改名队列，并把 `WindowMetrics` 恢复成备份值。原版丢失时，从 `C:\Windows\WinSxS` 里按包名（`microsoftyahei` 等）取组件存储中的原版。
-### 四、用户级字体与「写入时清除用户级同名字体」
+### 四、当前用户已安装的字体与「写入时清除用户字体」
 
-Windows 的字体分两层，**用户级优先于系统级**：
+Windows 的字体分两层，**当前用户已安装的字体优先于系统字体**：
 
 | 层级 | 文件位置 | 注册表 | 优先级 |
 |---|---|---|---|
-| 用户级（Win10 1809 起） | `%LOCALAPPDATA%\Microsoft\Windows\Fonts\` | `HKCU\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts` | 高 |
+| 当前用户已安装（Win10 1809 起） | `%LOCALAPPDATA%\Microsoft\Windows\Fonts\` | `HKCU\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts` | 高 |
 | 系统级 | `C:\Windows\Fonts\` | `HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts` | 低 |
 
 用「为当前用户安装」装过微软雅黑的话，文件名通常是 `msyh_0.ttc` 这种。DirectWrite 会优先读这一份，所以替换 `C:\Windows\Fonts\msyh.ttc` 再重启，界面依然显示用户级那份 —— 看着像“替换成功但没变化”。
 
-高级页的「写入时清除用户级同名字体」默认开着，它做四件事：
+高级页的「写入时清除用户字体」默认开着，它做四件事：
 
 1. 先把 `HKCU\...\Fonts` 整键导出到 `backup\<时间戳>\HKCU-Fonts.reg`；导出失败或文件为空就中止清理，不会“删了没备份”；
 2. 只删除同时满足两个条件的注册项：值指向 `%LOCALAPPDATA%\Microsoft\Windows\Fonts\` 下的文件，且名字是雅黑 / 微软雅黑 / Segoe UI 的同名条目；

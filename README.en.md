@@ -175,18 +175,18 @@ The five values under `HKCU\Control Panel\Desktop\WindowMetrics` (`SmCaptionFont
 
 It compares the SHA values in `state.ini` to decide whether the current files are the ones we wrote; if so it queues the originals from the backup through the same boot-time rename mechanism and restores the backup values of `WindowMetrics`. If the originals are gone, it takes them from the component store `C:\Windows\WinSxS` by package name (`microsoftyahei` and so on).
 
-### 4. Per-user fonts and "clear same-name per-user fonts on apply"
+### 4. Fonts installed for the current user and "clear user fonts on apply"
 
-Windows keeps fonts on two layers, and the **per-user layer wins**:
+Windows keeps fonts on two layers, and **fonts installed for the current user win**:
 
 | Layer | Files | Registry | Priority |
 |---|---|---|---|
-| Per-user (Win10 1809+) | `%LOCALAPPDATA%\Microsoft\Windows\Fonts\` | `HKCU\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts` | higher |
+| Installed for the current user (Win10 1809+) | `%LOCALAPPDATA%\Microsoft\Windows\Fonts\` | `HKCU\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts` | higher |
 | System | `C:\Windows\Fonts\` | `HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts` | lower |
 
 If Microsoft YaHei was once installed "for the current user", its file is usually named `msyh_0.ttc`. DirectWrite reads that copy first, so replacing `C:\Windows\Fonts\msyh.ttc` and rebooting leaves the UI on the per-user copy — it looks like the swap silently did nothing.
 
-The advanced-page switch "clear same-name per-user fonts on apply" is on by default and does four things:
+The advanced-page switch "clear user fonts on apply" is on by default and does four things:
 
 1. exports the whole `HKCU\...\Fonts` key to `backup\<timestamp>\HKCU-Fonts.reg` first; if the export fails or the file is empty, the cleanup is aborted, so nothing is deleted without a backup;
 2. deletes only entries that point into `%LOCALAPPDATA%\Microsoft\Windows\Fonts\` and whose names are YaHei / Microsoft YaHei / Segoe UI;
