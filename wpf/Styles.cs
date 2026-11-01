@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Markup;
 using System.Windows.Media;
@@ -27,6 +28,73 @@ namespace WinFontSwap.Wpf
                 DwmSetWindowAttribute(h, 33, ref pref, sizeof(int));   // DWMWA_WINDOW_CORNER_PREFERENCE = ROUND
             }
             catch { }
+        }
+
+        /// <summary>和主页面同一套自绘窗口按钮（– 最小化 / × 关闭）：透明底、悬停变亮、命中区 40×28。</summary>
+        public static System.Windows.Controls.Button WindowButton(string glyph, Action act)
+        {
+            var b = new System.Windows.Controls.Button
+            {
+                Content = glyph,
+                Width = 40,
+                Height = 28,
+                FontSize = 13,
+                Foreground = T.TextDim,
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Cursor = System.Windows.Input.Cursors.Hand
+            };
+            System.Windows.Shell.WindowChrome.SetIsHitTestVisibleInChrome(b, true);
+            var f = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.Border));
+            f.SetValue(System.Windows.Controls.Border.CornerRadiusProperty, new CornerRadius(4));
+            f.SetValue(System.Windows.Controls.Border.BackgroundProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Control.BackgroundProperty));
+            var cp = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.ContentPresenter));
+            cp.SetValue(System.Windows.Controls.ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+            cp.SetValue(System.Windows.Controls.ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
+            f.AppendChild(cp);
+            var tpl = new System.Windows.Controls.ControlTemplate(typeof(System.Windows.Controls.Button));
+            tpl.VisualTree = f;
+            b.Template = tpl;
+            b.MouseEnter += delegate { b.Background = T.BtnHover; b.Foreground = T.Text; };
+            b.MouseLeave += delegate { b.Background = Brushes.Transparent; b.Foreground = T.TextDim; };
+            b.Click += delegate { act(); };
+            return b;
+        }
+
+        /// <summary>把对话框做成和主页面一样的外观：无系统标题栏，左上角标题、右上角自绘关闭按钮，窗口自己画深色背景。</summary>
+        public static UIElement DialogFrame(Window w, FrameworkElement body, string title)
+        {
+            try
+            {
+                w.WindowStyle = WindowStyle.None;
+                w.Background = Brushes.Transparent;
+                System.Windows.Shell.WindowChrome.SetWindowChrome(w, new System.Windows.Shell.WindowChrome
+                {
+                    CaptionHeight = 40,
+                    ResizeBorderThickness = new Thickness(0),
+                    GlassFrameThickness = new Thickness(0),
+                    CornerRadius = new CornerRadius(0),
+                    UseAeroCaptionButtons = false    // 系统不画按钮，和主页面一样自己画
+                });
+            }
+            catch { }
+
+            var card = new System.Windows.Controls.Border { Background = T.BDrawer, CornerRadius = new CornerRadius(10), Child = body };
+            var layer = new Grid();
+            layer.Children.Add(card);
+
+            var cap = new Grid { Height = 40, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(18, 4, 6, 0) };
+            cap.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            cap.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = GridLength.Auto });
+            var label = T.Label(title, 13, T.Text, false);
+            label.VerticalAlignment = VerticalAlignment.Center;
+            cap.Children.Add(label);
+            var close = WindowButton("×", delegate { try { w.Close(); } catch { } });
+            close.VerticalAlignment = VerticalAlignment.Center;
+            System.Windows.Controls.Grid.SetColumn(close, 1);
+            cap.Children.Add(close);
+            layer.Children.Add(cap);
+            return layer;
         }
 
         static readonly IEasingFunction Ease = new CubicEase { EasingMode = EasingMode.EaseOut };
