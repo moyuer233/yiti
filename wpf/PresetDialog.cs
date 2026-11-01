@@ -33,7 +33,7 @@ namespace WinFontSwap.Wpf
             Width = 720;
             Height = 560;
             MinWidth = 720; MinHeight = 560; MaxWidth = 720; MaxHeight = 560;
-            ResizeMode = ResizeMode.CanMinimize;   // 有最小化和关闭，但不能拖大小
+            ResizeMode = ResizeMode.NoResize;   // 这个窗口只保留关闭按钮，不给最小化/最大化
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             Background = T.BDrawer;
             Foreground = T.Text;
