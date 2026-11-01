@@ -30,6 +30,8 @@ _✨ The no-brainer system-wide font replacement tool for Windows ✨_
 
 ![Font replacement](docs/font_en.png)
 
+![Window fonts](docs/font_shell_en.png)
+
 ![Advanced](docs/adv_en.png)
 
 ![About](docs/about_en.png)

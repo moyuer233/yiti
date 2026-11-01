@@ -30,6 +30,8 @@ _✨ 傻瓜式Windows全局字体替换工具 ✨_
 
 ![字体替换](docs/font.png)
 
+![窗口字体](docs/font_shell.png)
+
 ![高级](docs/adv.png)
 
 ![关于](docs/about.png)
