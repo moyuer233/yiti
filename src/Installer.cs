@@ -1134,7 +1134,22 @@ namespace WinFontSwap
             catch (Exception ex) { log("清理旧的重启队列失败（不影响本次排队）：" + ex.Message); }
             AddQueuePairs(pairs);
             if (clearCaches) ClearFontCaches(log);
-            state["applied"] = string.Join(";", applied.ToArray());
+            // applied 记的是“所有被我们替换过的目标”：子集重贴（重新应用上次的字体）不能把其余目标从列表里抹掉
+            var merged = new List<string>();
+            if (state.ContainsKey("applied"))
+            {
+                foreach (var prev in state["applied"].Split(';'))
+                {
+                    if (string.IsNullOrEmpty(prev)) continue;
+                    if (applied.Contains(prev)) continue;
+                    if (!File.Exists(Path.Combine(FontsDir, prev))) continue;
+                    merged.Add(prev);
+                }
+            }
+            merged.AddRange(applied);
+            state["applied"] = string.Join(";", merged.ToArray());
+            state["opt.cache"] = clearCaches ? "1" : "0";
+            state["opt.userfonts"] = clearUserFonts ? "1" : "0";
             state["aclPending"] = "1";
             state["date"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
             WriteState(state);
@@ -1508,7 +1523,21 @@ namespace WinFontSwap
             }
         }
 
-        /// <summary>上次应用时给这个目标用的源字体文件（没有记录返回 null）。face 是 TTC 里的第几个。
+        /// <summary>上次应用时的两项开关（清字体缓存 / 清用户字体），“重新应用上次的字体”沿用同一口径。</summary>
+        public static void GetLastOptions(out bool clearCaches, out bool clearUserFonts)
+        {
+            clearCaches = true; clearUserFonts = true;
+            try
+            {
+                var st = ReadState();
+                string v;
+                if (st.TryGetValue("opt.cache", out v)) clearCaches = v != "0";
+                if (st.TryGetValue("opt.userfonts", out v)) clearUserFonts = v != "0";
+            }
+            catch { }
+        }
+
+        /// <summary>上次应用时给这个目标用的源字体文件（没有记录返回 null）。face 是 TTC 里的第几个。</summary>
         public static bool TryGetLastSource(string targetFile, out string path, out int face)
         {
             path = null; face = 0;

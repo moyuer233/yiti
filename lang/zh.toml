@@ -19,6 +19,7 @@
 "now" = "当前状态："
 "re.apply" = "重新应用上次的字体"
 "reapply.no.source" = "上次用的字体文件已经不在（可能被删除或移动），请重新选择字体后再应用。"
+"reapply.nothing" = "当前没有需要重新应用的字体（检测结果与记录一致）。"
 "reapply.partial" = "以下目标找不到上次的源字体，已跳过：
 "reading" = "读取中"
 "regular" = "常规"

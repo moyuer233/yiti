@@ -12,7 +12,12 @@ New-Item -ItemType Directory -Force $outDir | Out-Null
 $out = Join-Path $outDir 'YiTi.exe'
 
 # Kill the running release build so csc can overwrite it (CS0016 otherwise).
-Get-Process YiTi -ErrorAction SilentlyContinue | ForEach-Object { $_.Kill() }
+# Only kill the copy from this repo: a YiTi.exe elsewhere (old download) must not be touched.
+Get-Process YiTi -ErrorAction SilentlyContinue | ForEach-Object {
+  $p = $null
+  try { $p = $_.Path } catch { }
+  if ($p -and ($p -ieq $out)) { $_.Kill() }
+}
 Start-Sleep -Milliseconds 400
 
 $a = @()

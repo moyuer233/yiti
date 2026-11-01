@@ -1750,9 +1750,8 @@ namespace WinFontSwap.Wpf
         void ReapplyLast()
         {
             var rep = Installer.CheckConsistency();
-            var targets = new List<string>();
-            targets.AddRange(rep.AppliedPending);
-            targets.AddRange(rep.Never);
+            // 只重贴“记录说换过、但现在又不是我们的文件”的目标；Never 是用户从没勾过的目标，不该被拉进来
+            var targets = new List<string>(rep.AppliedPending);
             var list = new List<FontSource>();
             var lost = new List<string>();
             foreach (var f in targets)
@@ -1789,6 +1788,13 @@ namespace WinFontSwap.Wpf
                 }
                 catch { lost.Add(f); }
             }
+            if (targets.Count == 0)
+            {
+                var ok = L.T("font.reapply.nothing");
+                SetStatus(ok, false);
+                ConfirmDialog.Info(this, L.T("font.apply"), ok);
+                return;
+            }
             if (list.Count == 0)
             {
                 var msg = L.T("font.reapply.no.source");
@@ -1797,7 +1803,9 @@ namespace WinFontSwap.Wpf
                 return;
             }
             if (lost.Count > 0) SetStatus(L.T("font.reapply.partial") + string.Join("、", lost.ToArray()), true);
-            RunApplyCore(list, false);
+            bool lastCache, lastUserFonts;
+            Installer.GetLastOptions(out lastCache, out lastUserFonts);
+            RunApplyCore(list, false, lastCache, lastUserFonts);
         }
 
         void RunApply(bool generateOnly)
@@ -1806,7 +1814,7 @@ namespace WinFontSwap.Wpf
         }
 
         /// <summary>用指定的源列表走完整应用流程（半替换“重新应用上次的字体”也走这里）。</summary>
-        void RunApplyCore(List<FontSource> list, bool generateOnly)
+        void RunApplyCore(List<FontSource> list, bool generateOnly, bool? cacheOverride = null, bool? userFontsOverride = null)
         {
             var trace = new System.Text.StringBuilder();
             foreach (var s in list) trace.Append(s.TargetFile + "<-" + System.IO.Path.GetFileName(s.SourcePath) + "; ");
@@ -1854,8 +1862,8 @@ namespace WinFontSwap.Wpf
             SetStatus(generateOnly ? L.T("msg.generating") : L.T("msg.generating.and.writing"), false);
             try
             {
-                bool cache = _advCache != null && _advCache.IsChecked == true;
-                bool userFonts = _advUserFonts != null && _advUserFonts.IsChecked == true;
+                bool cache = cacheOverride.HasValue ? cacheOverride.Value : (_advCache != null && _advCache.IsChecked == true);
+                bool userFonts = userFontsOverride.HasValue ? userFontsOverride.Value : (_advUserFonts != null && _advUserFonts.IsChecked == true);
                 var res = Installer.Apply(list, delegate (string m) { }, generateOnly, cache, userFonts);
                 // 和字体一起改的界面元素也要写：以前这条分支只排字体文件，界面元素被默默丢掉（默认预设时最明显）
                 if (!generateOnly && AnyShellSelected())

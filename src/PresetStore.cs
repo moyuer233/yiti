@@ -50,6 +50,8 @@ namespace WinFontSwap
                             int eq = line.IndexOf('=');
                             if (eq <= 0) continue;
                             var k = line.Substring(0, eq).Trim();
+                            var val = line.Substring(eq + 1).Trim();
+                            if (val != "1") continue;   // 只统计真正启用的行，别把 on=0 算进去
                             if (k.StartsWith("slot.") && k.EndsWith(".on")) e.Slots++;
                             else if (k.StartsWith("shell.") && k.EndsWith(".on")) e.Shell++;
                         }
