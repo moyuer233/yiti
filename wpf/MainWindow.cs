@@ -542,6 +542,17 @@ namespace WinFontSwap.Wpf
                     {
                         Dispatcher.BeginInvoke(new Action(delegate { RunApply(true); }));
                     }
+                    else if (a.StartsWith("--savepreset:"))
+                    {
+                        var presetName = a.Substring("--savepreset:".Length);
+                        Dispatcher.BeginInvoke(new Action(delegate
+                        {
+                            var d = CollectPreset();
+                            PresetStore.Save(presetName, d);
+                            Diagnostics.Append("preset saved (applied state): " + presetName + " keys=" + d.Count);
+                            ConfirmDialog.Info(this, L.T("preset.save"), L.T("preset.saved") + presetName);
+                        }));
+                    }
                     else if (a == "--presetdemo" || a == "--presetdemoedit")
                     {
                         bool edit = a == "--presetdemoedit";
@@ -1949,29 +1960,57 @@ namespace WinFontSwap.Wpf
             return dlg.Result;
         }
 
-        /// <summary>把当前界面上的选择收集成一份预设（不写系统，只存配置）。</summary>
+        /// <summary>
+        /// 把「当前状态」收集成一份预设：读系统里实际装着的字体和窗口字体，而不是界面上还没应用的勾选。
+        /// 这样预设 = 现在这台电脑的样子，换机/回滚时加载出来的就是一模一样的配置。
+        /// </summary>
         Dictionary<string, string> CollectPreset()
         {
             var d = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             d["auto.weight"] = _advAutoWeightOn ? "1" : "0";
             d["auto.explorer"] = _advAutoExplorerOn ? "1" : "0";
-            for (int i = 0; i < _slots.Length; i++)
+            for (int i = 0; i < Installer.TargetFiles.Length && i < _slots.Length; i++)
             {
-                d["slot." + i + ".on"] = _on[i] ? "1" : "0";
-                if (_slots[i] == null || string.IsNullOrEmpty(_slots[i].Path)) continue;
-                d["slot." + i + ".path"] = _slots[i].Path;
-                d["slot." + i + ".face"] = _slots[i].FaceIndex.ToString();
-                d["slot." + i + ".family"] = _slots[i].Family ?? "";
+                var file = Installer.TargetFiles[i];
+                var applied = Installer.DetectSourceFamily(file);            // 现在实际装的是哪款字体
+                if (string.IsNullOrEmpty(applied))
+                    applied = Installer.InternalFamilyOfPath(System.IO.Path.Combine(Installer.FontsDir, file));   // 认不出就退回字体内部族名（原版）
+                if (string.IsNullOrEmpty(applied)) continue;
+                d["slot." + i + ".on"] = "1";
+                d["slot." + i + ".family"] = applied;
             }
-            for (int i = 0; i < Win32Fonts.Names.Length; i++)
+            // 窗口字体：直接读注册表里的 LOGFONT，等价于「当前状态」
+            var info = Win32Fonts.ReadAll();
+            for (int i = 0; i < Win32Fonts.Names.Length && i < info.Count; i++)
             {
-                d["shell." + i + ".on"] = _winOn[i] ? "1" : "0";
-                d["shell." + i + ".face"] = _winFace[i] ?? "";
-                d["shell." + i + ".pt"] = _winSize[i] != null ? _winSize[i].Text : "9";
-                d["shell." + i + ".weight"] = _winWeight[i].ToString();
-                d["shell." + i + ".charset"] = _winCharSet[i].ToString();
+                var cur = info[i];
+                if (cur == null || string.IsNullOrEmpty(cur.Face)) continue;
+                d["shell." + i + ".on"] = "1";
+                d["shell." + i + ".face"] = cur.Face;
+                d["shell." + i + ".pt"] = Math.Max(1, (int)Math.Round(Math.Abs(cur.HeightPx) * 72.0 / 96.0)).ToString();
+                d["shell." + i + ".weight"] = cur.Weight.ToString();
+                d["shell." + i + ".charset"] = cur.CharSet.ToString();
             }
             return d;
+        }
+
+        /// <summary>按族名在本机字体库里找一款（优先 400/Regular），给「按当前状态保存」的预设还原用。</summary>
+        static FontEntry FindEntryByFamily(string family)
+        {
+            var want = (family ?? "").Trim();
+            if (want.Length == 0) return null;
+            FontEntry fallback = null;
+            foreach (var e in FontLibrary.All)
+            {
+                if (e == null || string.IsNullOrEmpty(e.Path)) continue;
+                var fam = (e.Family ?? "").Trim();
+                var same = string.Equals(fam, want, StringComparison.OrdinalIgnoreCase)
+                        || fam.StartsWith(want + " ", StringComparison.OrdinalIgnoreCase);
+                if (!same) continue;
+                if (e.Weight >= 350 && e.Weight <= 450) return e;   // 优先常规档
+                if (fallback == null) fallback = e;
+            }
+            return fallback;
         }
 
         /// <summary>把预设加载回界面（不写系统，用户还要点「应用」）。</summary>
@@ -1995,12 +2034,18 @@ namespace WinFontSwap.Wpf
                     if (_tog[i] != null) { _tog[i].IsChecked = _on[i]; T.RefreshToggleVisual(_tog[i]); }
                     values.TryGetValue("slot." + i + ".path", out path);
                     values.TryGetValue("slot." + i + ".face", out face);
-                    if (string.IsNullOrEmpty(path) || !File.Exists(path)) { _slots[i] = null; continue; }
-                    int fi = 0; int.TryParse(face, out fi);
-                    var list = FontLibrary.ReadFile(path);
+                    string family;
+                    values.TryGetValue("slot." + i + ".family", out family);
                     FontEntry pick = null;
-                    foreach (var e in list) if (e.FaceIndex == fi) { pick = e; break; }
-                    if (pick == null && list.Count > 0) pick = list[0];
+                    if (!string.IsNullOrEmpty(path) && File.Exists(path))
+                    {
+                        int fi = 0; int.TryParse(face, out fi);
+                        var list = FontLibrary.ReadFile(path);
+                        foreach (var e in list) if (e.FaceIndex == fi) { pick = e; break; }
+                        if (pick == null && list.Count > 0) pick = list[0];
+                    }
+                    // 按「当前状态」保存的预设没有路径：按族名回本机字体库里找（微软原版找不到 = 这个槽用原版）
+                    if (pick == null && !string.IsNullOrEmpty(family)) pick = FindEntryByFamily(family);
                     _slots[i] = pick;
                 }
                 if (_slots[0] != null) _picked = _slots[0];

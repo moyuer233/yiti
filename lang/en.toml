@@ -207,6 +207,7 @@
 "name.rename" = "Rename preset"
 "name.rename.prompt" = "New name:"
 "overwrite" = "A preset with this name exists. Overwrite it?"
+"saved" = "Preset saved: "
 "loaded" = "Preset loaded: "
 "loaded.2" = ". Click Apply to use it."
 "edit.mode" = "Edit mode"

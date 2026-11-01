@@ -206,6 +206,7 @@
 "name.rename" = "重命名预设"
 "name.rename.prompt" = "新的名字："
 "overwrite" = "已有同名预设，覆盖吗？"
+"saved" = "已保存预设："
 "loaded" = "已加载预设："
 "loaded.2" = "，点「应用」生效。"
 "edit.mode" = "编辑模式"
