@@ -1090,9 +1090,13 @@ namespace WinFontSwap.Wpf
                 var dlg = new PresetDialog(delegate { return CollectPreset(); }, delegate (string name, Dictionary<string, string> values) { ApplyPreset(name, values); }) { Owner = this };
                 dlg.ShowDialog();
             };
+            var backupEntry = T.Btn2(L.T("backup.backups"), false, 13);   // 备份管理：还原/删除历史备份
+            backupEntry.Margin = new Thickness(0, 0, 10, 0);
+            backupEntry.Click += delegate { var dlg = new BackupDialog { Owner = this }; dlg.ShowDialog(); RefreshTargets(); };
             var defaults = T.Btn2(L.T("font.defaults"), false, 13);
             defaults.Click += delegate { ResetToDefaults(); };
             bar.Children.Add(apply);
+            bar.Children.Add(backupEntry);
             bar.Children.Add(defaults);   // 默认预设在前，预设管理紧挨着它
             bar.Children.Add(preset);
             bottom.Children.Add(bar);
