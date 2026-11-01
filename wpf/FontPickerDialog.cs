@@ -30,7 +30,7 @@ namespace WinFontSwap.Wpf
             MinHeight = 640;
             MaxWidth = 560;
             MaxHeight = 640;
-            ResizeMode = ResizeMode.NoResize;   // 固定大小：不能拖、没有最大化
+            ResizeMode = ResizeMode.CanMinimize;   // 固定大小，但保留最小化与关闭
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             SourceInitialized += delegate { Styles.DarkTitle(this); };
             Background = T.BDrawer;
