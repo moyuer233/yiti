@@ -542,14 +542,16 @@ namespace WinFontSwap.Wpf
                     {
                         Dispatcher.BeginInvoke(new Action(delegate { RunApply(true); }));
                     }
-                    else if (a == "--presetdemo")
+                    else if (a == "--presetdemo" || a == "--presetdemoedit")
                     {
+                        bool edit = a == "--presetdemoedit";
                         Dispatcher.BeginInvoke(new Action(delegate
                         {
-                            var dlg = new PresetDialog(delegate { return CollectPreset(); }, delegate (string name, Dictionary<string, string> values) { ApplyPreset(name, values); }) { Owner = this };
+                            var dlg = new PresetDialog(delegate { return CollectPreset(); }, delegate (string name, Dictionary<string, string> values) { ApplyPreset(name, values); }, edit) { Owner = this };
                             dlg.ShowDialog();
                         }));
                     }
+
                     else if (a == "--defaultsdemo")
                     {
                         Dispatcher.BeginInvoke(new Action(delegate
@@ -1172,18 +1174,6 @@ namespace WinFontSwap.Wpf
             genRow.ToolTip = L.T("adv.build.the.files.only.leave.the.system.alone");
             stack.Children.Add(genRow);
 
-
-
-            TextBlock advDescBackup;
-            var backupBtn = T.Btn2(L.T("adv.manage"), false, 13);
-            backupBtn.Click += delegate
-            {
-                var dlg = new BackupDialog { Owner = this };
-                dlg.ShowDialog();
-            };
-            var backupRow = T.Row("\uE777", L.T("backup.backups"), "", backupBtn, out advDescBackup);
-            backupRow.ToolTip = L.T("adv.review.or.delete.old.backups.or.roll.back.to");
-            stack.Children.Add(backupRow);
 
 
             TextBlock advDescRestartExplorer;
