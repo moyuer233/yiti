@@ -35,10 +35,11 @@ namespace WinFontSwap.Wpf
             MinWidth = 760; MinHeight = 600; MaxWidth = 760; MaxHeight = 600;
             ResizeMode = ResizeMode.NoResize;   // 这个窗口只保留关闭按钮，不给最小化/最大化
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            Background = T.BDrawer;
             Foreground = T.Text;
             FontSize = 13;
 
-            var root = new Grid { Margin = new Thickness(0) };
+            var root = new Grid { Margin = new Thickness(16) };
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });   // 0 概览
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });   // 1 设置
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });   // 2 批量工具条
@@ -164,7 +165,8 @@ namespace WinFontSwap.Wpf
             Grid.SetRow(bar, 4);
             root.Children.Add(bar);
 
-            Content = Styles.PopupFrame(this, root, Title);   // 和「默认预设」小弹窗同一套外观
+            Content = root;
+            SourceInitialized += delegate { Styles.DarkTitle(this); };
             SetEditMode(editMode);
         }
 

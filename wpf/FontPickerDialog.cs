@@ -32,10 +32,12 @@ namespace WinFontSwap.Wpf
             MaxHeight = 640;
             ResizeMode = ResizeMode.CanMinimize;   // 固定大小，但保留最小化与关闭
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            SourceInitialized += delegate { Styles.DarkTitle(this); };
+            Background = T.BDrawer;
             Foreground = T.Text;
             FontSize = 13;
 
-            var root = new Grid { Margin = new Thickness(0) };
+            var root = new Grid { Margin = new Thickness(16) };
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
@@ -68,7 +70,7 @@ namespace WinFontSwap.Wpf
             Grid.SetRow(bar, 3);
             root.Children.Add(bar);
 
-            Content = Styles.PopupFrame(this, root, Title);   // 和「默认预设」小弹窗同一套外观
+            Content = root;
             foreach (var a in Environment.GetCommandLineArgs())
             {
                 if (a.StartsWith("--q:")) _search.Text = a.Substring(4);

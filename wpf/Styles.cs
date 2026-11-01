@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Markup;
 using System.Windows.Media;
@@ -28,61 +27,6 @@ namespace WinFontSwap.Wpf
                 DwmSetWindowAttribute(h, 33, ref pref, sizeof(int));   // DWMWA_WINDOW_CORNER_PREFERENCE = ROUND
             }
             catch { }
-        }
-
-        /// <summary>
-        /// 和「默认预设」那种小弹窗同款：无系统标题栏、深色圆角卡片 + 外阴影、标题在卡片里、整窗可拖动、Esc 关闭。
-        /// 用于预设管理 / 备份管理 / 字体选择这类独立窗口。
-        /// </summary>
-        public static UIElement PopupFrame(Window w, FrameworkElement body, string title)
-        {
-            try
-            {
-                w.WindowStyle = WindowStyle.None;
-                w.AllowsTransparency = true;
-                w.Background = Brushes.Transparent;
-                w.ResizeMode = ResizeMode.NoResize;
-            }
-            catch { }
-
-            var card = new Border
-            {
-                Background = T.BDrawer,
-                CornerRadius = new CornerRadius(10),
-                Padding = new Thickness(20, 16, 20, 16),
-                Effect = new System.Windows.Media.Effects.DropShadowEffect
-                {
-                    BlurRadius = 26,
-                    ShadowDepth = 0,
-                    Opacity = 0.45,
-                    Color = Colors.Black
-                }
-            };
-            var content = new Grid();
-            content.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            content.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-            var head = new TextBlock { Text = title, FontSize = 16, FontWeight = FontWeights.SemiBold, Foreground = T.Text };
-            Grid.SetRow(head, 0);
-            content.Children.Add(head);
-            var inner = new Grid { Margin = new Thickness(0, 12, 0, 0) };
-            inner.Children.Add(body);
-            Grid.SetRow(inner, 1);   // 占满剩余高度，列表才能正常拉伸
-            content.Children.Add(inner);
-            card.Child = content;
-
-            var layer = new Grid { Margin = new Thickness(14) };
-            layer.Children.Add(card);
-
-            card.MouseLeftButtonDown += delegate (object s, System.Windows.Input.MouseButtonEventArgs e)
-            {
-                if (e.OriginalSource is TextBlock || e.OriginalSource is Border) { try { w.DragMove(); } catch { } }
-            };
-            w.KeyDown += delegate (object s, System.Windows.Input.KeyEventArgs e)
-            {
-                if (e.Key == System.Windows.Input.Key.Escape) { try { w.Close(); } catch { } }
-            };
-            w.Loaded += delegate { Styles.FadeIn(card, 8, 150); };
-            return layer;
         }
 
         static readonly IEasingFunction Ease = new CubicEase { EasingMode = EasingMode.EaseOut };
