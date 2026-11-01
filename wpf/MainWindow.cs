@@ -1094,6 +1094,7 @@ namespace WinFontSwap.Wpf
             backupEntry.Margin = new Thickness(0, 0, 10, 0);
             backupEntry.Click += delegate { var dlg = new BackupDialog { Owner = this }; dlg.ShowDialog(); RefreshTargets(); };
             var defaults = T.Btn2(L.T("font.defaults"), false, 13);
+            defaults.Margin = new Thickness(0, 0, 10, 0);
             defaults.Click += delegate { ResetToDefaults(); };
             bar.Children.Add(apply);
             bar.Children.Add(backupEntry);
