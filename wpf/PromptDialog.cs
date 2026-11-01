@@ -69,7 +69,7 @@ namespace WinFontSwap.Wpf
             };
             Loaded += delegate
             {
-                Styles.FadeIn(card, 10, 170);
+                Styles.PopupIn(card);
                 _box.Focus();
                 _box.SelectAll();
             };

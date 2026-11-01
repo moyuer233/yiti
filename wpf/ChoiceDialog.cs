@@ -83,7 +83,7 @@ namespace WinFontSwap.Wpf
             {
                 if (e.Key == Key.Escape) { Choice = -1; Styles.FadeOutThen(card, 110, delegate { Close(); }); }
             };
-            Loaded += delegate { Styles.FadeIn(card, 10, 170); cancel.Focus(); };
+            Loaded += delegate { Styles.PopupIn(card); cancel.Focus(); };
         }
     }
 }

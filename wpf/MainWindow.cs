@@ -387,7 +387,7 @@ namespace WinFontSwap.Wpf
             Loaded += delegate
             {
                 // 启动时整窗淡入，避免一亮就硬切出来
-                Styles.FadeIn(this, 0, 150);
+                Styles.FadeIn(this, 0, 200);   // 和 Win11 打开窗口的淡入对齐
                 WpfProgram.Log("logpath=" + WpfProgram.LogPathUsed + "  base=" + AppDomain.CurrentDomain.BaseDirectory);
                 try { DarkTitle(); } catch (Exception ex) { WpfProgram.Log("DarkTitle: " + ex.Message); }
                 try { ReloadFonts(); } catch (Exception ex) { WpfProgram.Log("ReloadFonts: " + ex.Message); }
@@ -885,7 +885,7 @@ namespace WinFontSwap.Wpf
             else if (i == 1) _content.Content = BuildAdvancedPage();
             else _content.Content = BuildAboutPage();
             // 切页时给内容一个短淡入，避免“啪”地一下换掉
-            Styles.FadeIn(_content, 8, 160);
+            Styles.FadeIn(_content, 30, 250);   // 实测 Windows 设置换页：250ms、约 30px 位移、减速
         }
 
         // ---------------- 页面 ----------------

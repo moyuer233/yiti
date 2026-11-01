@@ -95,10 +95,40 @@ namespace WinFontSwap.Wpf
             System.Windows.Controls.Grid.SetColumn(close, 1);
             cap.Children.Add(close);
             layer.Children.Add(cap);
+            w.Loaded += delegate { PopupIn(card); };   // 管理窗口也走 Win11 弹出层的入场
             return layer;
         }
 
         static readonly IEasingFunction Ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+
+        /// <summary>cubic-bezier 缓动：WPF 没有现成的，这里按标准算法求值（x 解出 t 再取 y）。</summary>
+        sealed class BezierEase : IEasingFunction
+        {
+            readonly double _x1, _y1, _x2, _y2;
+            public BezierEase(double x1, double y1, double x2, double y2) { _x1 = x1; _y1 = y1; _x2 = x2; _y2 = y2; }
+            static double A(double p1, double p2) { return 1.0 - 3.0 * p2 + 3.0 * p1; }
+            static double B(double p1, double p2) { return 3.0 * p2 - 6.0 * p1; }
+            static double C(double p1) { return 3.0 * p1; }
+            static double Calc(double t, double p1, double p2)
+            {
+                return ((A(p1, p2) * t + B(p1, p2)) * t + C(p1)) * t;
+            }
+            public double Ease(double x)
+            {
+                if (x <= 0) return 0;
+                if (x >= 1) return 1;
+                double lo = 0, hi = 1;
+                for (int i = 0; i < 24; i++)
+                {
+                    double mid = (lo + hi) / 2;
+                    if (Calc(mid, _x1, _x2) < x) lo = mid; else hi = mid;
+                }
+                return Calc((lo + hi) / 2, _y1, _y2);
+            }
+        }
+
+        /// <summary>Windows 11 的减速曲线（实测设置应用：250ms、约 30px 位移）。</summary>
+        public static readonly IEasingFunction Standard = new BezierEase(0.1, 0.9, 0.2, 1);
 
         /// <summary>淡入：从 opacity 0 到 1，可带一点竖直位移（offsetY>0 时向上浮起）。</summary>
         public static void FadeIn(UIElement el, double offsetY, int ms)
@@ -113,13 +143,33 @@ namespace WinFontSwap.Wpf
                     tt = new TranslateTransform(0, offsetY);
                     el.RenderTransform = tt;
                 }
-                var fade = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = Ease };
+                var fade = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = Standard };
                 el.BeginAnimation(UIElement.OpacityProperty, fade);
                 if (tt != null)
                 {
-                    var move = new DoubleAnimation(offsetY, 0, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = Ease };
+                    var move = new DoubleAnimation(offsetY, 0, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = Standard };
                     tt.BeginAnimation(TranslateTransform.YProperty, move);
                 }
+            }
+            catch { el.Opacity = 1; }
+        }
+
+        /// <summary>弹窗入场：淡入 + 从 0.96 放大到 1（对齐 Win11 弹出层的 200ms）。</summary>
+        public static void PopupIn(FrameworkElement el, int ms = 200)
+        {
+            if (el == null) return;
+            try
+            {
+                el.Opacity = 0;
+                var st = new ScaleTransform(0.96, 0.96);
+                el.RenderTransform = st;
+                el.RenderTransformOrigin = new Point(0.5, 0.5);
+                var fade = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = Standard };
+                el.BeginAnimation(UIElement.OpacityProperty, fade);
+                var sx = new DoubleAnimation(0.96, 1, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = Standard };
+                var sy = new DoubleAnimation(0.96, 1, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = Standard };
+                st.BeginAnimation(ScaleTransform.ScaleXProperty, sx);
+                st.BeginAnimation(ScaleTransform.ScaleYProperty, sy);
             }
             catch { el.Opacity = 1; }
         }
@@ -130,7 +180,7 @@ namespace WinFontSwap.Wpf
             if (el == null) { if (done != null) done(); return; }
             try
             {
-                var fade = new DoubleAnimation(el.Opacity, 0, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = Ease };
+                var fade = new DoubleAnimation(el.Opacity, 0, new Duration(TimeSpan.FromMilliseconds(ms))) { EasingFunction = Standard };
                 fade.Completed += delegate { try { if (done != null) done(); } catch { } };
                 el.BeginAnimation(UIElement.OpacityProperty, fade);
             }

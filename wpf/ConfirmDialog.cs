@@ -84,7 +84,7 @@ namespace WinFontSwap.Wpf
                 if (e.Key == Key.Escape) { Result = false; Styles.FadeOutThen(card, 110, delegate { Close(); }); }
                 if (e.Key == Key.Enter) { Result = true; Styles.FadeOutThen(card, 110, delegate { Close(); }); }
             };
-            Loaded += delegate { Styles.FadeIn(card, 10, 170); if (cancel != null) cancel.Focus(); };   // 淡入 + 上浮，默认焦点在取消
+            Loaded += delegate { Styles.PopupIn(card); if (cancel != null) cancel.Focus(); };   // 淡入 + 上浮，默认焦点在取消
         }
     }
 }
