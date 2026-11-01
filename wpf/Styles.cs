@@ -67,6 +67,7 @@ namespace WinFontSwap.Wpf
             try
             {
                 w.WindowStyle = WindowStyle.None;
+                w.AllowsTransparency = true;   // 需要真透明才能把卡片外的阴影画出来
                 w.Background = Brushes.Transparent;
                 System.Windows.Shell.WindowChrome.SetWindowChrome(w, new System.Windows.Shell.WindowChrome
                 {
@@ -79,9 +80,23 @@ namespace WinFontSwap.Wpf
             }
             catch { }
 
-            var card = new System.Windows.Controls.Border { Background = T.BDrawer, CornerRadius = new CornerRadius(10), Child = body };
-            var layer = new Grid();
-            layer.Children.Add(card);
+            // 卡片四周留出阴影需要的空间，阴影用 DropShadowEffect 画在卡片上（弹窗都允许透明）
+            const double pad = 14;
+            var card = new System.Windows.Controls.Border
+            {
+                Background = T.BDrawer,
+                CornerRadius = new CornerRadius(10),
+                Child = body,
+                Effect = new System.Windows.Media.Effects.DropShadowEffect
+                {
+                    BlurRadius = 28,
+                    ShadowDepth = 0,
+                    Opacity = 0.55,
+                    Color = Colors.Black
+                }
+            };
+            var outer = new Grid { Margin = new Thickness(pad) };
+            outer.Children.Add(card);
 
             var cap = new Grid { Height = 40, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(18, 4, 6, 0) };
             cap.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -93,7 +108,9 @@ namespace WinFontSwap.Wpf
             close.VerticalAlignment = VerticalAlignment.Center;
             System.Windows.Controls.Grid.SetColumn(close, 1);
             cap.Children.Add(close);
-            layer.Children.Add(cap);
+            outer.Children.Add(cap);
+            var layer = new Grid();
+            layer.Children.Add(outer);
             return layer;
         }
 
