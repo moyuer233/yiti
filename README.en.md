@@ -28,13 +28,13 @@ _✨ The no-brainer system-wide font replacement tool for Windows ✨_
 <details>
 <summary><h3>Screenshots (click to expand)</h3></summary>
 
-![Font replacement](docs/font_en.png)
+![Font replacement](docs/font_en.png?v=2)
 
-![Window fonts](docs/font_shell_en.png)
+![Window fonts](docs/font_shell_en.png?v=2)
 
-![Advanced](docs/adv_en.png)
+![Advanced](docs/adv_en.png?v=2)
 
-![About](docs/about_en.png)
+![About](docs/about_en.png?v=2)
 
 </details>
 

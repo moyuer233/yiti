@@ -28,13 +28,13 @@ _✨ 傻瓜式Windows全局字体替换工具 ✨_
 <details>
 <summary><h3>界面预览（点击展开）</h3></summary>
 
-![字体替换](docs/font.png)
+![字体替换](docs/font.png?v=2)
 
-![窗口字体](docs/font_shell.png)
+![窗口字体](docs/font_shell.png?v=2)
 
-![高级](docs/adv.png)
+![高级](docs/adv.png?v=2)
 
-![关于](docs/about.png)
+![关于](docs/about.png?v=2)
 
 </details>
 

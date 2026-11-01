@@ -1249,7 +1249,18 @@ namespace WinFontSwap.Wpf
 
 
             TextBlock d4;
-            stack.Children.Add(T.Row("\uE8A5", L.T("about.author"), "moyuer233", T.Label("", 13, T.Text, false), out d4));
+            var authorRow = T.Row("\uE8A5", L.T("about.author"), "MoyuStarry", T.Label("", 13, T.Text, false), out d4);
+            // 作者名可点：跳到 Bilibili 主页
+            d4.Foreground = T.Accent;
+            d4.Cursor = Cursors.Hand;
+            d4.TextDecorations = System.Windows.TextDecorations.Underline;
+            d4.ToolTip = "space.bilibili.com/514699365";
+            ToolTipService.SetShowOnDisabled(d4, true);
+            d4.MouseLeftButtonUp += delegate
+            {
+                try { System.Diagnostics.Process.Start("https://space.bilibili.com/514699365"); } catch { }
+            };
+            stack.Children.Add(authorRow);
 
 
             TextBlock dl;
