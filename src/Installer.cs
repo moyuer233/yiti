@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Principal;
+using System.Globalization;
 using System.Text;
 using Microsoft.Win32;
 
@@ -1076,9 +1077,13 @@ namespace WinFontSwap
             var pairs = new List<string[]>();
             // 记录每个目标写进去的是哪个字体族，界面才能显示“已替换为 X”
             var srcFamily = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            // 同时记住源字体文件与 face：系统更新把文件换回原版后，要靠它“一键重新应用”
+            var srcFile = new Dictionary<string, FontSource>(StringComparer.OrdinalIgnoreCase);
             foreach (var s in sources)
             {
-                if (s != null && !string.IsNullOrEmpty(s.TargetFile)) srcFamily[s.TargetFile] = s.Family == null ? "" : s.Family;
+                if (s == null || string.IsNullOrEmpty(s.TargetFile)) continue;
+                srcFamily[s.TargetFile] = s.Family == null ? "" : s.Family;
+                srcFile[s.TargetFile] = s;
             }
             // 安全副本放 orig\ 子目录；backup\<文件> 这个路径要留给「重启时把原文件改名搬进来」，
             // 那个目标路径必须不存在（MOVEFILE_DELAY_UNTIL_REBOOT 不能覆盖已存在的目标）
@@ -1114,6 +1119,12 @@ namespace WinFontSwap
                 state["sha_" + file] = Sha256(path);
                 string fam;
                 if (srcFamily.TryGetValue(file, out fam)) state["family_" + file] = fam;
+                FontSource src;
+                if (srcFile.TryGetValue(file, out src) && src.SourcePath != null)
+                {
+                    state["src_" + file] = src.SourcePath;
+                    state["srcface_" + file] = src.FaceIndex.ToString(CultureInfo.InvariantCulture);
+                }
                 applied.Add(file);
             }
 
@@ -1469,6 +1480,8 @@ namespace WinFontSwap
 
                 state["sha_" + f] = Sha256(bak);
                 state.Remove("family_" + f);
+                state.Remove("src_" + f);
+                state.Remove("srcface_" + f);
             }
 
             AddQueuePairs(pairs);
@@ -1493,6 +1506,21 @@ namespace WinFontSwap
             {
                 get { return AppliedOk.Count > 0 && (AppliedPending.Count > 0 || Never.Count > 0); }
             }
+        }
+
+        /// <summary>上次应用时给这个目标用的源字体文件（没有记录返回 null）。face 是 TTC 里的第几个。
+        public static bool TryGetLastSource(string targetFile, out string path, out int face)
+        {
+            path = null; face = 0;
+            try
+            {
+                var st = ReadState();
+                st.TryGetValue("src_" + targetFile, out path);
+                string f;
+                if (st.TryGetValue("srcface_" + targetFile, out f)) int.TryParse(f, NumberStyles.Integer, CultureInfo.InvariantCulture, out face);
+                return !string.IsNullOrEmpty(path);
+            }
+            catch { return false; }
         }
 
         /// <summary>按 state.ini 的 applied/sha 记录核对每个目标现在到底换没换，用来发现“半替换”。</summary>

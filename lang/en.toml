@@ -17,7 +17,9 @@
 "warn.no.light" = " (this font has no light, regular is used)"
 "not.selected" = "Not selected"
 "now" = "Now: "
-"re.apply" = "Re-apply"
+"re.apply" = "Re-apply last fonts"
+"reapply.no.source" = "The font files used last time are gone (deleted or moved). Pick a font again and apply."
+"reapply.partial" = "Skipped targets whose last source font was not found: 
 "reading" = "Reading…"
 "regular" = "Regular"
 "restore" = "Restore"

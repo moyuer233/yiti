@@ -912,7 +912,7 @@ namespace WinFontSwap.Wpf
             bannerText.Margin = new Thickness(0, 0, 12, 0);
             bannerText.TextWrapping = TextWrapping.Wrap;
             var bannerBtn = T.Btn2(L.T("font.re.apply"), false, 12);
-            bannerBtn.Click += delegate { RunApply(false); };
+            bannerBtn.Click += delegate { ReapplyLast(); };   // 用 state.ini 里记录的源重贴，不依赖界面当前选择
             bannerBar.Children.Add(bannerText);
             bannerBar.Children.Add(bannerBtn);
             var restoreBtn = T.Btn2(L.T("font.restore.from.backup"), true, 12);
@@ -1743,9 +1743,71 @@ namespace WinFontSwap.Wpf
             return list;
         }
 
+        /// <summary>
+        /// 半替换横幅的“重新应用上次的字体”：只重贴已经被换回原版的那几个目标，
+        /// 源字体取 state.ini 里记录的上次选择 —— 不依赖界面当前选了什么。
+        /// </summary>
+        void ReapplyLast()
+        {
+            var rep = Installer.CheckConsistency();
+            var targets = new List<string>();
+            targets.AddRange(rep.AppliedPending);
+            targets.AddRange(rep.Never);
+            var list = new List<FontSource>();
+            var lost = new List<string>();
+            foreach (var f in targets)
+            {
+                string path; int face;
+                if (!Installer.TryGetLastSource(f, out path, out face) || !File.Exists(path)) { lost.Add(f); continue; }
+                FontEntry entry = null;
+                try
+                {
+                    var entries = FontLibrary.ReadFile(path);
+                    foreach (var x in entries) { if (x.FaceIndex == face) { entry = x; break; } }
+                    if (entry == null && entries.Count > 0) entry = entries[0];
+                }
+                catch { }
+                if (entry == null) { lost.Add(f); continue; }
+                try
+                {
+                    var data = File.ReadAllBytes(entry.Path);
+                    // 英数（SegUIVar）仍优先可变字体版本，和正常应用保持一致
+                    if (Array.IndexOf(Installer.TargetFiles, f) == 3 && !Sfnt.IsVariable(data, entry.FaceIndex))
+                    {
+                        var vf = FontLibrary.FindVariableSibling(entry);
+                        if (vf != null) { data = File.ReadAllBytes(vf.Path); entry = vf; }
+                    }
+                    list.Add(new FontSource
+                    {
+                        TargetFile = f,
+                        SourcePath = entry.Path,
+                        FaceIndex = entry.FaceIndex,
+                        Family = entry.Family,
+                        Subfamily = entry.Subfamily,
+                        Data = data
+                    });
+                }
+                catch { lost.Add(f); }
+            }
+            if (list.Count == 0)
+            {
+                var msg = L.T("font.reapply.no.source");
+                SetStatus(msg, true);
+                ConfirmDialog.Info(this, L.T("font.apply"), msg);
+                return;
+            }
+            if (lost.Count > 0) SetStatus(L.T("font.reapply.partial") + string.Join("、", lost.ToArray()), true);
+            RunApplyCore(list, false);
+        }
+
         void RunApply(bool generateOnly)
         {
-            var list = CollectSources();
+            RunApplyCore(CollectSources(), generateOnly);
+        }
+
+        /// <summary>用指定的源列表走完整应用流程（半替换“重新应用上次的字体”也走这里）。</summary>
+        void RunApplyCore(List<FontSource> list, bool generateOnly)
+        {
             var trace = new System.Text.StringBuilder();
             foreach (var s in list) trace.Append(s.TargetFile + "<-" + System.IO.Path.GetFileName(s.SourcePath) + "; ");
             Diagnostics.Append("apply: fonts=" + list.Count + " [" + trace + "] generateOnly=" + generateOnly);
