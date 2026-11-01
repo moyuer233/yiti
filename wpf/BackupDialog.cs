@@ -38,7 +38,7 @@ namespace WinFontSwap.Wpf
             Foreground = T.Text;
             FontSize = 13;
 
-            var root = new Grid { Margin = new Thickness(16, 52, 16, 16) };
+            var root = new Grid { Margin = new Thickness(0) };
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });   // 0 概览
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });   // 1 设置
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });   // 2 批量工具条
@@ -164,8 +164,7 @@ namespace WinFontSwap.Wpf
             Grid.SetRow(bar, 4);
             root.Children.Add(bar);
 
-            Content = Styles.DialogFrame(this, root, Title);   // 和主页面一样：无系统标题栏，自绘 ×
-            SourceInitialized += delegate { Styles.DarkTitle(this); };
+            Content = Styles.PopupFrame(this, root, Title);   // 和「默认预设」小弹窗同一套外观
             SetEditMode(editMode);
         }
 

@@ -30,87 +30,58 @@ namespace WinFontSwap.Wpf
             catch { }
         }
 
-        /// <summary>和主页面同一套自绘窗口按钮（– 最小化 / × 关闭）：透明底、悬停变亮、命中区 40×28。</summary>
-        public static System.Windows.Controls.Button WindowButton(string glyph, Action act)
-        {
-            var b = new System.Windows.Controls.Button
-            {
-                Content = glyph,
-                Width = 40,
-                Height = 28,
-                FontSize = 13,
-                Foreground = T.TextDim,
-                Background = Brushes.Transparent,
-                BorderThickness = new Thickness(0),
-                Cursor = System.Windows.Input.Cursors.Hand
-            };
-            System.Windows.Shell.WindowChrome.SetIsHitTestVisibleInChrome(b, true);
-            var f = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.Border));
-            f.SetValue(System.Windows.Controls.Border.CornerRadiusProperty, new CornerRadius(4));
-            f.SetValue(System.Windows.Controls.Border.BackgroundProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Control.BackgroundProperty));
-            var cp = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.ContentPresenter));
-            cp.SetValue(System.Windows.Controls.ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
-            cp.SetValue(System.Windows.Controls.ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
-            f.AppendChild(cp);
-            var tpl = new System.Windows.Controls.ControlTemplate(typeof(System.Windows.Controls.Button));
-            tpl.VisualTree = f;
-            b.Template = tpl;
-            b.MouseEnter += delegate { b.Background = T.BtnHover; b.Foreground = T.Text; };
-            b.MouseLeave += delegate { b.Background = Brushes.Transparent; b.Foreground = T.TextDim; };
-            b.Click += delegate { act(); };
-            return b;
-        }
-
-        /// <summary>把对话框做成和主页面一样的外观：无系统标题栏，左上角标题、右上角自绘关闭按钮，窗口自己画深色背景。</summary>
-        public static UIElement DialogFrame(Window w, FrameworkElement body, string title)
+        /// <summary>
+        /// 和「默认预设」那种小弹窗同款：无系统标题栏、深色圆角卡片 + 外阴影、标题在卡片里、整窗可拖动、Esc 关闭。
+        /// 用于预设管理 / 备份管理 / 字体选择这类独立窗口。
+        /// </summary>
+        public static UIElement PopupFrame(Window w, FrameworkElement body, string title)
         {
             try
             {
                 w.WindowStyle = WindowStyle.None;
-                w.AllowsTransparency = true;   // 需要真透明才能把卡片外的阴影画出来
+                w.AllowsTransparency = true;
                 w.Background = Brushes.Transparent;
-                System.Windows.Shell.WindowChrome.SetWindowChrome(w, new System.Windows.Shell.WindowChrome
-                {
-                    CaptionHeight = 40,
-                    ResizeBorderThickness = new Thickness(0),
-                    GlassFrameThickness = new Thickness(0),
-                    CornerRadius = new CornerRadius(0),
-                    UseAeroCaptionButtons = false    // 系统不画按钮，和主页面一样自己画
-                });
+                w.ResizeMode = ResizeMode.NoResize;
             }
             catch { }
 
-            // 卡片四周留出阴影需要的空间，阴影用 DropShadowEffect 画在卡片上（弹窗都允许透明）
-            const double pad = 14;
-            var card = new System.Windows.Controls.Border
+            var card = new Border
             {
                 Background = T.BDrawer,
                 CornerRadius = new CornerRadius(10),
-                Child = body,
+                Padding = new Thickness(20, 16, 20, 16),
                 Effect = new System.Windows.Media.Effects.DropShadowEffect
                 {
-                    BlurRadius = 28,
+                    BlurRadius = 26,
                     ShadowDepth = 0,
-                    Opacity = 0.55,
+                    Opacity = 0.45,
                     Color = Colors.Black
                 }
             };
-            var outer = new Grid { Margin = new Thickness(pad) };
-            outer.Children.Add(card);
+            var content = new Grid();
+            content.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            content.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            var head = new TextBlock { Text = title, FontSize = 16, FontWeight = FontWeights.SemiBold, Foreground = T.Text };
+            Grid.SetRow(head, 0);
+            content.Children.Add(head);
+            var inner = new Grid { Margin = new Thickness(0, 12, 0, 0) };
+            inner.Children.Add(body);
+            Grid.SetRow(inner, 1);   // 占满剩余高度，列表才能正常拉伸
+            content.Children.Add(inner);
+            card.Child = content;
 
-            var cap = new Grid { Height = 40, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(18, 4, 6, 0) };
-            cap.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            cap.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = GridLength.Auto });
-            var label = T.Label(title, 13, T.Text, false);
-            label.VerticalAlignment = VerticalAlignment.Center;
-            cap.Children.Add(label);
-            var close = WindowButton("×", delegate { try { w.Close(); } catch { } });
-            close.VerticalAlignment = VerticalAlignment.Center;
-            System.Windows.Controls.Grid.SetColumn(close, 1);
-            cap.Children.Add(close);
-            outer.Children.Add(cap);
-            var layer = new Grid();
-            layer.Children.Add(outer);
+            var layer = new Grid { Margin = new Thickness(14) };
+            layer.Children.Add(card);
+
+            card.MouseLeftButtonDown += delegate (object s, System.Windows.Input.MouseButtonEventArgs e)
+            {
+                if (e.OriginalSource is TextBlock || e.OriginalSource is Border) { try { w.DragMove(); } catch { } }
+            };
+            w.KeyDown += delegate (object s, System.Windows.Input.KeyEventArgs e)
+            {
+                if (e.Key == System.Windows.Input.Key.Escape) { try { w.Close(); } catch { } }
+            };
+            w.Loaded += delegate { Styles.FadeIn(card, 8, 150); };
             return layer;
         }
 
