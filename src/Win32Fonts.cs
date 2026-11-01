@@ -25,6 +25,12 @@ namespace WinFontSwap
             "小标题栏", "菜单", "消息框", "状态栏", "图标"
         };
 
+        /// <summary>界面显示用的语义 key（Names 是中文标签，日志里用；界面要能跟着语言切换）。</summary>
+        public static readonly string[] NameKeys =
+        {
+            "font.shell.smcaption", "font.shell.menu", "font.shell.message", "font.shell.status", "font.shell.icon"
+        };
+
         public sealed class Info
         {
             public string Face = "";

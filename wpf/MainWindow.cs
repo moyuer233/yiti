@@ -1085,7 +1085,7 @@ namespace WinFontSwap.Wpf
 
 
                 TextBlock desc;
-                stack.Children.Add(T.Row("\uE8D2", L.T(Win32Fonts.Names[i]), L.T("font.reading"), right, out desc));
+                stack.Children.Add(T.Row("\uE8D2", L.T(Win32Fonts.NameKeys[i]), L.T("font.reading"), right, out desc));
                 _winCur[i] = desc;
             }
 
@@ -1685,7 +1685,7 @@ namespace WinFontSwap.Wpf
                 if (pt <= 0) pt = 9;
                 bool sizeChanged = cur == null || Math.Abs(pt - Math.Round(Math.Abs(cur.HeightPx) * 72.0 / 96.0)) > 0.4;
                 if (string.IsNullOrEmpty(_winFace[i]) || (!faceChanged && !sizeChanged)) continue;
-                sb.AppendLine(Win32Fonts.Names[i] + " → " + _winFace[i] + "  " + pt.ToString("0") + " pt");
+                sb.AppendLine(L.T(Win32Fonts.NameKeys[i]) + " → " + _winFace[i] + "  " + pt.ToString("0") + " pt");
             }
             return sb.ToString().TrimEnd();
         }
