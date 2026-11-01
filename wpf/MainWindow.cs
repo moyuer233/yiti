@@ -777,6 +777,11 @@ namespace WinFontSwap.Wpf
 
         static Button WinBtn(string glyph, Action act)
         {
+            return Styles.WindowButton(glyph, act);
+        }
+
+        static Button WinBtnOld(string glyph, Action act)
+        {
             var b = new Button
             {
                 Content = glyph,

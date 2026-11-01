@@ -30,7 +30,7 @@ namespace WinFontSwap.Wpf
             ResizeMode = ResizeMode.NoResize;
             ShowInTaskbar = false;
             SizeToContent = SizeToContent.Height;
-            Width = 400;
+            Width = 428;   // 400 的卡片 + 两侧阴影留白
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
             var card = new Border
@@ -57,7 +57,7 @@ namespace WinFontSwap.Wpf
             stack.Children.Add(bar);
 
             card.Child = stack;
-            Content = card;
+            Content = new Grid { Margin = new Thickness(14), Children = { card } };   // 留白给外阴影，否则阴影会被窗口边缘裁掉
 
             _box.KeyDown += delegate (object s, KeyEventArgs e)
             {
