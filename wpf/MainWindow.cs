@@ -542,6 +542,14 @@ namespace WinFontSwap.Wpf
                     {
                         Dispatcher.BeginInvoke(new Action(delegate { RunApply(true); }));
                     }
+                    else if (a == "--presetdemo")
+                    {
+                        Dispatcher.BeginInvoke(new Action(delegate
+                        {
+                            var dlg = new PresetDialog(delegate { return CollectPreset(); }, delegate (string name, Dictionary<string, string> values) { ApplyPreset(name, values); }) { Owner = this };
+                            dlg.ShowDialog();
+                        }));
+                    }
                     else if (a == "--defaultsdemo")
                     {
                         Dispatcher.BeginInvoke(new Action(delegate
@@ -1075,13 +1083,17 @@ namespace WinFontSwap.Wpf
             var apply = T.Btn2(L.T("font.apply"), true, 13);
             apply.Margin = new Thickness(0, 0, 10, 0);
             apply.Click += delegate { WithBusy(apply, L.T("font.applying"), delegate { RunApply(false); }); };
-            var backupEntry = T.Btn2(L.T("backup.backups"), false, 13);   // 还原/删备份都收进这里
-            backupEntry.Margin = new Thickness(0, 0, 10, 0);
-            backupEntry.Click += delegate { var dlg = new BackupDialog { Owner = this }; dlg.ShowDialog(); RefreshTargets(); };
+            var preset = T.Btn2(L.T("preset.title"), false, 13);   // 保存/加载自己的预设
+            preset.Margin = new Thickness(0, 0, 10, 0);
+            preset.Click += delegate
+            {
+                var dlg = new PresetDialog(delegate { return CollectPreset(); }, delegate (string name, Dictionary<string, string> values) { ApplyPreset(name, values); }) { Owner = this };
+                dlg.ShowDialog();
+            };
             var defaults = T.Btn2(L.T("font.defaults"), false, 13);
             defaults.Click += delegate { ResetToDefaults(); };
             bar.Children.Add(apply);
-            bar.Children.Add(backupEntry);
+            bar.Children.Add(preset);
             bar.Children.Add(defaults);
             bottom.Children.Add(bar);
             Grid.SetRow(bottom, 1);
@@ -1940,6 +1952,86 @@ namespace WinFontSwap.Wpf
             var dlg = new ConfirmDialog(title, question, L.T("dlg.yes"), L.T("dlg.no")) { Owner = this };
             dlg.ShowDialog();
             return dlg.Result;
+        }
+
+        /// <summary>把当前界面上的选择收集成一份预设（不写系统，只存配置）。</summary>
+        Dictionary<string, string> CollectPreset()
+        {
+            var d = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            d["auto.weight"] = _advAutoWeightOn ? "1" : "0";
+            d["auto.explorer"] = _advAutoExplorerOn ? "1" : "0";
+            for (int i = 0; i < _slots.Length; i++)
+            {
+                d["slot." + i + ".on"] = _on[i] ? "1" : "0";
+                if (_slots[i] == null || string.IsNullOrEmpty(_slots[i].Path)) continue;
+                d["slot." + i + ".path"] = _slots[i].Path;
+                d["slot." + i + ".face"] = _slots[i].FaceIndex.ToString();
+                d["slot." + i + ".family"] = _slots[i].Family ?? "";
+            }
+            for (int i = 0; i < Win32Fonts.Names.Length; i++)
+            {
+                d["shell." + i + ".on"] = _winOn[i] ? "1" : "0";
+                d["shell." + i + ".face"] = _winFace[i] ?? "";
+                d["shell." + i + ".pt"] = _winSize[i] != null ? _winSize[i].Text : "9";
+                d["shell." + i + ".weight"] = _winWeight[i].ToString();
+                d["shell." + i + ".charset"] = _winCharSet[i].ToString();
+            }
+            return d;
+        }
+
+        /// <summary>把预设加载回界面（不写系统，用户还要点「应用」）。</summary>
+        void ApplyPreset(string name, Dictionary<string, string> values)
+        {
+            _loadingShell = true;
+            try
+            {
+                string v;
+                if (values.TryGetValue("auto.weight", out v))
+                {
+                    _advAutoWeightOn = v != "0";
+                    if (_advAutoWeight != null) { _advAutoWeight.IsChecked = _advAutoWeightOn; T.RefreshToggleVisual(_advAutoWeight); }
+                }
+                if (values.TryGetValue("auto.explorer", out v)) _advAutoExplorerOn = v != "0";
+                for (int i = 0; i < _slots.Length; i++)
+                {
+                    string on, path, face;
+                    if (!values.TryGetValue("slot." + i + ".on", out on)) continue;
+                    _on[i] = on != "0";
+                    if (_tog[i] != null) { _tog[i].IsChecked = _on[i]; T.RefreshToggleVisual(_tog[i]); }
+                    values.TryGetValue("slot." + i + ".path", out path);
+                    values.TryGetValue("slot." + i + ".face", out face);
+                    if (string.IsNullOrEmpty(path) || !File.Exists(path)) { _slots[i] = null; continue; }
+                    int fi = 0; int.TryParse(face, out fi);
+                    var list = FontLibrary.ReadFile(path);
+                    FontEntry pick = null;
+                    foreach (var e in list) if (e.FaceIndex == fi) { pick = e; break; }
+                    if (pick == null && list.Count > 0) pick = list[0];
+                    _slots[i] = pick;
+                }
+                if (_slots[0] != null) _picked = _slots[0];
+                for (int i = 0; i < Win32Fonts.Names.Length; i++)
+                {
+                    string on, face, pt, weight, charset;
+                    values.TryGetValue("shell." + i + ".on", out on);
+                    values.TryGetValue("shell." + i + ".face", out face);
+                    values.TryGetValue("shell." + i + ".pt", out pt);
+                    values.TryGetValue("shell." + i + ".weight", out weight);
+                    values.TryGetValue("shell." + i + ".charset", out charset);
+                    if (on != null) _winOn[i] = on != "0";
+                    if (face != null) _winFace[i] = face;
+                    int wi; if (int.TryParse(weight, out wi) && wi > 0) _winWeight[i] = wi;
+                    int ci; if (int.TryParse(charset, out ci) && ci > 0) _winCharSet[i] = ci;
+                    if (_winSize[i] != null && !string.IsNullOrEmpty(pt)) _winSize[i].Text = pt;
+                    if (_winCur[i] != null) _winCur[i].Text = (_winFace[i] ?? "") + "   " + (pt ?? "9") + " pt";
+                    if (_winTog[i] != null) { _winTog[i].IsChecked = _winOn[i]; T.RefreshToggleVisual(_winTog[i]); }
+                }
+                if (_shellAllSize != null && _winSize[0] != null) _shellAllSize.Text = _winSize[0].Text;
+                if (_shellAllDesc != null) _shellAllDesc.Text = _winFace[0] ?? "";
+            }
+            finally { _loadingShell = false; }
+            UpdateSlotLabels();
+            string msg = L.T("preset.loaded") + name + L.T("preset.loaded.2");
+            SetStatus(msg, false);
         }
 
         void ResetToDefaults()
