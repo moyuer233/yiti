@@ -1093,8 +1093,8 @@ namespace WinFontSwap.Wpf
             var defaults = T.Btn2(L.T("font.defaults"), false, 13);
             defaults.Click += delegate { ResetToDefaults(); };
             bar.Children.Add(apply);
+            bar.Children.Add(defaults);   // 默认预设在前，预设管理紧挨着它
             bar.Children.Add(preset);
-            bar.Children.Add(defaults);
             bottom.Children.Add(bar);
             Grid.SetRow(bottom, 1);
             root.Children.Add(bottom);
