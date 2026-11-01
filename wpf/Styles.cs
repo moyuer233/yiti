@@ -67,6 +67,7 @@ namespace WinFontSwap.Wpf
             try
             {
                 w.WindowStyle = WindowStyle.None;
+                w.AllowsTransparency = true;   // 真透明：卡片圆角外才是透明，不会露出黑角
                 w.Background = Brushes.Transparent;
                 System.Windows.Shell.WindowChrome.SetWindowChrome(w, new System.Windows.Shell.WindowChrome
                 {
