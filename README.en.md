@@ -66,6 +66,8 @@ What stays the same: font rendering clarity (ClearType), apps that ship their ow
 
 ## Risks
 
+### You can no longer use Microsoft YaHei on this computer.😭😭😭
+
 This tool modifies **system font files**: a change that needs a reboot and is awkward to undo before that reboot. Known risks:
 
 - **A wrong font can leave the UI with missing glyphs**: if the font lacks Chinese characters or a weight, menus and title bars show boxes or blurry text after the reboot; in bad cases some legacy programs render incorrectly.
