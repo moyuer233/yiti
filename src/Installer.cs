@@ -157,6 +157,9 @@ namespace WinFontSwap
         /// <summary>单 face 目标（静态 Segoe UI）。</summary>
         public static bool IsSingleFace(string file) { return file == "segoeui.ttf"; }
 
+        /// <summary>英数目标（Segoe UI Variable / Segoe UI）：DWrite 按字重精确匹配，生成时必须自称 Regular 400。</summary>
+        public static bool IsLatinTarget(string file) { return file == "SegUIVar.ttf" || file == "segoeui.ttf"; }
+
         /// <summary>多 face 且要保留可变轴的目标（Segoe UI Variable：Variable/Text/Display/Small）。</summary>
         public static bool IsVariableTtc(string file) { return file == "SegUIVar.ttf"; }
 
@@ -974,6 +977,9 @@ namespace WinFontSwap
             {
                 var specs = SpecsFor(src.TargetFile);
                 log("生成 " + src.TargetFile + "（源：" + Path.GetFileName(src.SourcePath) + "）");
+                // 英数目标必须自称 Regular 400：DWrite（WinUI/设置）按族名+字重精确匹配，
+                // 源字体是 Medium(500) 时会被判为不匹配而回退到系统原版 —— 表现就是“中文换了、英文数字没换”。
+                int forceWeight = IsLatinTarget(src.TargetFile) ? 400 : 0;
                 byte[] data;
                 if (IsVariableTtc(src.TargetFile))
                 {
@@ -981,19 +987,19 @@ namespace WinFontSwap
                         log("  可变字体：保留字重轴，并写入 " + specs.Length + " 个族名（Variable/Text/Display/Small）");
                     else
                         log("  注意：源不是可变字体，英文数字的字重会变单一");
-                    data = Sfnt.BuildCollection(src.Data, src.FaceIndex, specs, true);
+                    data = Sfnt.BuildCollection(src.Data, src.FaceIndex, specs, true, forceWeight, false);
                 }
                 else if (IsSingleFace(src.TargetFile))
                 {
                     if (Sfnt.IsVariable(src.Data, src.FaceIndex))
                         log("  可变字体：取默认字重做成静态字体");
-                    data = Sfnt.BuildSingle(src.Data, src.FaceIndex, specs[0], false);
+                    data = Sfnt.BuildSingle(src.Data, src.FaceIndex, specs[0], false, forceWeight, false);
                 }
                 else
                 {
                     if (Sfnt.IsVariable(src.Data, src.FaceIndex))
                         log("  注意：源是可变字体，会取它的默认字重（通常 400，相当于常规体）");
-                    data = Sfnt.BuildCollection(src.Data, src.FaceIndex, specs);
+                    data = Sfnt.BuildCollection(src.Data, src.FaceIndex, specs, false, forceWeight, false);
                 }
                 string err;
                 if (!Sfnt.Verify(data, specs, out err))

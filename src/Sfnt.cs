@@ -437,8 +437,35 @@ namespace WinFontSwap
             return BuildCollection(source, faceIndex, specs, false);
         }
 
+        /// <summary>按目标要求覆盖字重/样式（weight=0 表示不改）。中文目标保留源字重，英数目标强制 Regular 400。</summary>
+        static void PatchWeightStyle(List<SfntTable> tables, int weight, bool bold)
+        {
+            if (weight > 0)
+            {
+                var os2 = tables.Find(t => t.Tag == "OS/2");
+                if (os2 != null && os2.Data != null && os2.Data.Length >= 64)
+                {
+                    W16(os2.Data, 4, weight);
+                    int fs = (os2.Data[62] << 8) | os2.Data[63];
+                    fs &= ~(0x01 | 0x20 | 0x40);              // 清 italic/bold/regular
+                    fs |= bold ? 0x20 : 0x40;                 // 只留一种样式位
+                    os2.Data[62] = (byte)(fs >> 8);
+                    os2.Data[63] = (byte)fs;
+                }
+                var head = tables.Find(t => t.Tag == "head");
+                if (head != null && head.Data != null && head.Data.Length >= 46)
+                {
+                    int ms = (head.Data[44] << 8) | head.Data[45];
+                    ms &= ~1;
+                    if (bold) ms |= 1;
+                    head.Data[44] = (byte)(ms >> 8);
+                    head.Data[45] = (byte)ms;
+                }
+            }
+        }
+
         /// <summary>多 face TTC；keepVariation=true 时保留 fvar/gvar（各 face 共享同一份表）。</summary>
-        public static byte[] BuildCollection(byte[] source, int faceIndex, NameSpec[] specs, bool keepVariation)
+        public static byte[] BuildCollection(byte[] source, int faceIndex, NameSpec[] specs, bool keepVariation, int weight = 0, bool bold = false)
         {
             var faces = FaceOffsets(source);
             if (faceIndex < 0 || faceIndex >= faces.Length) throw new InvalidDataException("face 序号越界");
@@ -460,6 +487,8 @@ namespace WinFontSwap
                     if (t != null) baseTables.Remove(t);
                 }
             }
+
+            PatchWeightStyle(baseTables, weight, bold);
 
             // 第一个 face 带完整表；其余 face 只带自己的 name 表，别的表指向第一个 face（TTC 允许共享）
             var firstTables = new List<SfntTable>(baseTables.Count);
@@ -500,7 +529,7 @@ namespace WinFontSwap
         }
 
         /// <summary>生成单 face 的普通 sfnt（.ttf）；keepVariation=true 时保留 fvar/gvar 等可变轴表。</summary>
-        public static byte[] BuildSingle(byte[] source, int faceIndex, NameSpec spec, bool keepVariation)
+        public static byte[] BuildSingle(byte[] source, int faceIndex, NameSpec spec, bool keepVariation, int weight = 0, bool bold = false)
         {
             var faces = FaceOffsets(source);
             if (faceIndex < 0 || faceIndex >= faces.Length) throw new InvalidDataException("face 序号越界");
@@ -521,6 +550,8 @@ namespace WinFontSwap
                     if (t2 != null) tables.Remove(t2);
                 }
             }
+
+            PatchWeightStyle(tables, weight, bold);
 
             int nameIdx = tables.FindIndex(t => t.Tag == "name");
             if (nameIdx < 0) throw new InvalidDataException("字体缺少 name 表");
